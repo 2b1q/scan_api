@@ -2,29 +2,35 @@ const config = {};
 
 config.server = {
   port: '3000',
-  ip: (process.env.NODE_ENV == 'PROD') ? '95.213.165.61' : '192.168.1.87'
+  ip: (process.env.NODE_ENV == 'PROD') ? '95.213.165.61' : '192.168.1.87' // hardcoded
 }
 
-// cluster config
+// cluster config workers (not by CPU count!)
 config.workers = (process.env.NODE_ENV == 'PROD') ? 4 : 2;
 
 // DataStore config
 config.store = {
   mongo: {
-    uri: 'mongodb://localhost:27017/',
+    uri: 'mongodb://localhost:27017/', // hardcoded
     dbname: 'scandb',
     options: {
       // autoIndex: false,
       poolSize: 10 // количество подключений в пуле
-    }
+    },
+    max_skip: 300000 // max skip size limit
   }
+}
+
+config.list_type = {
+  eth:    'listOfETH',
+  token:  'listOfTokens'
 }
 
 // REST API options
 config.restOptions = {
   context: '/api',
   logger:{ file: 'restapi.log', level: 'error' },
-	apiKeys: [ '11111-1111-222-3333', 'q1w2e3r4' ],
+	apiKeys: [ '11111-1111-222-3333', 'q1w2e3r4', 'B@NKEX','t0kEn' ], // hardcoded
   domain: require('domain').create()
 }
 

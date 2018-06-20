@@ -3,7 +3,8 @@
 */
 const tnx_model = require('../models/transaction'),
       logger = require('../utils/logger')(module),
-      moment = require('moment');
+      moment = require('moment'),
+      check = require('../utils/checker').cheker();
 
 let logit = (req, msg = '') => {
   let payload = {
@@ -17,7 +18,10 @@ let logit = (req, msg = '') => {
 
 const GetLastTnxs = async (req, res) => {
   // TODO parse req obj => add res.json if req incorrect
-  res.json({ lastTnx: await tnx_model.getLastTnxs()})
+  // if(check.auth(req.query.api_key, res)) res.json({ lastTnx: await tnx_model.getLastTnxs()})
+  if(check.lastId(req.query.lastId, res)) res.json({ lastTnx: await tnx_model.getLastTnxs()})
+
+  // res.json({ lastTnx: await tnx_model.getLastTnxs()})
   logger.api_requests(logit(req))
 }
 
