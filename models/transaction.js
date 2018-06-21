@@ -1,26 +1,77 @@
 /*
 - transaction model
 */
-const db = require('../libs/db')
+const db        = require('../libs/db'),
+      MAX_SKIP  = require('../config/config').store.mongo.max_skip;
 
 // get collection by name
 let col = name => new Promise((resolve, reject) =>
   db.get.then(db_con => resolve(db_con.collection(name)))
 );
 
-// count all tnxs
-let CountTnx = async () => {
-  let db_col = await col('token_txn')
-  return await db_col.count({})
+// get tnx db collection name by ListId
+let get_tnx_col_by = ListId => ListId ==='listOfETH' ? 'ether_txn':'token_txn';
+
+// count all tnxs by ListId type
+let CountTnx = async ListId => {
+  let tnx_col = get_tnx_col_by(ListId)
+  let db_col = await col(tnx_col)
+  return {
+    type: tnx_col,
+    cnt: await db_col.count({})
+  }
 }
-// get last tnxs using options
+
+/* get last tnxs
+* Go e.g. api.GetLastTransactions(2, 10, "tx")
+*/
 let GetLastTransactions = async (options = {}) => {
-  let { Page, Size, ListId } = options;
-  let db_col = await col('token_txn')
-  // console.log(db_col.count({}, (err,cnt) => {
-  //   console.log(`token_txn cnt => ${cnt}`);
-  // }));
-  return await db_col.count({})
+  let { skip, page, size, ListId } = options;
+  let tnx_col = get_tnx_col_by(ListId)
+  let db_col = await col(tnx_col)
+  let count = await db_col.count({})
+  if(count > MAX_SKIP) count = MAX_SKIP
+  return new Promise((resolve,reject) =>
+    db_col.find({},{allowDiskUse: true})
+      .sort({ 'block': -1 })
+      .skip(skip)
+      .limit(size)
+      .toArray((err, docs) => {
+        if(err) return reject(err) // stop flow and return reject with exeption
+        let txns = docs.map(tx => {
+          return {
+            Token: {
+              Addr:   tx.tokenaddr,
+              Name:   tx.tokenname,
+              Smbl:   tx.tokensmbl,
+              Dcm:    tx.tokendcm,
+              Type:   tx.tokentype
+            },
+            RcpLogs:  tx.rcplogs,
+            Data:     tx.data
+          }
+        })
+        // console.log(txns);
+        resolve({
+          page:page,
+          size:size,
+          count:count,
+          Rows:txns
+        })
+      })
+  );
+  /*
+  Head: structs.ListHead{
+    TotalEntities: count,
+    PageNumber: page,
+    PageSize: size,
+    ModuleId: req.ModuleId,
+    ListId: req.ListId,
+    UpdateTime: time.Now(),
+  },
+  Rows: transactions,
+
+  */
 }
 
 let TxDetails = async () =>{}

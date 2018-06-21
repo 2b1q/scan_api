@@ -21,6 +21,14 @@ config.store = {
   }
 }
 
+// pager 
+config.page = {
+  min_page: 1,
+  max_page: 30000,
+  min_size: 10,
+  max_size: 200
+}
+
 config.list_type = {
   eth:    'listOfETH',
   token:  'listOfTokens'
