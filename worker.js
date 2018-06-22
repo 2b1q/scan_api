@@ -28,7 +28,7 @@ app.use('/api', rest)
 
  // Last ROUTE catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  let err = new Error('Not Found');
+  let err = new Error('Not Found. Bad API URL');
   err.status = 404;
   next(err);
 });

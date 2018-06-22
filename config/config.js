@@ -21,7 +21,7 @@ config.store = {
   }
 }
 
-// pager 
+// pager
 config.page = {
   min_page: 1,
   max_page: 30000,
@@ -29,6 +29,15 @@ config.page = {
   max_size: 200
 }
 
+// modules
+config.modules = {
+  tnx:    'transactions',
+  block:  'block',
+  addr:   'address',
+  token:  'tokens'
+}
+
+// tx types list
 config.list_type = {
   eth:    'listOfETH',
   token:  'listOfTokens'
