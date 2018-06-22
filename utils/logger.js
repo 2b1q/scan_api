@@ -32,7 +32,7 @@ function getLogger(module) {
 
   logger.api_requests = winston.createLogger({
     transports: [
-        new (winston.transports.Console)(console),
+        // new (winston.transports.Console)(console),
         new (winston.transports.File)({ filename: './logs/api_requests.log', label: path, timestamp: true, colorize: true })
     ]
   }).info;

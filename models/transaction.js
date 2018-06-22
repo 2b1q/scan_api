@@ -26,13 +26,14 @@ let CountTnx = async ListId => {
 * Go e.g. api.GetLastTransactions(2, 10, "tx")
 */
 let GetLastTransactions = async (options = {}) => {
+  console.log(options);
   let { skip, page, size, ListId } = options;
   let tnx_col = get_tnx_col_by(ListId)
   let db_col = await col(tnx_col)
   let count = await db_col.count({})
   if(count > MAX_SKIP) count = MAX_SKIP
   return new Promise((resolve,reject) =>
-    db_col.find({},{allowDiskUse: true})
+    db_col.find({},{allowDiskUse: true}) // allowDiskUse lets the server know if it can use disk to store temporary results for the aggregation (requires mongodb 2.6 >)
       .sort({ 'block': -1 })
       .skip(skip)
       .limit(size)
@@ -60,18 +61,6 @@ let GetLastTransactions = async (options = {}) => {
         })
       })
   );
-  /*
-  Head: structs.ListHead{
-    TotalEntities: count,
-    PageNumber: page,
-    PageSize: size,
-    ModuleId: req.ModuleId,
-    ListId: req.ListId,
-    UpdateTime: time.Now(),
-  },
-  Rows: transactions,
-
-  */
 }
 
 let TxDetails = async () =>{}
@@ -82,21 +71,6 @@ module.exports = {
   txDetails:   TxDetails            // from TxDetails > api.GetTransaction(req.Hash)
 }
 /*
-GetLastTransactions(req.Params.Page,req.Params.Size,req.ListId){
-OK Response{
-		Head: structs.ListHead{
-			TotalEntities: count,
-			PageNumber: page,
-			PageSize: size,
-			ModuleId: req.ModuleId,
-			ListId: req.ListId,
-			UpdateTime: time.Now(),
-		},
-		Rows: transactions,
-	}
-
-if 0 tnxs > {Error: "Not found", Head: bson.M{}, Rows: []int{}}
-}
 
 TxDetails > api.GetTransaction(req.Hash){
 OK return {Rows: txInner, Head: txMain}
@@ -115,27 +89,28 @@ api.GetBlock(0)
 api.GetAddrTransactions("2a65aca4d5fc5b5c859090a6c34d164135398226", 1, 10, "txtype = 'tx'")
 api.GetAddress("2a65aca4d5fc5b5c859090a6c34d164135398226")
 
+
 CmdList {
-  restapi.LastTransactions(request)
-  restapi.LastTransactions(request)
-  restapi.AddrTransactions(request)
-  restapi.BlockTransactions(request)
+  const MODULE_TXN = "transactions" > restapi.LastTransactions(request)
+  const MODULE_TOKEN = "tokens" > restapi.LastTransactions(request)
+  const MODULE_ADDR = "address" > restapi.AddrTransactions(request)
+  const MODULE_BLOCK = "block" > restapi.BlockTransactions(request)
 }
 
 (CMD_HEAD_ADDR) CmdAddressDetails{
   restapi.AddrDetails(request)
+}
+(CMD_HEAD_BLOCK) CmdBlockDetails{
+restapi.BlockDetails(request)
+}
+(CMD_HEAD_HASH) CmdTxDetails{
+restapi.TxDetails(request)
 }
 
 CmdNodesDetails{
   eth_proxy.EthProxy.GetPoints()
 }
 
-(CMD_HEAD_BLOCK) CmdBlockDetails{
-  restapi.BlockDetails(request)
-}
 
-(CMD_HEAD_HASH) CmdTxDetails{
-  restapi.TxDetails(request)
-}
 
 */
