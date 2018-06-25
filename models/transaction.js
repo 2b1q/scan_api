@@ -2,7 +2,8 @@
 - transaction model
 */
 const db        = require('../libs/db'),
-      MAX_SKIP  = require('../config/config').store.mongo.max_skip;
+      MAX_SKIP  = require('../config/config').store.mongo.max_skip,
+      cfg = require('../config/config');
 
 // get collection by name
 let col = name => new Promise((resolve, reject) =>
@@ -63,21 +64,82 @@ let GetLastTransactions = async (options = {}) => {
   );
 }
 
-let TxDetails = async () =>{}
+// find tokens
+let findTokens = async (tnx_col, query) => {
+  let db_col = await col(tnx_col)
+  return new Promise((resolve, reject) =>
+    db_col.find(query)
+      .toArray((err, docs) => {
+        if(err) return reject(err) // stop flow and return reject with exeption
+        resolve(docs)
+      })
+  );
+}
+
+/* Get tnx details by tx hash
+* go e.g. api.GetTransaction("e25db473556c7ecda92ebf7226ff022ef2f49fb11f03404d04987f69894f4548")
+*/
+let TxDetails = async hash => {
+  let token_col = get_tnx_col_by(cfg.list_type.token),  // listOfTokens
+      eth_col = get_tnx_col_by(cfg.list_type.eth),      // listOfETH
+      query = { 'hash': hash },
+      q1 = findTokens(eth_col, query),    // Promise1 = ether tnxs
+      q2 = findTokens(token_col, query);  // Promise2 = token tnxs
+  // Do in parallel
+  return await Promise.all([q1,q2])
+    .then((data) => {
+      let response = {};
+      if(data[0].length === 0) {  // if no ether tnxs ASK pending TNXS from eth_proxy node
+        response.status = 'empty' // no data flag
+        // TODO: get data from eth_proxy
+        // dummy
+        // if found tnx => response.status => 'ok'
+      } else {
+        response.status = 'ok'
+        // TODO: map data
+        // {Rows: txInner, Head: txMain}
+        console.log(data);
+        response.txInner = []
+
+        data[0].forEach(tx => {
+          response.Head = {
+            Addr:   tx.tokenaddr,
+            Name:   tx.tokenname,
+            Smbl:   tx.tokensmbl,
+            Dcm:    tx.tokendcm,
+            Type:   tx.tokentype
+          },
+          (tx.isinner > 0)
+            ? response.txInner.push(tx)
+            : response.txMain = tx
+        })
+
+        data[1].forEach(tx => {
+          response.txInner.push(
+            {
+              Addr:   tx.tokenaddr,
+              Name:   tx.tokenname,
+              Smbl:   tx.tokensmbl,
+              Dcm:    tx.tokendcm,
+              Type:   tx.tokentype,
+              txInner: tx
+            }
+          )
+        })
+
+        return response
+      }
+    })
+    .catch((e) => {
+      throw e // return error
+    })
+}
 
 module.exports = {
   getLastTnxs: GetLastTransactions, // from api.GetLastTransactions
   countTnx:    CountTnx,
   txDetails:   TxDetails            // from TxDetails > api.GetTransaction(req.Hash)
 }
-/*
-
-TxDetails > api.GetTransaction(req.Hash){
-OK return {Rows: txInner, Head: txMain}
-ERROR return {Error: "Not found", Head: bson.M{}, Rows: []int{}}
-}
-
-*/
 
 /*
 api.GetLastTransactions(2, 10, "tx")

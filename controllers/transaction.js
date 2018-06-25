@@ -59,30 +59,62 @@ const ChekListId = (ListId, res) => new Promise((resolve) =>
     : false
 );
 
+const ChekHash = (clear_hash, hash, res) => new Promise((resolve) =>
+  check.checkHash(clear_hash, hash, res)
+    ? resolve()
+    : false
+);
+
 // GetLast Tokens Transactions endpoint [HTTP POST]
 const GetLastTnxTokens = (req, res) => {
-  logger.api_requests(logit(req)) // log query any way
+  logger.api_requests(logit(req))      // log query data any way
   // set params from cfg constants
-  let ListId    =  cfg.list_type.token, // listOfTokens
-      ModuleId  =  cfg.modules.tnx;     // transactions
-  let options = check.build_options(req, ListId, ModuleId)
-  logger.info(options)
+  let ListId    = cfg.list_type.token, // listOfTokens
+      ModuleId  = cfg.modules.tnx,     // transactions
+      options   = check.build_options(req, ListId, ModuleId)
+  logger.info(options)                 // log options to console
   GetTnx(options, res)
 }
 
 // GetLast ETH Transactions
 const GetLastTnxEth = async (req, res) => {
-  logger.api_requests(logit(req))       // log query any way
+  logger.api_requests(logit(req))      // log query data any way
   // set params from cfg constants
-  let ListId    =  cfg.list_type.eth,   // listOfETH
-      ModuleId  =  cfg.modules.tnx;     // transactions
-  let options = check.build_options(req, ListId, ModuleId)
-  logger.info(options)
+  let ListId    = cfg.list_type.eth,   // listOfETH
+      ModuleId  = cfg.modules.tnx,     // transactions
+      options   = check.build_options(req, ListId, ModuleId)
+  logger.info(options)                 // log options to console
   GetTnx(options, res)
 }
 
-// Get Transaction details endpoint
-const GetTnxDetails = async (req, res) => {}
+/* Get Transaction details endpoint
+* go reference:
+* TxDetails > api.GetTransaction(req.Hash){
+*   OK return {Rows: txInner, Head: txMain}
+*   ERROR return {Error: "Not found", Head: bson.M{}, Rows: []int{}}
+* }
+*/
+const GetTnxDetails = async (req, res) => {
+  logger.api_requests(logit(req))      // log query data any way
+  let hash = req.body.Hash;
+  let clear_hash = check.cut0xClean(hash);
+  logger.info({hash: hash, cleared_hash: clear_hash})
+  ChekHash(clear_hash, hash, res)
+    .then(async () => {
+      try {
+        let response = await tnx_model.txDetails(clear_hash);
+        (response.status === 'empty')
+          ? res.json(check.get_msg().not_found)
+          : res.json(response) //dummy {Rows: txInner, Head: txMain}
+      } catch (e) {
+        res.status(500)
+        res.json({ error: e }) // FWD exception to client
+      }
+    })
+// res.json(check.get_msg().not_found)
+
+
+}
 
 // count TNXS by req.query.ListId type
 const CountTnx = async (req, res) =>

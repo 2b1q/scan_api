@@ -23,7 +23,8 @@ const check_module_singleton = (() => {
       unknown_listid:       {Error: 'Unknown ListId', Head: {}, Rows: []},
       no_api_key:           {Error: 'unable to set "api_key" param' },
       wrong_api_key:        {Error: 'bad "api_key"' },
-      unknown_module_id:    {Error: 'Unknown ModuleId', Head: {}, Rows: []}
+      unknown_module_id:    {Error: 'Unknown ModuleId', Head: {}, Rows: []},
+      bad_hash:             hash => Object({Error: `Bad Hash value "${hash}"`})
     }
     // private functions
     let isFloat = n => n === +n && n !== (n|0),
@@ -73,6 +74,13 @@ const check_module_singleton = (() => {
       else if(!chek_token(api_key)) send_response(res, msg.wrong_api_key, 401)
       else return true
     }
+    // check hash from client request
+    // TODO: chenge to regexp.test(str)
+    let check_Hash = (chash, hash, res) =>
+      chash.length === 64
+        ? true
+        : send_response(res, msg.bad_hash(hash), 404)
+
     // check listId from client request
     let check_ListId = (listId, res) =>
       Object.values(cfg.list_type).includes(listId)
@@ -83,17 +91,38 @@ const check_module_singleton = (() => {
       Object.values(cfg.modules).includes(ModuleId)
         ? true
         : send_response(res, msg.unknown_module_id, 404)
+
+    // hash operations
+    // cut '0x' from hash string
+    let cut_0x = hash =>
+      (typeof hash === 'string')
+        ? hash.split('0x').pop()
+        : ''
+
+    // remove unexpected chars from hex
+    let clean_Hex = hash =>
+      (typeof hash === 'string')
+        ? hash.replace(/[^a-fA-F0-9]+/g, '')
+        : ''
+
+    // cut '0x' then remove unexpected chars from hex
+    let cut0x_Clean = hash => clean_Hex(cut_0x(hash))
+
     // public interface
     return {
-      isInt: n => isInteger(n),                                     // handy tools
-      isFloat: n => isFloat(n),                                     // handy tools
-      safePageAndSize: (p,s) => queryoptions(p,s),                  // build page options => harcoded limits constants from (Go safePageAndSize)
-      apiToken: token => chek_token(token),                         // check API_KEY token (not used yet)
-      auth: (api_key, res) => check_auth(api_key, res),             // auth using API_KEY token (not used yet)
-      listId: (lid, res) => check_ListId(lid, res),                 // check is correct ListId
-      moduleId: (mid, res) => check_ModuleId(mid, res),             // check is correct ModuleId
-      get_msg: () => msg,                                           // get client msgs object
-      build_options: (req, lid, mid) => build_params(req, lid, mid) // build qury options
+      isInt: n => isInteger(n),                                       // handy tools
+      isFloat: n => isFloat(n),                                       // handy tools
+      safePageAndSize: (p,s) => queryoptions(p,s),                    // build page options => harcoded limits constants from (Go safePageAndSize)
+      apiToken: token => chek_token(token),                           // check API_KEY token (not used yet)
+      auth: (api_key, res) => check_auth(api_key, res),               // auth using API_KEY token (not used yet)
+      listId: (lid, res) => check_ListId(lid, res),                   // check is correct ListId
+      moduleId: (mid, res) => check_ModuleId(mid, res),               // check is correct ModuleId
+      get_msg: () => msg,                                             // get client msgs object
+      build_options: (req, lid, mid) => build_params(req, lid, mid),  // build qury options
+      cut0x: hash => cut_0x(hash),
+      cleanHex: hash => clean_Hex(hash),
+      cut0xClean: hash => cut0x_Clean(hash),
+      checkHash: (chash, hash, res) => check_Hash(chash, hash, res)
     }
   }
   return {
