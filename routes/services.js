@@ -1,4 +1,5 @@
 const tnx_controller = require('../controllers/transaction'),
+      block_controller = require('../controllers/block'),
       router = require('express').Router();
 
 /* tnxs endpoints */
@@ -8,9 +9,10 @@ router.post('/transactions/details',  tnx_controller.TnxDetails);     // Get Tra
 router.get('/transactions/count',     tnx_controller.countTnx);       // count all tnxs endpoint
 
 /* block  endpoints */
-// TODO: router.post('/block/tokens',   block_controller.blockTokens);  // GetLast block tokens Transactions tendpoint
-// TODO: router.post('/block/ether',    block_controller.blockEth);     // GetLast ETH block ether Transactions endpoint
-// TODO: router.post('/block/details',  block_controller.blockDetails); // Block details
+router.post('/block/tokens',   block_controller.blockTokens);  // GetLast block tokens Transactions tendpoint
+router.post('/block/ether',    block_controller.blockEth);     // GetLast ETH block ether Transactions endpoint
+router.post('/block/details',  block_controller.blockDetails); // Block details
+
 
 /* address  endpoints */
 /*

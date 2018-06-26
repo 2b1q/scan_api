@@ -19,9 +19,9 @@ let logit = (req, msg = '') => {
 }
 
 // GetLastTransactions from tnx_model
-const GetTnx = async ({ ListId, ModuleId, page, size } = opts, res) => {
+const GetTnx = async ({ listId, moduleId, page, size } = opts, res) => {
   let options = check.safePageAndSize(page, size)
-  options.ListId = ListId;
+  options.listId = listId;
   try {
     let response = await tnx_model.getLastTnxs(options);
     if(response.rows.length > 0) {
@@ -35,8 +35,8 @@ const GetTnx = async ({ ListId, ModuleId, page, size } = opts, res) => {
         pageNumber:     page,
         pageSize:       size,
         skip:           skip,
-        moduleId:       ModuleId,
-        listId:         ListId,
+        moduleId:       moduleId,
+        listId:         listId,
         updateTime:     moment()
       }
       res.json(response)
@@ -55,8 +55,8 @@ const GetTnx = async ({ ListId, ModuleId, page, size } = opts, res) => {
 * ChekListId(ListId, res)
 *  .then(() => GetTnx(options, res))
 */
-const ChekListId = (ListId, res) => new Promise((resolve) =>
-  check.listId(ListId, res)
+const ChekListId = (listId, res) => new Promise((resolve) =>
+  check.listId(listId, res)
     ? resolve()
     : false
 );
@@ -71,9 +71,9 @@ const ChekHash = (clear_hash, hash, res) => new Promise((resolve) =>
 const GetLastTnxTokens = (req, res) => {
   logger.api_requests(logit(req))      // log query data any way
   // set params from cfg constants
-  let ListId    = cfg.list_type.token, // listOfTokens
-      ModuleId  = cfg.modules.tnx,     // transactions
-      options   = check.build_options(req, ListId, ModuleId)
+  let listId    = cfg.list_type.token, // listOfTokens
+      moduleId  = cfg.modules.tnx,     // transactions
+      options   = check.build_options(req, listId, moduleId)
   logger.info(options)                 // log options to console
   GetTnx(options, res)
 }
@@ -82,9 +82,9 @@ const GetLastTnxTokens = (req, res) => {
 const GetLastTnxEth = async (req, res) => {
   logger.api_requests(logit(req))      // log query data any way
   // set params from cfg constants
-  let ListId    = cfg.list_type.eth,   // listOfETH
-      ModuleId  = cfg.modules.tnx,     // transactions
-      options   = check.build_options(req, ListId, ModuleId)
+  let listId    = cfg.list_type.eth,   // listOfETH
+      moduleId  = cfg.modules.tnx,     // transactions
+      options   = check.build_options(req, listId, moduleId)
   logger.info(options)                 // log options to console
   GetTnx(options, res)
 }
@@ -98,16 +98,16 @@ const GetLastTnxEth = async (req, res) => {
 */
 const GetTnxDetails = async (req, res) => {
   logger.api_requests(logit(req))      // log query data any way
-  let hash = req.body.Hash;
+  let hash = req.body.hash;
   let clear_hash = check.cut0xClean(hash);
   logger.info({hash: hash, cleared_hash: clear_hash})
   ChekHash(clear_hash, hash, res)
     .then(async () => {
       try {
-        let response = await tnx_model.txDetails(clear_hash);
+        let response = await tnx_model.txDetails(clear_hash); // get tx details by hash
         (response.hasOwnProperty('empty'))
           ? res.json(check.get_msg().not_found)
-          : res.json(response) //dummy {Rows: txInner, Head: txMain}
+          : res.json(response)
       } catch (e) {
         res.status(500)
         res.json({ error: e }) // FWD exception to client
@@ -118,11 +118,11 @@ const GetTnxDetails = async (req, res) => {
 
 }
 
-// count TNXS by req.query.ListId type
+// count TNXS by req.query.listId type
 const CountTnx = async (req, res) =>
   logger.api_requests(logit(req))                                   // log query any way
-  && check.listId(req.query.ListId, res)                            // check listId
-  && res.json({ tnx: await tnx_model.countTnx(req.query.ListId) })  // fwd data to model => count tnx by listId type
+  && check.listId(req.query.listId, res)                            // check listId
+  && res.json({ tnx: await tnx_model.countTnx(req.query.listId) })  // fwd data to model => count tnx by listId type
 
 module.exports = {
   lastTnxTokens: GetLastTnxTokens,  // GetLast Tokens Transactions endpoint [HTTP POST]

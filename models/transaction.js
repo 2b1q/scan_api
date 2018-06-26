@@ -1,21 +1,24 @@
 /*
-- transaction model
+* Transaction model.
+* inherited from GO API:
+*  api.GetLastTransactions(2, 10, "tx")
+*  api.GetTransaction("e25db473556c7ecda92ebf7226ff022ef2f49fb11f03404d04987f69894f4548")
 */
 const db        = require('../libs/db'),
       MAX_SKIP  = require('../config/config').store.mongo.max_skip,
-      cfg = require('../config/config');
+      cfg       = require('../config/config');
 
 // get collection by name
 let col = name => new Promise((resolve, reject) =>
   db.get.then(db_con => resolve(db_con.collection(name)))
 );
 
-// get tnx db collection name by ListId
-let get_tnx_col_by = ListId => ListId ==='listOfETH' ? 'ether_txn':'token_txn';
+// get tnx db collection name by listId
+let get_tnx_col_by = listId => listId ==='listOfETH' ? 'ether_txn':'token_txn';
 
-// count all tnxs by ListId type
-let CountTnx = async ListId => {
-  let tnx_col = get_tnx_col_by(ListId)
+// count all tnxs by listId type
+let CountTnx = async listId => {
+  let tnx_col = get_tnx_col_by(listId)
   let db_col = await col(tnx_col)
   return {
     type: tnx_col,
@@ -28,10 +31,11 @@ let CountTnx = async ListId => {
 */
 let GetLastTransactions = async (options = {}) => {
   console.log(options);
-  let { skip, page, size, ListId } = options;
-  let tnx_col = get_tnx_col_by(ListId)
+  let { skip, page, size, listId } = options;
+  let tnx_col = get_tnx_col_by(listId)
   let db_col = await col(tnx_col)
   let count = await db_col.count({})
+  if(count === 0) return { rows: '' } // stop flow if 0 docs
   if(count > MAX_SKIP) count = MAX_SKIP
   return new Promise((resolve,reject) =>
     db_col.find({},{allowDiskUse: true}) // allowDiskUse lets the server know if it can use disk to store temporary results for the aggregation (requires mongodb 2.6 >)
@@ -95,10 +99,9 @@ let TxDetails = async hash => {
       if(ether_tnxs.length === 0) {  // if no ether tnxs ASK pending TNXS from eth_proxy node
         response.empty = true // no data flag
         // TODO: get data from eth_proxy
-        // dummy
         // if found tnx => delete property response.empty
       } else {
-        let txInner = []; 
+        let txInner = [];
         ether_tnxs.forEach(tx => {
           response.head = {
             token: {
@@ -112,7 +115,7 @@ let TxDetails = async hash => {
             // "icon":"",
             // "dynamic":0
             },
-            ...tx
+            ...tx // return all data AS IS
           }
           if(tx.isinner > 0) txInner.push(response.head)
         })
@@ -127,7 +130,7 @@ let TxDetails = async hash => {
                 dcm:    tx.tokendcm,
                 type:   tx.tokentype
               },
-              ...tx
+              ...tx // return all data AS IS
             }
           )
         })
@@ -137,7 +140,7 @@ let TxDetails = async hash => {
       return response // return response object
     })
     .catch((e) => {
-      throw e // return error
+      throw e // return mongoDB error
     })
 }
 
@@ -146,39 +149,3 @@ module.exports = {
   countTnx:    CountTnx,
   txDetails:   TxDetails            // from TxDetails > api.GetTransaction(req.Hash)
 }
-
-/*
-api.GetLastTransactions(2, 10, "tx")
-api.GetTransaction("e25db473556c7ecda92ebf7226ff022ef2f49fb11f03404d04987f69894f4548")
-api.GetBlockTransactions(1000014, 2, 10, "txtype = 'tx'")
-api.GetBlock(1000014)
-api.GetBlock(10000)
-api.GetBlock(0)
-api.GetAddrTransactions("2a65aca4d5fc5b5c859090a6c34d164135398226", 1, 10, "txtype = 'tx'")
-api.GetAddress("2a65aca4d5fc5b5c859090a6c34d164135398226")
-
-
-CmdList {
-  const MODULE_TXN = "transactions" > restapi.LastTransactions(request)
-  const MODULE_TOKEN = "tokens" > restapi.LastTransactions(request)
-  const MODULE_ADDR = "address" > restapi.AddrTransactions(request)
-  const MODULE_BLOCK = "block" > restapi.BlockTransactions(request)
-}
-
-(CMD_HEAD_ADDR) CmdAddressDetails{
-  restapi.AddrDetails(request)
-}
-(CMD_HEAD_BLOCK) CmdBlockDetails{
-restapi.BlockDetails(request)
-}
-(CMD_HEAD_HASH) CmdTxDetails{
-restapi.TxDetails(request)
-}
-
-CmdNodesDetails{
-  eth_proxy.EthProxy.GetPoints()
-}
-
-
-
-*/

@@ -3,7 +3,7 @@
 *  - handy tools => check isFloat, isInteger
 *  - build page options => harcoded limits constants from (Go safePageAndSize)
 *  - get client msgs object
-*  - check is correct ListId
+*  - check is correct ListId, ModuleId, block
 */
 const check_module_singleton = (() => {
   let instance; // keep reference to instance
@@ -20,26 +20,29 @@ const check_module_singleton = (() => {
     // client msgs
     const msg = {
       not_found:            {Error: 'Not found', Head: {}, Rows: []},
-      unknown_listid:       {Error: 'Unknown ListId', Head: {}, Rows: []},
+      unknown_listid:       {Error: 'Unknown listId', Head: {}, Rows: []},
       no_api_key:           {Error: 'unable to set "api_key" param' },
       wrong_api_key:        {Error: 'bad "api_key"' },
-      unknown_module_id:    {Error: 'Unknown ModuleId', Head: {}, Rows: []},
+      wrong_block:          {Error: 'Wrong block number', Head: {}, Rows: []},
+      unknown_module_id:    {Error: 'Unknown moduleId', Head: {}, Rows: []},
+      no_entityId:          {Error: 'entityId not found'},
       bad_hash:             hash => Object({Error: `Bad Hash value "${hash}"`})
     }
     // private functions
     let isFloat = n => n === +n && n !== (n|0),
         isInteger = n => n === +n && n === (n|0)
     // build qury options
-    let build_params = (req, ListId, ModuleId) => {
+    let build_params = (req, listId, moduleId, entityId) => {
       let { page, size, filters } = req.body.params === undefined
         ? { page: 1, size: 20, filters: {} } // default values
         : req.body.params
       return {
-        ListId:ListId,
-        ModuleId:ModuleId,
-        page:page,
-        size:size,
-        filters:filters
+        listId:   listId,
+        moduleId: moduleId,
+        page:     Number (parseInt(page)),
+        size:     Number (parseInt(size)),
+        filters:  filters,
+        entityId: entityId
       }
     }
     // build page options (Go safePageAndSize "bkxscan/blob/master/main/api/main.go")
@@ -61,6 +64,7 @@ const check_module_singleton = (() => {
         page: Number (page)  // avoid string
       }
     }
+
     // check IF token exist
     let chek_token = token => cfg.restOptions.apiKeys.includes(token);
     // construct res object
@@ -68,12 +72,14 @@ const check_module_singleton = (() => {
       res.status(status);
       res.json(msg)
     };
+
     // check AUTH by token
     let check_auth = (api_key, res) =>{
       if(!api_key) send_response(res, msg.no_api_key, 401)
       else if(!chek_token(api_key)) send_response(res, msg.wrong_api_key, 401)
       else return true
     }
+
     // check hash from client request
     // TODO: chenge to regexp.test(str)
     let check_Hash = (chash, hash, res) =>
@@ -82,15 +88,22 @@ const check_module_singleton = (() => {
         : send_response(res, msg.bad_hash(hash), 404)
 
     // check listId from client request
-    let check_ListId = (listId, res) =>
+    let check_listId = (listId, res) =>
       Object.values(cfg.list_type).includes(listId)
         ? true
         : send_response(res, msg.unknown_listid, 404)
+
     // check ModuleId from client request
-    let check_ModuleId = (ModuleId, res) =>
-      Object.values(cfg.modules).includes(ModuleId)
+    let check_moduleId = (moduleId, res) =>
+      Object.values(cfg.modules).includes(moduleId)
         ? true
         : send_response(res, msg.unknown_module_id, 404)
+
+    // check entityId from client request
+    let check_entityId = (entityId, res) =>
+      entityId !== 0
+        ? true
+        : send_response(res, msg.no_entityId, 404)
 
     // hash operations
     // cut '0x' from hash string
@@ -115,14 +128,16 @@ const check_module_singleton = (() => {
       safePageAndSize: (p,s) => queryoptions(p,s),                    // build page options => harcoded limits constants from (Go safePageAndSize)
       apiToken: token => chek_token(token),                           // check API_KEY token (not used yet)
       auth: (api_key, res) => check_auth(api_key, res),               // auth using API_KEY token (not used yet)
-      listId: (lid, res) => check_ListId(lid, res),                   // check is correct ListId
-      moduleId: (mid, res) => check_ModuleId(mid, res),               // check is correct ModuleId
+      listId: (lid, res) => check_listId(lid, res),                   // check is correct ListId
+      moduleId: (mid, res) => check_moduleId(mid, res),               // check is correct ModuleId
       get_msg: () => msg,                                             // get client msgs object
-      build_options: (req, lid, mid) => build_params(req, lid, mid),  // build qury options
-      cut0x: hash => cut_0x(hash),
-      cleanHex: hash => clean_Hex(hash),
-      cut0xClean: hash => cut0x_Clean(hash),
-      checkHash: (chash, hash, res) => check_Hash(chash, hash, res)
+      build_options: (req, lid, mid, eid) =>
+        build_params(req, lid, mid, eid),                             // build qury options
+      cut0x: hash => cut_0x(hash),                                    // cut '0x' from hash string
+      cleanHex: hash => clean_Hex(hash),                              // remove unexpected chars from hex
+      cut0xClean: hash => cut0x_Clean(hash),                          // cut '0x' then remove unexpected chars from hex
+      checkHash: (chash, hash, res) => check_Hash(chash, hash, res),  // check hash from client request
+      entityId: (eid, res) => check_entityId(eid, res)                // check entityId from client request
     }
   }
   return {
