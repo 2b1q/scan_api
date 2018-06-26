@@ -42,23 +42,23 @@ let GetLastTransactions = async (options = {}) => {
         if(err) return reject(err) // stop flow and return reject with exeption
         let txns = docs.map(tx => {
           return {
-            Token: {
-              Addr:   tx.tokenaddr,
-              Name:   tx.tokenname,
-              Smbl:   tx.tokensmbl,
-              Dcm:    tx.tokendcm,
-              Type:   tx.tokentype
+            // construct token object
+            token: {
+              addr:   tx.tokenaddr,
+              name:   tx.tokenname,
+              smbl:   tx.tokensmbl,
+              dcm:    tx.tokendcm,
+              type:   tx.tokentype
             },
-            RcpLogs:  tx.rcplogs,
-            Data:     tx.data
+            ...tx // return all data AS IS
           }
         })
-        // console.log(txns);
         resolve({
           page:page,
           size:size,
           count:count,
-          Rows:txns
+          skip:skip,
+          rows:txns
         })
       })
   );
@@ -88,47 +88,53 @@ let TxDetails = async hash => {
   // Do in parallel
   return await Promise.all([q1,q2])
     .then((data) => {
+      let [ ether_tnxs, token_tnxs ] = data // 2d array destruct
+      delete data;  // GC drop
       let response = {};
-      if(data[0].length === 0) {  // if no ether tnxs ASK pending TNXS from eth_proxy node
-        response.status = 'empty' // no data flag
+
+      if(ether_tnxs.length === 0) {  // if no ether tnxs ASK pending TNXS from eth_proxy node
+        response.empty = true // no data flag
         // TODO: get data from eth_proxy
         // dummy
-        // if found tnx => response.status => 'ok'
+        // if found tnx => delete property response.empty
       } else {
-        response.status = 'ok'
-        // TODO: map data
-        // {Rows: txInner, Head: txMain}
-        console.log(data);
-        response.txInner = []
-
-        data[0].forEach(tx => {
-          response.Head = {
-            Addr:   tx.tokenaddr,
-            Name:   tx.tokenname,
-            Smbl:   tx.tokensmbl,
-            Dcm:    tx.tokendcm,
-            Type:   tx.tokentype
-          },
-          (tx.isinner > 0)
-            ? response.txInner.push(tx)
-            : response.txMain = tx
+        let txInner = []; 
+        ether_tnxs.forEach(tx => {
+          response.head = {
+            token: {
+              addr:   tx.tokenaddr,
+              name:   tx.tokenname,
+              smbl:   tx.tokensmbl,
+              dcm:    tx.tokendcm,
+              type:   tx.tokentype,
+            // new fields
+            // "balance":"",
+            // "icon":"",
+            // "dynamic":0
+            },
+            ...tx
+          }
+          if(tx.isinner > 0) txInner.push(response.head)
         })
 
-        data[1].forEach(tx => {
-          response.txInner.push(
+        token_tnxs.forEach(tx => {
+          txInner.push(
             {
-              Addr:   tx.tokenaddr,
-              Name:   tx.tokenname,
-              Smbl:   tx.tokensmbl,
-              Dcm:    tx.tokendcm,
-              Type:   tx.tokentype,
-              txInner: tx
+              token: {
+                addr:   tx.tokenaddr,
+                name:   tx.tokenname,
+                smbl:   tx.tokensmbl,
+                dcm:    tx.tokendcm,
+                type:   tx.tokentype
+              },
+              ...tx
             }
           )
         })
-
-        return response
+        response.rows = txInner
+        delete txInner
       }
+      return response // return response object
     })
     .catch((e) => {
       throw e // return error

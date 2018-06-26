@@ -24,18 +24,20 @@ const GetTnx = async ({ ListId, ModuleId, page, size } = opts, res) => {
   options.ListId = ListId;
   try {
     let response = await tnx_model.getLastTnxs(options);
-    if(response.Rows.length > 0) {
-      let { count, page, size } = response;
-      delete response.size
-      delete response.page
+    if(response.rows.length > 0) {
+      let { count, page, size, skip } = response;
+      delete response.size;
+      delete response.page;
       delete response.count;
-      response.Head = {
-        TotalEntities:  count,
-        PageNumber:     page,
-        PageSize:       size,
-        ModuleId:       ModuleId,
-        ListId:         ListId,
-        UpdateTime:     moment()
+      delete response.skip;
+      response.head = {
+        totalEntities:  count,
+        pageNumber:     page,
+        pageSize:       size,
+        skip:           skip,
+        moduleId:       ModuleId,
+        listId:         ListId,
+        updateTime:     moment()
       }
       res.json(response)
     } else {
@@ -103,7 +105,7 @@ const GetTnxDetails = async (req, res) => {
     .then(async () => {
       try {
         let response = await tnx_model.txDetails(clear_hash);
-        (response.status === 'empty')
+        (response.hasOwnProperty('empty'))
           ? res.json(check.get_msg().not_found)
           : res.json(response) //dummy {Rows: txInner, Head: txMain}
       } catch (e) {
