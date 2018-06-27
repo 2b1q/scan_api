@@ -51,36 +51,58 @@ const GetBlockTnx = async ({ listId, moduleId, page, size, entityId } = opts, re
   }
 }
 
-// Get block Tokens Transactions endpoint [HTTP POST]
+// check block options (REST API)
+const checkOptions = (req, res, listId = '') => {
+  logger.api_requests(logit(req))               // log query data any way
+  if(listId.length > 0) { // check options for get block tnx Else check block param
+    let { entityId = 0 } = req.body.params || {}; // if entityId not set or no params => entityId = 0 => then "error":"ModuleId not found"
+    entityId = Number( parseInt(entityId) )       // parse any value and convert to Number
+    // check entityId from client
+    if(check.entityId(entityId, res)) {
+      // set params from cfg constants
+      let moduleId  = cfg.modules.block,          // block
+      options   = check.build_options(req, listId, moduleId, entityId)
+      return options
+    } else {
+      return false
+    }
+  } else {
+    let block = req.body.block || 0;
+    block = Number( parseInt(block) )       // parse any value and convert to Number
+    return check.block(block, res)
+      ? block
+      : false
+  }
+}
+
+// get block details
+const GetBlock = async (block, res) => {
+  try {
+    let response = await block_model.getBlock(block)
+    res.json(response)
+  } catch (e) {
+    res.status(500)
+    res.json({ error: e }) // FWD exception to client
+  }
+}
+
+// Get block Tokens Transactions
 const GetBlockTokens = (req, res) => {
-  logger.api_requests(logit(req))               // log query data any way
-  let { entityId = 0 } = req.body.params || {}; // if entityId not set or no params => entityId = 0 => then "error":"ModuleId not found"
-  entityId = Number( parseInt(entityId) )       // parse any value and convert to Number
-  // check entityId from client
-  if(check.entityId(entityId, res)) {
-    // set params from cfg constants
-    let listId    = cfg.list_type.token,        // listOfTokens
-        moduleId  = cfg.modules.block,          // block
-        options   = check.build_options(req, listId, moduleId, entityId)
-    GetBlockTnx(options, res)
-  }
+ let options = checkOptions(req,res, cfg.list_type.token)
+ if(options) GetBlockTnx(options, res)
 }
 
-
+// Get block ETH Transactions
 const GetBlockEth = (req, res) => {
-  logger.api_requests(logit(req))               // log query data any way
-  let { entityId = 0 } = req.body.params || {}; // if entityId not set or no params => entityId = 0 => then "error":"ModuleId not found"
-  entityId = Number( parseInt(entityId) )       // parse any value and convert to Number
-  // check entityId from client
-  if(check.entityId(entityId, res)) {
-    // set params from cfg constants
-    let listId    = cfg.list_type.eth,          // listOfETH
-        moduleId  = cfg.modules.block,          // block
-        options   = check.build_options(req, listId, moduleId, entityId)
-    GetBlockTnx(options, res)
-  }
+  let options = checkOptions(req,res, cfg.list_type.eth)
+  if(options) GetBlockTnx(options, res)
 }
-const GetBlockDetails = (req, res) => {}
+
+// Get block details
+const GetBlockDetails = (req, res) => {
+  let block = checkOptions(req,res)
+  if(block) GetBlock(block, res)
+}
 
 
 

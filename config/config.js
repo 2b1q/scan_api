@@ -18,6 +18,13 @@ config.store = {
       poolSize: 10 // количество подключений в пуле
     },
     max_skip: 300000 // max skip size limit
+  },
+  cols: {
+    eth:        'ether_txn',
+    token:      'token_txn',
+    block:      'block_header',
+    token_head: 'token_header',
+    contract:   'contract_header'
   }
 }
 

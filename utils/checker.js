@@ -105,6 +105,12 @@ const check_module_singleton = (() => {
         ? true
         : send_response(res, msg.no_entityId, 404)
 
+    // check block from client request
+    let check_block = (block, res) =>
+      block !== 0
+        ? true
+        : send_response(res, msg.wrong_block, 404)
+
     // hash operations
     // cut '0x' from hash string
     let cut_0x = hash =>
@@ -137,7 +143,8 @@ const check_module_singleton = (() => {
       cleanHex: hash => clean_Hex(hash),                              // remove unexpected chars from hex
       cut0xClean: hash => cut0x_Clean(hash),                          // cut '0x' then remove unexpected chars from hex
       checkHash: (chash, hash, res) => check_Hash(chash, hash, res),  // check hash from client request
-      entityId: (eid, res) => check_entityId(eid, res)                // check entityId from client request
+      entityId: (eid, res) => check_entityId(eid, res),               // check entityId from client request
+      block: (block, res) => check_block(block, res)                  // check block from client request
     }
   }
   return {

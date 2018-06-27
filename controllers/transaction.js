@@ -114,20 +114,16 @@ const GetTnxDetails = async (req, res) => {
         res.json({ error: e }) // FWD exception to client
       }
     })
-// res.json(check.get_msg().not_found)
-
-
 }
 
-// count TNXS by req.query.listId type
+// count TNXS
 const CountTnx = async (req, res) =>
-  logger.api_requests(logit(req))                                   // log query any way
-  && check.listId(req.query.listId, res)                            // check listId
-  && res.json({ tnx: await dbquery.countTnx(req.query.listId) })  // fwd data to model => count tnx by listId type
+  logger.api_requests(logit(req))                                         // log query any way
+  && res.json( await dbquery.countTnx(Object.values(cfg.store.cols)))      // fwd data to model => count all
 
 module.exports = {
   lastTnxTokens: GetLastTnxTokens,  // GetLast Tokens Transactions endpoint [HTTP POST]
   lastTnxEth: GetLastTnxEth,        // GetLast ETH Transactions endpoint    [HTTP POST]
   TnxDetails: GetTnxDetails,        // Get Transaction details endpoint     [HTTP POST]
-  countTnx: CountTnx                // count TNXS by req.query.ListId type  [HTTP GET]
+  countTnx: CountTnx                // count TNXS                           [HTTP GET]
 };

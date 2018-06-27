@@ -66,13 +66,23 @@ const GetDbTransactions = async options => {
   );
 }
 
-// count all tnxs by listId type
-const countTnx = async listId => {
-  let tnx_col = get_tnx_col_by(listId)
-  let db_col = await col(tnx_col)
-  return {
-    type: tnx_col,
-    cnt: await dbquery.countTnx(listId)
+// count collection docs by selector
+const countTnx = async (collection, selector = {}) => {
+  if(Array.isArray(collection)) {
+    let promise_all_result = collection.map(async col_type => {
+      let db_col = await col(col_type)
+      return {
+        [col_type]:  await db_col.count(selector)
+      }
+    })
+    // wait all db request and construct one result object
+    return await Promise.all(promise_all_result).then(data => Object.assign(...data))
+  } else {
+    let db_col = await col(collection)
+    return {
+      type: collection,
+      cnt: await db_col.count(selector)
+    }
   }
 }
 
@@ -137,8 +147,43 @@ const TxDetails = async (hash, query) => {
     })
 }
 
+// find one db doc from collection using query pattern
+const findOneQuery = async (collection, query = {}) => {
+  let db_col = await col(collection)
+  return new Promise(async (resolve, reject) => {
+    let count = await db_col.count(query)
+    if(count === 0) reject({ rows: count }) // stop flow if 0 docs
+    db_col.findOne(query).then(doc => resolve(doc))
+  });
+}
+
+// get block details by options
+const GetBlock = async options => {
+  console.log(options);
+  let { block, block_col, ether_col, block_selector, tnx_selector } = options;
+  let blockHeader_p = findOneQuery(block_col, block_selector)
+  // TODO: mongo aggregation query (one group count query)
+  // TODO: "tokentxcount" + "totaltxcount" (not used yet)
+  let mainTxCount_p = countTnx(ether_col, tnx_selector)
+  tnx_selector.isinner = 1
+  let innerTxCount_p = countTnx(ether_col, tnx_selector)
+  // do in parallel, if block not found reject and drop other promises
+  return await Promise.all([blockHeader_p, mainTxCount_p, innerTxCount_p])
+    .then(([block, main, inner] = data) => {
+      return({
+        head: {
+          ...block,
+          maintxcount:  main.cnt,
+          innertxcount: inner.cnt
+        }
+      })
+    })
+    .catch(e => e)
+}
+
 module.exports = {
   getDbTransactions:  GetDbTransactions, // common tnx get function (for block and tnx API)
   countTnx:           countTnx,          // count TNXS by ListId type
-  TxDetails:          TxDetails
+  TxDetails:          TxDetails,
+  getBlock:           GetBlock           // get block details by options
 }
