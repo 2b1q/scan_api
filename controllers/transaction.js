@@ -2,6 +2,7 @@
 - REST API transaction controller
 */
 const tnx_model = require('../models/transaction'),
+      dbquery   = require('../models/db_query'),
       logger = require('../utils/logger')(module),
       moment = require('moment'),
       check = require('../utils/checker').cheker(),
@@ -122,7 +123,7 @@ const GetTnxDetails = async (req, res) => {
 const CountTnx = async (req, res) =>
   logger.api_requests(logit(req))                                   // log query any way
   && check.listId(req.query.listId, res)                            // check listId
-  && res.json({ tnx: await tnx_model.countTnx(req.query.listId) })  // fwd data to model => count tnx by listId type
+  && res.json({ tnx: await dbquery.countTnx(req.query.listId) })  // fwd data to model => count tnx by listId type
 
 module.exports = {
   lastTnxTokens: GetLastTnxTokens,  // GetLast Tokens Transactions endpoint [HTTP POST]
