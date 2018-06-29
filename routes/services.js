@@ -1,5 +1,6 @@
 const tnx_controller = require('../controllers/transaction'),
       block_controller = require('../controllers/block'),
+      addr_controller = require('../controllers/address'),
       router = require('express').Router();
 
 /* tnxs endpoints */
@@ -13,17 +14,9 @@ router.post('/block/tokens',   block_controller.blockTokens);  // GetLast block 
 router.post('/block/ether',    block_controller.blockEth);     // GetLast ETH block ether Transactions endpoint
 router.post('/block/details',  block_controller.blockDetails); // Block details
 
-
 /* address  endpoints */
-/*
-api/block/tokens
-api/block/ether
-api/block/details
-
-api/transactions/details
-
-api/address/details детали к-ка
-api/address/
-*/
+router.post('/address/tokens',   addr_controller.addrTokens);  // Get Address Tokens Transactions endpoint [HTTP POST]
+router.post('/address/ether',    addr_controller.addrEth);     // Get Address ETH Transactions endpoint    [HTTP POST]
+router.post('/address/details',  addr_controller.addrDetails); // Get Address details endpoint     [HTTP POST]
 
 module.exports = router;

@@ -185,5 +185,6 @@ module.exports = {
   getDbTransactions:  GetDbTransactions, // common tnx get function (for block and tnx API)
   countTnx:           countTnx,          // count TNXS by ListId type
   TxDetails:          TxDetails,
-  getBlock:           GetBlock           // get block details by options
+  getBlock:           GetBlock,          // get block details by options
+  findOne:            findOneQuery       // find one db doc from collection using query pattern
 }

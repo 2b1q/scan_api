@@ -51,21 +51,16 @@ const GetBlockTnx = async ({ listId, moduleId, page, size, entityId } = opts, re
   }
 }
 
-// check block options (REST API)
-const checkOptions = (req, res, listId = '') => {
+// check block options (REST API). set moduleId = 'block'
+const checkOptions = (req, res, listId = '', moduleId = 'block') => {
   logger.api_requests(logit(req))               // log query data any way
   if(listId.length > 0) { // check options for get block tnx Else check block param
     let { entityId = 0 } = req.body.params || {}; // if entityId not set or no params => entityId = 0 => then "error":"ModuleId not found"
     entityId = Number( parseInt(entityId) )       // parse any value and convert to Number
     // check entityId from client
-    if(check.entityId(entityId, res)) {
-      // set params from cfg constants
-      let moduleId  = cfg.modules.block,          // block
-      options   = check.build_options(req, listId, moduleId, entityId)
-      return options
-    } else {
-      return false
-    }
+    return check.entityId(entityId, res)
+      ? check.build_options(req, listId, moduleId, entityId)
+      : false
   } else {
     let block = req.body.block || 0;
     block = Number( parseInt(block) )       // parse any value and convert to Number

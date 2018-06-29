@@ -24,9 +24,11 @@ const check_module_singleton = (() => {
       no_api_key:           {Error: 'unable to set "api_key" param' },
       wrong_api_key:        {Error: 'bad "api_key"' },
       wrong_block:          {Error: 'Wrong block number', Head: {}, Rows: []},
+      wrong_addr:           {Error: 'Wrong addr property', Head: {}, Rows: []},
       unknown_module_id:    {Error: 'Unknown moduleId', Head: {}, Rows: []},
       no_entityId:          {Error: 'entityId not found'},
-      bad_hash:             hash => Object({Error: `Bad Hash value "${hash}"`})
+      bad_hash:             hash => Object({Error: `Bad Hash value "${hash}"`}),
+      bad_addr:             addr => Object({Error: `Bad addr value "${addr}"`})
     }
     // private functions
     let isFloat = n => n === +n && n !== (n|0),
@@ -80,12 +82,18 @@ const check_module_singleton = (() => {
       else return true
     }
 
-    // check hash from client request
     // TODO: chenge to regexp.test(str)
+    // check hash from client request
     let check_Hash = (chash, hash, res) =>
       chash.length === 64
         ? true
         : send_response(res, msg.bad_hash(hash), 404)
+
+    // check addr from client request
+    let check_addr = (caddr, addr, res) =>
+      caddr.length === 40
+            ? true
+            : send_response(res, msg.bad_addr(addr), 404)
 
     // check listId from client request
     let check_listId = (listId, res) =>
@@ -110,6 +118,12 @@ const check_module_singleton = (() => {
       block !== 0
         ? true
         : send_response(res, msg.wrong_block, 404)
+
+    // check address from client request
+    let check_addr_exist = (address, res) =>
+      address !== 0
+        ? true
+        : send_response(res, msg.wrong_addr, 404)
 
     // hash operations
     // cut '0x' from hash string
@@ -143,8 +157,10 @@ const check_module_singleton = (() => {
       cleanHex: hash => clean_Hex(hash),                              // remove unexpected chars from hex
       cut0xClean: hash => cut0x_Clean(hash),                          // cut '0x' then remove unexpected chars from hex
       checkHash: (chash, hash, res) => check_Hash(chash, hash, res),  // check hash from client request
+      checkAddr: (caddr, addr, res) => check_addr(caddr, addr, res),  // check address from client request
       entityId: (eid, res) => check_entityId(eid, res),               // check entityId from client request
-      block: (block, res) => check_block(block, res)                  // check block from client request
+      block: (block, res) => check_block(block, res),                 // check block from client request
+      addr: (address, res) => check_addr_exist(address, res)          // check IS address exists from client request
     }
   }
   return {
