@@ -125,5 +125,6 @@ module.exports = {
   lastTnxTokens: GetLastTnxTokens,  // GetLast Tokens Transactions endpoint [HTTP POST]
   lastTnxEth: GetLastTnxEth,        // GetLast ETH Transactions endpoint    [HTTP POST]
   TnxDetails: GetTnxDetails,        // Get Transaction details endpoint     [HTTP POST]
-  countTnx: CountTnx                // count TNXS                           [HTTP GET]
+  countTnx: CountTnx,               // count TNXS                           [HTTP GET]
+  getTnx:   GetTnx                  // list API support
 };

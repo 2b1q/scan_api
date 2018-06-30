@@ -120,5 +120,6 @@ const GetAddrkDetails = (req, res) => {
 module.exports = {
   addrTokens:    GetAddrTokens,     // Get Address Tokens Transactions endpoint [HTTP POST]
   addrEth:       GetAddrEth,        // Get Address ETH Transactions endpoint    [HTTP POST]
-  addrDetails:   GetAddrkDetails    // Get Address details endpoint     [HTTP POST]
+  addrDetails:   GetAddrkDetails,   // Get Address details endpoint     [HTTP POST]
+  getAddrTnx:    GetAddrTnx         // list API support
 };
