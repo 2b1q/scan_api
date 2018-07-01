@@ -66,4 +66,4 @@ typings/
 .next
 
 #config
-config/config.yml
+config/config.js
