@@ -47,6 +47,20 @@ const check_module_singleton = (() => {
         entityId: entityId
       }
     }
+    // build qury options
+    let build_params_io = (params, listId, moduleId, entityId) => {
+      let { page, size, filters } = params === undefined
+        ? { page: 1, size: 20, filters: {} } // default values
+        : params
+      return {
+        listId:   listId,
+        moduleId: moduleId,
+        page:     Number (parseInt(page)),
+        size:     Number (parseInt(size)),
+        filters:  filters,
+        entityId: entityId.length >= 40 ? entityId : Number (entityId) // if entityId length >= 40 its address else its block 
+      }
+    }
     // build page options (Go safePageAndSize "bkxscan/blob/master/main/api/main.go")
     let queryoptions = (p, s) => {
       let page = (isNaN(p)) ? 1 :  Number (p).toFixed(); // default page = 1
@@ -153,6 +167,8 @@ const check_module_singleton = (() => {
       get_msg: () => msg,                                             // get client msgs object
       build_options: (req, lid, mid, eid) =>
         build_params(req, lid, mid, eid),                             // build qury options
+      build_io_opts: (params, listId, moduleId, entityId) =>
+        build_params_io(params, listId, moduleId, entityId),
       cut0x: hash => cut_0x(hash),                                    // cut '0x' from hash string
       cleanHex: hash => clean_Hex(hash),                              // remove unexpected chars from hex
       cut0xClean: hash => cut0x_Clean(hash),                          // cut '0x' then remove unexpected chars from hex

@@ -40,14 +40,21 @@ const GetTnx = async ({ listId, moduleId, page, size } = opts, res) => {
         listId:         listId,
         updateTime:     moment()
       }
-      res.json(response)
+      // if we have res object -> its REST API else ITS socket IO data
+      if(res) res.json(response)
+      else return response
     } else {
-      res.json(check.get_msg().not_found)
+      // if we have res object -> its REST API else ITS socket IO data
+      if(res) res.json(check.get_msg().not_found)
+      else return check.get_msg().not_found
     }
   // handle exception from DB tnx_model
   } catch (e) {
-    res.status(500)
-    res.json({ error: e }) // FWD exception to client
+    // if we have res object -> its REST API else ITS socket IO data
+    if(res) {
+      res.status(500)
+      res.json({ error: e }) // FWD exception to client
+    } else return { error: e }
   }
 }
 

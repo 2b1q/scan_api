@@ -24,6 +24,44 @@ const ChekAddr = (clearAddr, entityId, res) => new Promise((resolve) =>
     : false
 );
 
+// TODO: refact this 
+// common get address transaction func
+const get_addr_tnxs = async (options, moduleId, listId, clearAddr, res = '') => {
+  try {
+    let response = await addr_model.addrTnxs(options);
+    if(response.rows.length > 0) {
+      let { count, page, size, skip } = response;
+      delete response.size;
+      delete response.page;
+      delete response.count;
+      delete response.skip;
+      response.head = {
+        totalEntities:  count,
+        pageNumber:     page,
+        pageSize:       size,
+        skip:           skip,
+        moduleId:       moduleId,
+        listId:         listId,
+        entityId:       clearAddr,
+        updateTime:     moment()
+      }
+      // if res.length > 0 -> its REST API else ITS socket IO data
+      if(res.length > 0) res.json(response)
+      else return response
+    } else {
+      // if res.length > 0 -> its REST API else ITS socket IO data
+      if(res.length > 0) res.json(check.get_msg().not_found)
+      else return check.get_msg().not_found
+    }
+  } catch (e) {
+    // if res.length > 0 -> its REST API else ITS socket IO data
+    if(res.length > 0) {
+      res.status(500)
+      res.json({ error: e }) // FWD exception to client
+    } else return { error: e }
+  }
+}
+
 // GetAddrTransactions from tnx_model
 const GetAddrTnx = async ({ listId, moduleId, page, size, entityId } = opts, res) => {
   let options = check.safePageAndSize(page, size)  // build page, skip, size options
@@ -34,33 +72,14 @@ const GetAddrTnx = async ({ listId, moduleId, page, size, entityId } = opts, res
   // get tnx db collection name by listId (IIFE + AF + ternary)
   options.collection = (listId => listId ==='listOfETH' ? 'ether_txn':'token_txn')(listId)
   logger.info({addr: entityId, cleared_addr: clearAddr})
-  ChekAddr(clearAddr, entityId, res)
-    .then(async () => {
-      try {
-        let response = await addr_model.addrTnxs(options);
-        if(response.rows.length > 0) {
-          let { count, page, size, skip } = response;
-          delete response.size;
-          delete response.page;
-          delete response.count;
-          delete response.skip;
-          response.head = {
-            totalEntities:  count,
-            pageNumber:     page,
-            pageSize:       size,
-            skip:           skip,
-            moduleId:       moduleId,
-            listId:         listId,
-            entityId:       clearAddr,
-            updateTime:     moment()
-          }
-          res.json(response)
-        } else res.json(check.get_msg().not_found)
-      } catch (e) {
-        res.status(500)
-        res.json({ error: e }) // FWD exception to client
-      }
-    })
+  // if we have res object -> its REST API else ITS socket IO data
+  if(res){
+    ChekAddr(clearAddr, entityId, res)
+      .then(get_addr_tnxs(options, moduleId, listId, clearAddr, res))
+  // ITS socket IO data
+  } else {
+    return get_addr_tnxs(options, moduleId, listId, clearAddr)
+  }
 }
 
 // check Address options (REST API). Set moduleId = 'address'
@@ -85,10 +104,15 @@ const checkOptions = (req, res, listId = '', moduleId = 'address' ) => {
 const GetAddr = async (address, res) => {
   try {
     let response = await addr_model.getAddr(address)
-    res.json(response)
+    // if we have res object -> its REST API else ITS socket IO data
+    if(res) res.json(response)
+    else return response
   } catch (e) {
-    res.status(500)
-    res.json({ error: e }) // FWD exception to client
+    // if we have res object -> its REST API else ITS socket IO data
+    if(res) {
+      res.status(500)
+      res.json({ error: e }) // FWD exception to client
+    } else return { error: e }
   }
 }
 
@@ -121,5 +145,6 @@ module.exports = {
   addrTokens:    GetAddrTokens,     // Get Address Tokens Transactions endpoint [HTTP POST]
   addrEth:       GetAddrEth,        // Get Address ETH Transactions endpoint    [HTTP POST]
   addrDetails:   GetAddrkDetails,   // Get Address details endpoint     [HTTP POST]
-  getAddrTnx:    GetAddrTnx         // list API support
+  getAddrTnx:    GetAddrTnx,        // list API support (address transactions)
+  getAddrIo:     GetAddr            // direct support for socket io (address details)
 };

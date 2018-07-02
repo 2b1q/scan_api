@@ -37,6 +37,13 @@ function getLogger(module) {
     ]
   }).info;
 
+  logger.socket_requests = winston.createLogger({
+    transports: [
+        new (winston.transports.Console)(console),
+        new (winston.transports.File)({ filename: './logs/socket_io.log', label: path, timestamp: true, colorize: true })
+    ]
+  }).info;
+
   return logger
 }
 

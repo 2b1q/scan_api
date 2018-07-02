@@ -50,6 +50,16 @@ config.list_type = {
   token:  'listOfTokens'
 }
 
+// socket io client evens
+config.events = {
+  client: {
+    list:    'list',
+    tx_d:    'txDetails',
+    block_d: 'blockDetails',
+    addr_d:  'addressDetails'
+  }
+}
+
 // REST API options
 config.restOptions = {
   context: '/api',
