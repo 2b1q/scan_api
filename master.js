@@ -1,12 +1,5 @@
 let cluster = require('cluster'),
-    config = require('./config/config'),
-    ethProxy = require('./ether/proxy').getInstance(),
-    ethSubs = require('./ether/subscribe');
-
-ethSubs.subscribe(ethProxy);
-setInterval(function () {
-    ethSubs.subscribe(ethProxy)
-}, 10000);
+    config = require('./config/config');
 
 // if worker 'disconnect' from IPC channel
 cluster.on('disconnect', (worker, code, signal) => {

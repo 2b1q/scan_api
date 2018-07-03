@@ -9,8 +9,16 @@ const express = require('express'),
     config       = require('./config/config'),
     // Rest = require('connect-rest'),
     debug = require('debug')('scan-api:server');
-    debug('booting %s', 'scan-api')
+    debug('booting %s', 'scan-api');
     // db = require('./libs/db');
+
+    let ethProxy = require('./ether/proxy').getInstance();
+    let ethSubs = require('./ether/subscribe');
+
+ethSubs.subscribe(ethProxy);
+setInterval(function () {
+    ethSubs.subscribe(ethProxy)
+}, config.ethOptions.upNodeFrequency);
 
 // init express framework
 const app = express();

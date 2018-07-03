@@ -1,14 +1,12 @@
-let eth_proxy = require('./proxy');
+let ethProxy = require('./proxy').getInstance();
 
 const lastBlock = async (req, res) => {
-    console.log("lastBlock => getInstance = ", eth_proxy.getInstance());
-    let x = 0; //eth_proxy.getLastBlock();
-    res.json({"lastblock": x});
+    console.log(ethProxy);
+    res.json({"lastblock": ethProxy.getLastBlock()});
 };
 
 const getLastBlocks = async (req, res) =>{
-    //let x = eth_proxy.getProvidersBlock();
-    res.json({"nodes": []})
+    res.json({"nodes": ethProxy.getProvidersBlock()})
 
 };
 
