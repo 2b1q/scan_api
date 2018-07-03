@@ -3,7 +3,7 @@ const config = {};
 config.server = {
   port: '3000',
   ip: (process.env.NODE_ENV == 'PROD') ? '95.213.165.61' : '192.168.1.87' // hardcoded
-}
+};
 
 // cluster config workers (not by CPU count!)
 config.workers = (process.env.NODE_ENV == 'PROD') ? 4 : 2;
@@ -26,7 +26,7 @@ config.store = {
     token_head: 'token_header',
     contract:   'contract_header'
   }
-}
+};
 
 // pager
 config.page = {
@@ -34,7 +34,7 @@ config.page = {
   max_page: 30000,
   min_size: 10,
   max_size: 200
-}
+};
 
 // modules
 config.modules = {
@@ -42,13 +42,13 @@ config.modules = {
   block:  'block',
   addr:   'address',
   token:  'tokens'
-}
+};
 
 // tx types list
 config.list_type = {
   eth:    'listOfETH',
   token:  'listOfTokens'
-}
+};
 
 // socket io client evens
 config.events = {
@@ -66,20 +66,13 @@ config.restOptions = {
   logger:{ file: 'restapi.log', level: 'error' },
 	apiKeys: [ '11111-1111-222-3333', 'q1w2e3r4', 'B@NKEX','t0kEn' ], // hardcoded
   domain: require('domain').create()
-}
-
-config.restOptions = {
-    context: '/api',
-    logger:{ file: 'restapi.log', level: 'error' },
-    apiKeys: [ '11111-1111-222-3333', 'q1w2e3r4', 'B@NKEX','t0kEn' ], // hardcoded
-    domain: require('domain').create()
-}
+};
 
 config.ethOptions = {
-    gethURLs: ["ws://94.130.171.164:8556", "ws://94.130.171.164:8556", "ws://localhost:8556"],
+    gethURLs: ["ws://94.130.171.164:8546", "ws://94.130.171.164:8556", "ws://localhost:8556"],
     maxNodesDelta: 20,
-}
-
+    upNodeFrequency: 10000,
+};
 
 // colorize console
 config.color = {
@@ -91,6 +84,6 @@ config.color = {
   red: "\x1b[31m",
   magenta: "\x1b[35m",
   white: "\x1b[37m"
-}
+};
 
 module.exports = config;

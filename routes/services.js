@@ -2,7 +2,8 @@ const tnx_controller = require('../controllers/transaction'),
       block_controller = require('../controllers/block'),
       addr_controller = require('../controllers/address'),
       list_controller = require('../controllers/list'),
-      eth_proxy = require('../ether/proxy'),
+      eth_api = require('../ether/api'),
+      eth_func = require('../ether/functions'),
       router = require('express').Router();
 
 /* REST API endpoint
@@ -16,7 +17,10 @@ router.post('/transactions/tokens',   tnx_controller.lastTnxTokens);  // GetLast
 router.post('/transactions/details',  tnx_controller.TnxDetails);     // Get Transaction details endpoint [HTTP POST]
 router.get('/transactions/count',     tnx_controller.countTnx);       // count all tnxs endpoint [HTTP GET]
 
-router.get('/nodes',     eth_proxy.getLastBlocks);       // nodes last blocks
+router.get('/test/nodes',           eth_api.getLastBlocks);       // nodes last blocks
+router.get('/test/lastblock',       eth_api.getLastBlock);       // nodes last blocks
+router.get('/test/best',            eth_api.getBestProvider);       // nodes last blocks
+router.get('/test/balance',         eth_func.zeroBalance);       // nodes last blocks
 
 /* block  endpoints */
 router.post('/block/tokens',   block_controller.blockTokens);  // GetLast block tokens Transactions tendpoint [HTTP POST]
