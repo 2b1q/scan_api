@@ -36,18 +36,24 @@ const GetBlockTnx = async ({ listId, moduleId, page, size, entityId } = opts, re
         pageSize:       size,
         skip:           skip,
         moduleId:       moduleId,
+        infinityScroll: 0,  // hardcoded
         listId:         listId,
-        entityId:       entityId,
+        entityId:       entityId.toString(), // bug if its Number - FE wont render
         updateTime:     moment()
       }
-      res.json(response)
+      if(res) res.json(response)
+      else return response
     } else {
-      res.json(check.get_msg().not_found)
+      if(res) res.json(check.get_msg().not_found)
+      else return check.get_msg().not_found
     }
   // handle exception from DB tnx_model
   } catch (e) {
-    res.status(500)
-    res.json({ error: e }) // FWD exception to client
+    if(res) {
+      res.status(500)
+      res.json({ error: e }) // FWD exception to client
+    }
+    else return { error: e }
   }
 }
 
@@ -74,10 +80,13 @@ const checkOptions = (req, res, listId = '', moduleId = 'block') => {
 const GetBlock = async (block, res) => {
   try {
     let response = await block_model.getBlock(block)
-    res.json(response)
+    if(res) res.json(response)
+    else return response
   } catch (e) {
-    res.status(500)
-    res.json({ error: e }) // FWD exception to client
+    if(res){
+      res.status(500)
+      res.json({ error: e }) // FWD exception to client
+    } else return { error: e }
   }
 }
 
@@ -105,5 +114,6 @@ module.exports = {
   blockTokens:    GetBlockTokens,     // Get block Tokens Transactions endpoint [HTTP POST]
   blockEth:       GetBlockEth,        // Get block ETH Transactions endpoint    [HTTP POST]
   blockDetails:   GetBlockDetails,    // Get block details endpoint     [HTTP POST]
-  getBlockTnx:    GetBlockTnx         // for list API support
+  getBlockTnx:    GetBlockTnx,        // for list API support
+  getBlockIo:     GetBlock            // direct access (get block details socket IO + rest)
 };

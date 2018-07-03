@@ -24,9 +24,8 @@ const ChekAddr = (clearAddr, entityId, res) => new Promise((resolve) =>
     : false
 );
 
-// TODO: refact this 
 // common get address transaction func
-const get_addr_tnxs = async (options, moduleId, listId, clearAddr, res = '') => {
+const get_addr_tnxs = async (options, moduleId, listId, clearAddr) => {
   try {
     let response = await addr_model.addrTnxs(options);
     if(response.rows.length > 0) {
@@ -45,24 +44,16 @@ const get_addr_tnxs = async (options, moduleId, listId, clearAddr, res = '') => 
         entityId:       clearAddr,
         updateTime:     moment()
       }
-      // if res.length > 0 -> its REST API else ITS socket IO data
-      if(res.length > 0) res.json(response)
-      else return response
-    } else {
-      // if res.length > 0 -> its REST API else ITS socket IO data
-      if(res.length > 0) res.json(check.get_msg().not_found)
-      else return check.get_msg().not_found
-    }
+      return response
+    } else  return check.get_msg().not_found
   } catch (e) {
-    // if res.length > 0 -> its REST API else ITS socket IO data
-    if(res.length > 0) {
-      res.status(500)
-      res.json({ error: e }) // FWD exception to client
-    } else return { error: e }
+    return { error: e }
   }
 }
 
-// GetAddrTransactions from tnx_model
+/* GetAddrTransactions from tnx_model (REST API + Socket IO)
+* if we have res object its REST request, otherwise its IO request
+*/
 const GetAddrTnx = async ({ listId, moduleId, page, size, entityId } = opts, res) => {
   let options = check.safePageAndSize(page, size)  // build page, skip, size options
   let clearAddr = check.cut0xClean(entityId);      // clear address
@@ -73,13 +64,10 @@ const GetAddrTnx = async ({ listId, moduleId, page, size, entityId } = opts, res
   options.collection = (listId => listId ==='listOfETH' ? 'ether_txn':'token_txn')(listId)
   logger.info({addr: entityId, cleared_addr: clearAddr})
   // if we have res object -> its REST API else ITS socket IO data
-  if(res){
-    ChekAddr(clearAddr, entityId, res)
-      .then(get_addr_tnxs(options, moduleId, listId, clearAddr, res))
+  if(res) ChekAddr(clearAddr, entityId, res)
+            .then(res.json(await get_addr_tnxs(options, moduleId, listId, clearAddr)))
   // ITS socket IO data
-  } else {
-    return get_addr_tnxs(options, moduleId, listId, clearAddr)
-  }
+  else return await get_addr_tnxs(options, moduleId, listId, clearAddr)
 }
 
 // check Address options (REST API). Set moduleId = 'address'
@@ -100,10 +88,11 @@ const checkOptions = (req, res, listId = '', moduleId = 'address' ) => {
   }
 }
 
-// get Address details
+// get Address details (REST API + Socket IO)
 const GetAddr = async (address, res) => {
   try {
     let response = await addr_model.getAddr(address)
+    if(!response.hasOwnProperty('head')) response = check.get_msg().not_found
     // if we have res object -> its REST API else ITS socket IO data
     if(res) res.json(response)
     else return response
@@ -146,5 +135,5 @@ module.exports = {
   addrEth:       GetAddrEth,        // Get Address ETH Transactions endpoint    [HTTP POST]
   addrDetails:   GetAddrkDetails,   // Get Address details endpoint     [HTTP POST]
   getAddrTnx:    GetAddrTnx,        // list API support (address transactions)
-  getAddrIo:     GetAddr            // direct support for socket io (address details)
+  getAddrIo:     GetAddr            // address details - direct support (REST API + Socket IO)
 };

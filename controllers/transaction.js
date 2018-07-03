@@ -97,6 +97,18 @@ const GetLastTnxEth = async (req, res) => {
   GetTnx(options, res)
 }
 
+// common tx details
+const txDetails = async hash => {
+  try {
+    let response = await tnx_model.txDetails(clear_hash); // get tx details by hash
+    return (response.hasOwnProperty('empty'))
+      ? check.get_msg().not_found
+      : response
+  } catch (e) {
+    return check.get_msg().not_found 
+  }
+}
+
 /* Get Transaction details endpoint
 * go reference:
 * TxDetails > api.GetTransaction(req.Hash){
@@ -111,15 +123,7 @@ const GetTnxDetails = async (req, res) => {
   logger.info({hash: hash, cleared_hash: clear_hash})
   ChekHash(clear_hash, hash, res)
     .then(async () => {
-      try {
-        let response = await tnx_model.txDetails(clear_hash); // get tx details by hash
-        (response.hasOwnProperty('empty'))
-          ? res.json(check.get_msg().not_found)
-          : res.json(response)
-      } catch (e) {
-        res.status(500)
-        res.json({ error: e }) // FWD exception to client
-      }
+      res.json(await txDetails(clear_hash))
     })
 }
 
@@ -133,5 +137,6 @@ module.exports = {
   lastTnxEth: GetLastTnxEth,        // GetLast ETH Transactions endpoint    [HTTP POST]
   TnxDetails: GetTnxDetails,        // Get Transaction details endpoint     [HTTP POST]
   countTnx: CountTnx,               // count TNXS                           [HTTP GET]
-  getTnx:   GetTnx                  // list API support
+  getTnx:   GetTnx,                 // list API support
+  getTxIo:  txDetails               // (Get Transaction detailsdirect access for socket IO
 };
