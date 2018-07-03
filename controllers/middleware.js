@@ -18,6 +18,9 @@ const log_event = (event, data, con_obj) => logger.socket_requests(
     connected_obj: con_obj
   })
 
+// rand str 10 chars
+const randstr = () => Math.random().toString(36).substring(2, 12)
+
 // check block/address options.
 const checkOptions = (listId, moduleId, entityId, params) =>
   entityId !== 0
@@ -34,7 +37,7 @@ const checkAddr = addr => {
 }
 
 // send msg to client
-const emitMsg = (socket, msg) => socket.emit(msg)
+const emitMsg = (socket, event, msg) => socket.emit(event, JSON.stringify(msg))
 
 // emmit/log/event wrapper
 const emit = async (event, socket, data, con_obj) => {
@@ -47,19 +50,22 @@ const emit = async (event, socket, data, con_obj) => {
   switch (event) {
     case e.list:
       options = checkOptions(listId, moduleId, entityId, params)
-      emitMsg(socket, (options === false)
-        ? { Error: 'bad params', params: data }
-        : await addr_controller.getAddrTnx(options)
+      emitMsg(
+        socket,
+        event,
+        (options === false)
+          ? { Error: 'bad params', params: data }
+          : await addr_controller.getAddrTnx(options)
       )
       break;
     case e.addr_d: // get addr details
       let caddr = checkAddr(addr)
-      emitMsg(socket, (caddr === false)
+      emitMsg(socket, event, (caddr === false)
         ? check.get_msg().bad_addr
         : await addr_controller.getAddrIo(caddr)
       )
     default:
-      emitMsg(socket, 'Unknown event')
+      emitMsg(socket, event, 'Unknown event')
   }
 }
 
@@ -72,12 +78,14 @@ const init_io_handler = io => {
       query:      socket.handshake.query,
       sid:        socket.client.id
     }
-    socket.on('disconnection', data => log_event('disconnection', data, con_obj))
+    socket.join(randstr()) // it works without join 
 
     socket.on(e.list, data => emit(e.list, socket, data, con_obj))
     socket.on(e.tx_d, data => emit(e.tx_d, socket, data, con_obj))
     socket.on(e.block_d, data => emit(e.block_d, socket, data, con_obj))
     socket.on(e.addr_d, data => emit(e.addr_d, socket, data, con_obj))
+
+    socket.on('disconnection', data => log_event('disconnection', data, con_obj))
   })
 }
 
