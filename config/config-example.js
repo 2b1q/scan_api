@@ -12,7 +12,7 @@ config.workers = (process.env.NODE_ENV == 'PROD') ? 4 : 2;
 config.store = {
   mongo: {
     uri: 'mongodb://localhost:27017/', // hardcoded
-    dbname: 'bkx_testnet',
+    dbname: 'scandb',
     options: {
       // autoIndex: false,
       poolSize: 10 // количество подключений в пуле
@@ -50,16 +50,6 @@ config.list_type = {
   token:  'listOfTokens'
 }
 
-// socket io client evens
-config.events = {
-  client: {
-    list:    'list',
-    tx_d:    'txDetails',
-    block_d: 'blockDetails',
-    addr_d:  'addressDetails'
-  }
-}
-
 // REST API options
 config.restOptions = {
   context: '/api',
@@ -67,19 +57,6 @@ config.restOptions = {
 	apiKeys: [ '11111-1111-222-3333', 'q1w2e3r4', 'B@NKEX','t0kEn' ], // hardcoded
   domain: require('domain').create()
 }
-
-config.restOptions = {
-    context: '/api',
-    logger:{ file: 'restapi.log', level: 'error' },
-    apiKeys: [ '11111-1111-222-3333', 'q1w2e3r4', 'B@NKEX','t0kEn' ], // hardcoded
-    domain: require('domain').create()
-}
-
-config.ethOptions = {
-    gethURLs: ["ws://94.130.171.164:8556", "ws://94.130.171.164:8556", "ws://localhost:8556"],
-    maxNodesDelta: 20,
-}
-
 
 // colorize console
 config.color = {
