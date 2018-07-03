@@ -1,10 +1,5 @@
 let ethProxy = require('./proxy').getInstance();
 
-const getLastBlock = async (req, res) => {
-    console.log(ethProxy);
-    res.json({"lastblock": ethProxy.getLastBlock()});
-};
-
 function getAddrBalance(addr) {
     let provider = ethProxy.getBestProvider();
     if (provider) {
@@ -17,10 +12,10 @@ function getAddrBalance(addr) {
 
 
 const zeroBalance = async (req, res) =>
-    res.json( await getAddrBalance("0000000000000000000000000000000000000000"));      // fwd data to model => count all
+    res.json( await getAddrBalance("0000000000000000000000000000000000000000"));
 
 module.exports = {
-    zeroBalance: zeroBalance,  // GetLast Tokens Transactions endpoint [HTTP POST]
+    zeroBalance: zeroBalance,
 };
 
 
