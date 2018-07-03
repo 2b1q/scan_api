@@ -92,6 +92,7 @@ const checkOptions = (req, res, listId = '', moduleId = 'address' ) => {
 const GetAddr = async (address, res) => {
   try {
     let response = await addr_model.getAddr(address)
+    if(!response.hasOwnProperty('head')) response = check.get_msg().not_found
     // if we have res object -> its REST API else ITS socket IO data
     if(res) res.json(response)
     else return response
