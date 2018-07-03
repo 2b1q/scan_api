@@ -2,6 +2,7 @@
 const config = require('../config/config'),
       c      = config.color,
       e      = config.events.client, // socket IO client events
+      m      = config.modules,  // modules
       logger = require('../utils/logger')(module),
       moment = require('moment'),
       check  = require('../utils/checker').cheker(),
@@ -41,24 +42,39 @@ const emitMsg = (socket, event, msg) => socket.emit(event, JSON.stringify(msg))
 
 // emmit/log/event wrapper
 const emit = async (event, socket, data, con_obj) => {
-  log_event(event, data, con_obj)
+  log_event(event, data, con_obj) // log events
   // setup request params
   let options = {},
       response = {},
       { listId, moduleId, params, addr = 0 } = JSON.parse(data),
       { entityId = 0 } = params || {};
   switch (event) {
-    case e.list:
+    case e.list: // event = 'list'
       options = checkOptions(listId, moduleId, entityId, params)
-      emitMsg(
-        socket,
-        event,
-        (options === false)
-          ? { Error: 'bad params', params: data }
-          : await addr_controller.getAddrTnx(options)
-      )
+      switch (moduleId) {
+        case m.tnx: // moduleId => transactions
+
+          break;
+        case m.token: // moduleId => tokens
+
+          break;
+        case m.block: // moduleId => block
+
+          break;
+        case m.addr: // moduleId => address
+          emitMsg(socket, event,
+            (options === false)
+              ? { Error: 'bad params', params: data }
+              : await addr_controller.getAddrTnx(options)
+          )
+          break;
+        default: emitMsg(socket, event, 'Unknown ModuleId')
+      }
+      console.log(`${c.green}=====list options=======`);
+      console.log(`${c.yellow}${JSON.stringify(options,null,2)}`);
+      console.log(`${c.green}========================${c.white}`);
       break;
-    case e.addr_d: // get addr details
+    case e.addr_d: // get addr details event = 'addressDetails'
       let caddr = checkAddr(addr)
       emitMsg(socket, event, (caddr === false)
         ? check.get_msg().bad_addr
@@ -78,7 +94,7 @@ const init_io_handler = io => {
       query:      socket.handshake.query,
       sid:        socket.client.id
     }
-    socket.join(randstr()) // it works without join 
+    socket.join(randstr()) // it works without join
 
     socket.on(e.list, data => emit(e.list, socket, data, con_obj))
     socket.on(e.tx_d, data => emit(e.tx_d, socket, data, con_obj))

@@ -2,7 +2,7 @@ var cluster = require('cluster'),
     ethProxy = require('./ether/proxy'),
     config = require('./config/config');
 
-ethProxy.initEthProviders();
+// ethProxy.initEthProviders();
 
 // if worker 'disconnect' from IPC channel
 cluster.on('disconnect', (worker, code, signal) => {
