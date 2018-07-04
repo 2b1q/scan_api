@@ -1,13 +1,10 @@
 let ethProxy = require('./proxy').getInstance();
 
-function getAddrBalance(addr) {
-    let provider = ethProxy.getBestProvider();
-    if (provider) {
-        return provider.eth.getBalance(addr)
-    } else {
-        return -1
-    }
-
+async function getAddrBalance(addr) {
+    let provider = await ethProxy.getBestProvider();
+    return provider
+      ? provider.eth.getBalance(addr)
+      : -1
 }
 
 
@@ -16,6 +13,7 @@ const zeroBalance = async (req, res) =>
 
 module.exports = {
     zeroBalance: zeroBalance,
+    getAddrBalance: getAddrBalance // direct access to getAddrBalance()
 };
 
 
