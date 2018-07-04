@@ -25,12 +25,12 @@ const GetAddress = async addr => {
             { 'addrfrom': addr } ]
     }  // tnx selector
   }
-  let addr_balance = await eth.getAddrBalance(addr)
-  console.log({addr_balance: addr_balance}); // DEBUG
+  // get addr ETH balance from eth_proxy (Promise)
+  let addr_balance_p = eth.getAddrBalance(addr)
   let addrHeader_p = dbquery.findOne(options.addr_col, options.addr_selector)
   let mainTxCount_p = dbquery.countTnx(options.ether_col, options.tnx_selector)
-  return await Promise.all([addrHeader_p, mainTxCount_p])
-    .then(([addrHeader, { cnt } ]) => {
+  return await Promise.all([addrHeader_p, mainTxCount_p, addr_balance_p])
+    .then(([addrHeader, { cnt }, eth_balance ]) => {
       response.rows = []
       response.head = {
         addr:         addrHeader.addr || addr,
@@ -38,7 +38,7 @@ const GetAddress = async addr => {
         coin:         'ETH',
         data:         null,
         decimals:     18,
-        balance:      addr_balance,
+        balance:      eth_balance,
         contract: 0, // dummy
         innertxcount: 0, // dummy
         tokentxcount: 0, // dummy
@@ -74,8 +74,6 @@ const GetAddress = async addr => {
   // return await dbquery.getBlock(options)
 
 }
-
-async function RcpAddrBalance(addr) {} //dummy
 
 /*
 * Get address tnx:

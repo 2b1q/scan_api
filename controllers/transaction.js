@@ -100,12 +100,12 @@ const GetLastTnxEth = async (req, res) => {
 // common tx details
 const txDetails = async hash => {
   try {
-    let response = await tnx_model.txDetails(clear_hash); // get tx details by hash
-    return (response.hasOwnProperty('empty'))
+    let response = await tnx_model.txDetails(hash); // get tx details by hash
+    return response.hasOwnProperty('empty')
       ? check.get_msg().not_found
       : response
   } catch (e) {
-    return check.get_msg().not_found 
+    return check.get_msg().not_found
   }
 }
 
@@ -122,9 +122,7 @@ const GetTnxDetails = async (req, res) => {
   let clear_hash = check.cut0xClean(hash);
   logger.info({hash: hash, cleared_hash: clear_hash})
   ChekHash(clear_hash, hash, res)
-    .then(async () => {
-      res.json(await txDetails(clear_hash))
-    })
+    .then(async () => res.json(await txDetails(clear_hash)))
 }
 
 // count TNXS
