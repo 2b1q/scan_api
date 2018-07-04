@@ -152,8 +152,8 @@ const findOneQuery = async (collection, query = {}) => {
   let db_col = await col(collection)
   return new Promise(async (resolve, reject) => {
     let count = await db_col.count(query)
-    if(count === 0) reject({ rows: count }) // stop flow if 0 docs
-    db_col.findOne(query).then(doc => resolve(doc))
+    if(count === 0) resolve ({ rows: count }) // fix (reject to resolve)
+    else db_col.findOne(query).then(doc => resolve(doc))
   });
 }
 

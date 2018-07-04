@@ -1,14 +1,11 @@
 let ethProxy = require('./proxy').getInstance();
 let erc20ABI = require('./abi').erc20ABI;
 
-function getAddrBalance(addr) {
-    let provider = ethProxy.getBestProvider();
-    if (provider) {
-        return provider.eth.getBalance(addr)
-    } else {
-        return -1
-    }
-
+async function getAddrBalance(addr) {
+    let provider = await ethProxy.getBestProvider();
+    return provider
+      ? provider.eth.getBalance(addr)
+      : -1
 }
 
 function getTokenBalance(walletAddr, tokenAddr) {
@@ -29,6 +26,7 @@ const tokenBalance = async (req, res) =>
     res.json( await getTokenBalance("c0c91f8e5718658ebcc31c0f57d2726be15901a8", "7c63a5f86740501599fe9a9f5e2f7246374b67e2"));
 
 module.exports = {
+    getAddrBalance: getAddrBalance,
     ethBalance: ethBalance,
     tokenBalance: tokenBalance,
 };

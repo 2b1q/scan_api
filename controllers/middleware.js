@@ -92,6 +92,15 @@ const emit = async (event, socket, data, con_obj) => {
       let caddr = checkAddr(addr)
       console.log(`${c.green}===== socket.io > addressDetails ===${c.yellow}`);
       console.log({ addr: addr, cleared_addr: caddr });
+      // console.log(await addr_controller.getAddrIo(caddr)); DEBUG
+      /*
+      ===== socket.io > addressDetails ===
+{ addr: '99e793f74ebeda76005a83396e63493f7f26f4a2',
+  cleared_addr: '99e793f74ebeda76005a83396e63493f7f26f4a2' }
+connection not open on send()
+{ error: Error: connection not open
+    at WebsocketProvider.send (/home/bbq/BANKEX/playground/dev/bkx-scan-api/node_modules/web3-providers-ws/src/index.js:247:18)
+      */
       console.log(`${c.green}====================================${c.white}`);
       emitMsg(socket, event, (caddr === false)
         ? check.get_msg().bad_addr

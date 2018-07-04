@@ -1,3 +1,11 @@
+const config  = require('../config/config'),
+      c       = config.color,
+      cluster = require('cluster');
+
+// worker id pattern
+const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[proxy] ${c.white}`)()
+const id_ptrn = id => `${c.yellow}${id}${c.white}`
+
 const check_eth_clients_singleton = (() => {
     let ethProxy;
 
@@ -43,7 +51,7 @@ const check_eth_clients_singleton = (() => {
                 let self = this.getInstance();
                 let tmpBlocks = [];
                 let clients = self.ethClients;
-                console.log("getProvidersBlock, clients length = ", clients.length);
+                console.log(`${wid_ptrn}getProvidersBlock, clients length = ${id_ptrn(clients.length)}`);
                 for (let i=0; i<clients.length; i+=1){
                     tmpBlocks.push(clients[i].lastBlock);
                 }
@@ -52,8 +60,8 @@ const check_eth_clients_singleton = (() => {
 
             getLastBlock: () => {
                 let self = this.getInstance();
-                console.log("getLastBlock, this = ", this);
-                console.log("getLastBlock, self.lastBlock = ", self.lastBlock);
+                console.log(`${wid_ptrn}getLastBlock, this = ${this}`);
+                console.log(`${wid_ptrn}getLastBlock, self.lastBlock = ${id_ptrn(self.lastBlock)}`);
                 return self.lastBlock;
             }
 

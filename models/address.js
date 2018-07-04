@@ -6,7 +6,8 @@
 */
 const MAX_SKIP  = require('../config/config').store.mongo.max_skip,
       cfg       = require('../config/config'),
-      dbquery   = require('./db_query');
+      dbquery   = require('./db_query'),
+      eth       = require('../ether/functions'); //getAddrBalance
 
 /* Get address details:
 *   GO api.GetAddress("2a65aca4d5fc5b5c859090a6c34d164135398226")
@@ -24,20 +25,21 @@ const GetAddress = async addr => {
             { 'addrfrom': addr } ]
     }  // tnx selector
   }
-  // TODO: let addr_balance = await web3.RcpAddrBalance(addr)
-  let addr_balance = 0 // dummy
+  let addr_balance = await eth.getAddrBalance(addr)
+  console.log({addr_balance: addr_balance}); // DEBUG
   let addrHeader_p = dbquery.findOne(options.addr_col, options.addr_selector)
   let mainTxCount_p = dbquery.countTnx(options.ether_col, options.tnx_selector)
   return await Promise.all([addrHeader_p, mainTxCount_p])
     .then(([addrHeader, { cnt } ]) => {
       response.rows = []
       response.head = {
-        addr:         addrHeader.addr,
-        maintxcount:  cnt,
+        addr:         addrHeader.addr || addr,
+        maintxcount:  cnt || 0,
         coin:         'ETH',
         data:         null,
         decimals:     18,
-        balance:      0, // dummy
+        balance:      addr_balance,
+        contract: 0, // dummy
         innertxcount: 0, // dummy
         tokentxcount: 0, // dummy
         totaltxcount: 0, // dummy
@@ -45,7 +47,6 @@ const GetAddress = async addr => {
         totaltokens: 0, // dummy
         maxtx:      0 // dummy
       }
-      console.log(response);
       return response
     })
     .catch(e => e)
