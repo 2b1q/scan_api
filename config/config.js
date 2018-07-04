@@ -69,7 +69,7 @@ config.restOptions = {
 };
 
 config.ethOptions = {
-    gethURLs: ["ws://94.130.171.164:8546", "ws://94.130.171.164:8556", "ws://localhost:8556"],
+    gethURLs: ["ws://94.130.171.164:8556"],
     maxNodesDelta: 20,
     upNodeFrequency: 10000,
 };

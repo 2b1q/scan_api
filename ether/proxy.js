@@ -11,7 +11,7 @@ const check_eth_clients_singleton = (() => {
             ethClients.push({
                 url: gethUrls[i],
                 provider: null,
-                lastBlock: 1,
+                lastBlock: 0,
                 subscribe: null,
                 id: i
             });
