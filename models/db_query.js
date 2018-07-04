@@ -157,6 +157,20 @@ const findOneQuery = async (collection, query = {}) => {
   });
 }
 
+// find db doc from collection using query pattern
+const findQuery = async (collection, query = {}) => {
+  let db_col = await col(collection)
+  return new Promise(async (resolve) => {
+    let count = await db_col.count(query)
+    if(count === 0) resolve ({ rows: count }) // fix (reject to resolve)
+    else db_col.find(query)
+          .toArray((err, docs) => {
+            if(err) resolve({ rows: 0 })
+            else resolve(docs)
+          })
+  });
+}
+
 // get block details by options
 const GetBlock = async options => {
   console.log(options);
@@ -186,5 +200,6 @@ module.exports = {
   countTnx:           countTnx,          // count TNXS by ListId type
   TxDetails:          TxDetails,
   getBlock:           GetBlock,          // get block details by options
-  findOne:            findOneQuery       // find one db doc from collection using query pattern
+  findOne:            findOneQuery,      // find one db doc from collection using query pattern
+  find:               findQuery          // find db docs from collection using query pattern
 }

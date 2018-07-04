@@ -11,7 +11,7 @@ config.workers = (process.env.NODE_ENV == 'PROD') ? 4 : 2;
 // DataStore config
 config.store = {
   mongo: {
-    uri: 'mongodb://localhost:27017/', // hardcoded
+    uri: 'mongodb://192.168.1.11:27017/', // hardcoded
     dbname: 'bkx_testnet',
     options: {
       // autoIndex: false,
