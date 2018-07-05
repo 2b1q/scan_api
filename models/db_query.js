@@ -175,12 +175,13 @@ const findQuery = async (collection, query = {}) => {
 const GetBlock = async options => {
   console.log(options);
   let { block, block_col, ether_col, block_selector, tnx_selector } = options;
-  let blockHeader_p = findOneQuery(block_col, block_selector)
+  // assign new Object 'inner_selector' from 'tnx_selector' and change 'isinner' property 
+  let inner_selector = Object.assign({}, tnx_selector, { isinner: 1 }); // fix bug with one object reference modification
   // TODO: mongo aggregation query (one group count query)
   // TODO: "tokentxcount" + "totaltxcount" (not used yet)
+  let blockHeader_p = findOneQuery(block_col, block_selector)
   let mainTxCount_p = countTnx(ether_col, tnx_selector)
-  tnx_selector.isinner = 1
-  let innerTxCount_p = countTnx(ether_col, tnx_selector)
+  let innerTxCount_p = countTnx(ether_col, inner_selector)
   // do in parallel, if block not found reject and drop other promises
   return await Promise.all([blockHeader_p, mainTxCount_p, innerTxCount_p])
     .then(([block, main, inner] = data) => {
