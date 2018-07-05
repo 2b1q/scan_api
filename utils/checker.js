@@ -23,8 +23,9 @@ const check_module_singleton = (() => {
       unknown_listid:       {Error: 'Unknown listId', Head: {}, Rows: []},
       no_api_key:           {Error: 'unable to set "api_key" param' },
       wrong_api_key:        {Error: 'bad "api_key"' },
-      wrong_block:          {Error: 'Wrong block number', Head: {}, Rows: []},
-      wrong_addr:           {Error: 'Wrong addr property', Head: {}, Rows: []},
+      wrong_block:          {Error: 'Wrong block number'},
+      wrong_addr:           {Error: 'Wrong addr property'},
+      wrong_entityId:       {Error: 'Wrong entityId property'},
       unknown_module_id:    {Error: 'Unknown moduleId', Head: {}, Rows: []},
       no_entityId:          {Error: 'entityId not found'},
       bad_hash:             hash => Object({Error: `Bad Hash value "${hash}"`}),
@@ -58,7 +59,7 @@ const check_module_singleton = (() => {
         page:     Number (parseInt(page)),
         size:     Number (parseInt(size)),
         filters:  filters,
-        entityId: entityId.length >= 40 ? entityId : Number (entityId) // if entityId length >= 40 its address else its block 
+        entityId: entityId.length >= 40 ? entityId : Number (entityId) // if entityId length >= 40 its address else its block
       }
     }
     // build page options (Go safePageAndSize "bkxscan/blob/master/main/api/main.go")
@@ -122,22 +123,28 @@ const check_module_singleton = (() => {
         : send_response(res, msg.unknown_module_id, 404)
 
     // check entityId from client request
-    let check_entityId = (entityId, res) =>
-      entityId !== 0
+    let check_entityId = (entityId, res) => {
+      if(isNaN(entityId)) entityId = 0;
+      return entityId !== 0
         ? true
-        : send_response(res, msg.no_entityId, 404)
+        : send_response(res, msg.wrong_entityId, 404)
+      }
 
     // check block from client request
-    let check_block = (block, res) =>
-      block !== 0
+    let check_block = (block, res) => {
+      if(isNaN(block)) block = 0;
+      return block !== 0
         ? true
         : send_response(res, msg.wrong_block, 404)
+    }
 
     // check address from client request
-    let check_addr_exist = (address, res) =>
-      address !== 0
+    let check_addr_exist = (address, res) => {
+      if(isNaN(address)) address = 0;
+      return address !== 0
         ? true
         : send_response(res, msg.wrong_addr, 404)
+    }
 
     // hash operations
     // cut '0x' from hash string

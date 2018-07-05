@@ -48,9 +48,10 @@ const checkHash = hash => {
 
 // send msg to client
 const emitMsg = (socket, event, msg) => socket.emit(event, JSON.stringify(msg))
+const err_msg = { Error: 404, msg: 'Not found'}
 
-// emmit/log/event wrapper
-const emit = async (event, socket, data, con_obj) => {
+// emmit/log/event/error wrapper
+const emit = async (event, socket, data, con_obj, err) => {
   log_event(event, data, con_obj) // log events
   // setup request params
   let options = {},
@@ -69,18 +70,13 @@ const emit = async (event, socket, data, con_obj) => {
           emitMsg(socket, event, await tnx_controller.getTnx(tx_opts))
           break;
         case m.block: // moduleId => block
-          emitMsg(socket, event,
-            (options === false)
-              ? { Error: 'bad params', params: data }
-              : await block_controller.getBlockTnx(options)
-          )
+          if(options === false || isNaN(entityId)) err(err_msg)
+          else emitMsg(socket, event, await block_controller.getBlockTnx(options))
           break;
         case m.addr: // moduleId => address
-          emitMsg(socket, event,
-            (options === false)
-              ? { Error: 'bad params', params: data }
-              : await addr_controller.getAddrTnx(options)
-          )
+          options.entityId = checkAddr(entityId)
+          if(options.entityId === false) err(err_msg)
+          else emitMsg(socket, event, await addr_controller.getAddrTnx(options))
           break;
         default: emitMsg(socket, event, 'Unknown ModuleId')
       }
@@ -108,23 +104,20 @@ connection not open on send()
       )
       break;
     case e.block_d: // get block details event = 'blockDetails'
-      if(block) {
-        block = Number (parseInt(block))
-        emitMsg(socket, event, await block_controller.getBlockIo(block))
-      } else emitMsg(socket, event, {Error: 'Wrong block'})
+      block = Number (block)
+      if(isNaN(block)) err(err_msg)
+      else emitMsg(socket, event, await block_controller.getBlockIo(block))
       console.log(`${c.green}===== socket.io > blockDetails =====${c.yellow}`);
       console.log({ block: block });
       console.log(`${c.green}====================================${c.white}`);
       break;
     case e.tx_d: // get tnx details event = 'txDetails'
       let chash = checkHash(hash)
-      emitMsg(socket, event, (chash === false)
-        ? check.get_msg().bad_hash(hash)
-        : await tnx_controller.getTxIo(chash)
-      )
       console.log(`${c.green}===== socket.io > txDetails ========${c.yellow}`);
       console.log({ hash: hash, cleared_hash: chash });
       console.log(`${c.green}====================================${c.white}`);
+      if(chash) emitMsg(socket, event, await tnx_controller.getTxIo(chash))
+      else err(err_msg)
       break;
     default:
       emitMsg(socket, event, 'Unknown event')
@@ -142,12 +135,15 @@ const init_io_handler = io => {
     }
     socket.join(randstr()) // it works without join
 
-    socket.on(e.list, data => emit(e.list, socket, data, con_obj))
-    socket.on(e.tx_d, data => emit(e.tx_d, socket, data, con_obj))
-    socket.on(e.block_d, data => emit(e.block_d, socket, data, con_obj))
-    socket.on(e.addr_d, data => emit(e.addr_d, socket, data, con_obj))
+    socket.on(e.list, (data, err) => emit(e.list, socket, data, con_obj, err))
+    socket.on(e.tx_d, (data, err) => emit(e.tx_d, socket, data, con_obj, err))
+    socket.on(e.block_d, (data, err) => emit(e.block_d, socket, data, con_obj, err))
+    socket.on(e.addr_d, (data, err) => emit(e.addr_d, socket, data, con_obj, err))
 
     socket.on('disconnection', data => log_event('disconnection', data, con_obj))
+    socket.on('error', (error) => {
+      console.log(error);
+    });
   })
 }
 

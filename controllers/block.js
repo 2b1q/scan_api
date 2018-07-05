@@ -62,14 +62,14 @@ const checkOptions = (req, res, listId = '', moduleId = 'block') => {
   logger.api_requests(logit(req))               // log query data any way
   if(listId.length > 0) { // check options for get block tnx Else check block param
     let { entityId = 0 } = req.body.params || {}; // if entityId not set or no params => entityId = 0 => then "error":"ModuleId not found"
-    entityId = Number( parseInt(entityId) )       // parse any value and convert to Number
+    entityId = Number(entityId)       // convert to Number
     // check entityId from client
     return check.entityId(entityId, res)
       ? check.build_options(req, listId, moduleId, entityId)
       : false
   } else {
     let block = req.body.block || 0;
-    block = Number( parseInt(block) )       // parse any value and convert to Number
+    block = Number(block)       // convert to Number
     return check.block(block, res)
       ? block
       : false

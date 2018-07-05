@@ -18,10 +18,10 @@ let logit = (req, msg = '') => {
 }
 
 // check address format
-const ChekAddr = (clearAddr, entityId, res) => new Promise((resolve) =>
+const ChekAddr = (clearAddr, entityId, res) => new Promise(resolve =>
   check.checkAddr(clearAddr, entityId, res)
-    ? resolve()
-    : false
+    ? resolve(true)
+    : resolve(false)
 );
 
 // common get address transaction func
@@ -65,7 +65,10 @@ const GetAddrTnx = async ({ listId, moduleId, page, size, entityId } = opts, res
   logger.info({addr: entityId, cleared_addr: clearAddr})
   // if we have res object -> its REST API else ITS socket IO data
   if(res) ChekAddr(clearAddr, entityId, res)
-            .then(res.json(await get_addr_tnxs(options, moduleId, listId, clearAddr)))
+            .then(async result => {
+              if(result) res.json(await get_addr_tnxs(options, moduleId, listId, clearAddr))
+              else console.log(`result status is ${result}`);
+            })
   // ITS socket IO data
   else return await get_addr_tnxs(options, moduleId, listId, clearAddr)
 }
