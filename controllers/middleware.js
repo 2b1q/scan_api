@@ -64,19 +64,31 @@ const emit = async (event, socket, data, con_obj, err) => {
       options = checkOptions(listId, moduleId, entityId, params)
       switch (moduleId) {
         case m.tnx: // moduleId => transactions
-          emitMsg(socket, event, await tnx_controller.getTnx(tx_opts))
+          response = await tnx_controller.getTnx(tx_opts)
+          if(response.hasOwnProperty('Error')) err(err_msg)
+          else emitMsg(socket, event, response)
           break;
         case m.token: // moduleId => tokens
-          emitMsg(socket, event, await tnx_controller.getTnx(tx_opts))
+          response = await tnx_controller.getTnx(tx_opts)
+          if(response.hasOwnProperty('Error')) err(err_msg)
+          else emitMsg(socket, event, response)
           break;
         case m.block: // moduleId => block
           if(options === false || isNaN(entityId)) err(err_msg)
-          else emitMsg(socket, event, await block_controller.getBlockTnx(options))
+          else {
+            response = await block_controller.getBlockTnx(options)
+            if(response.hasOwnProperty('Error')) err(err_msg)
+            else emitMsg(socket, event, response)
+          }
           break;
         case m.addr: // moduleId => address
           options.entityId = checkAddr(entityId)
           if(options.entityId === false) err(err_msg)
-          else emitMsg(socket, event, await addr_controller.getAddrTnx(options))
+          else {
+            response = await addr_controller.getAddrTnx(options)
+            if(response.hasOwnProperty('Error')) err(err_msg)
+            else emitMsg(socket, event, response)
+          }
           break;
         default: emitMsg(socket, event, 'Unknown ModuleId')
       }
@@ -98,15 +110,22 @@ connection not open on send()
     at WebsocketProvider.send (/home/bbq/BANKEX/playground/dev/bkx-scan-api/node_modules/web3-providers-ws/src/index.js:247:18)
       */
       console.log(`${c.green}====================================${c.white}`);
-      emitMsg(socket, event, (caddr === false)
-        ? check.get_msg().bad_addr
-        : await addr_controller.getAddrIo(caddr)
-      )
+      if(caddr === false) err(err_msg)
+      // else emitMsg(socket, event, await addr_controller.getAddrIo(caddr))
+      else {
+        response = await addr_controller.getAddrIo(caddr)
+        if(response.hasOwnProperty('Error')) err(err_msg)
+        else emitMsg(socket, event, response)
+      }
       break;
     case e.block_d: // get block details event = 'blockDetails'
       block = Number (block)
       if(isNaN(block)) err(err_msg)
-      else emitMsg(socket, event, await block_controller.getBlockIo(block))
+      else {
+        response = await block_controller.getBlockIo(block)
+        if(response.hasOwnProperty('Error')) err(err_msg)
+        else emitMsg(socket, event, response)
+      }
       console.log(`${c.green}===== socket.io > blockDetails =====${c.yellow}`);
       console.log({ block: block });
       console.log(`${c.green}====================================${c.white}`);
@@ -116,7 +135,11 @@ connection not open on send()
       console.log(`${c.green}===== socket.io > txDetails ========${c.yellow}`);
       console.log({ hash: hash, cleared_hash: chash });
       console.log(`${c.green}====================================${c.white}`);
-      if(chash) emitMsg(socket, event, await tnx_controller.getTxIo(chash))
+      if(chash) {
+        response = await tnx_controller.getTxIo(chash)
+        if(response.hasOwnProperty('Error')) err(err_msg)
+        else emitMsg(socket, event, response)
+      }
       else err(err_msg)
       break;
     default:
