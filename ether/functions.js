@@ -16,6 +16,36 @@ async function getTokenBalance(walletAddr, tokenAddr) {
     } else return -1
 }
 
+async function getTransaction(hash) {
+    let provider = await ethProxy.getBestProvider();
+    if (provider) {
+        console.log(hash);
+        let tx = await provider.eth.getTransaction(hash);
+        /*
+  { blockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+  blockNumber: null,
+  from: '0xbF5Eaf0B9508c84A1d63553aE304848E3A0D3E71',
+  gas: 314150,
+  gasPrice: '1000000000',
+  hash: '0x28fc4495eaceaf8d37d7e401e31a2834cc2058fefa4f0ec9337432894e284207',
+  input: '0x',
+  nonce: 121315,
+  to: '0x9791a933394f1b4243d29868C9E86c2bd9BC67A1',
+  transactionIndex: 0,
+  value: '10000000000000000',
+  v: '0x2b',
+  r: '0x2336053749f123e34af6bb0059732ad7e45bfe311e0ce994cf5ac94ce6c163fd',
+  s: '0x31aa76931f2ea5863b87a9ea3f04a93456f887838f196e764d1e738a2dc39db4' }
+
+  */
+        console.log(tx);
+        return "ok"
+    } else return -1
+}
+
+const transaction = async (req, res) =>
+    res.json( await getTransaction("0x28fc4495eaceaf8d37d7e401e31a2834cc2058fefa4f0ec9337432894e284207"));
+
 const ethBalance = async (req, res) =>
     res.json( await getAddrBalance("0000000000000000000000000000000000000000"));
 
@@ -27,6 +57,7 @@ module.exports = {
     getTokenBalance: getTokenBalance,
     ethBalance: ethBalance,
     tokenBalance: tokenBalance,
+    getTransaction: transaction,
 };
 
 

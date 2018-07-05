@@ -22,6 +22,7 @@ router.get('/test/lastblock',       eth_api.getLastBlock);       // nodes last b
 router.get('/test/best',            eth_api.getBestProvider);       // nodes last blocks
 router.get('/test/balance/eth',     eth_func.ethBalance);       // nodes last blocks
 router.get('/test/balance/token',   eth_func.tokenBalance);       // nodes last blocks
+router.get('/test/tx',              eth_func.getTransaction);       // nodes last blocks
 
 /* block  endpoints */
 router.post('/block/tokens',   block_controller.blockTokens);  // GetLast block tokens Transactions tendpoint [HTTP POST]
