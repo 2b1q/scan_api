@@ -69,9 +69,9 @@ const GetAddress = async addr => {
         coin:         'ETH',
         data:         null,
         decimals:     18,
-        balance:      eth_balance.toString(16), // TODO: fix data convert in balance and tables
-                                                // TODO: remove actions like parseInt(balance_in_hex) / 10^decimals on front-end and apps
-                                                // TODO: balance recalc via web3 utils
+        balance:      parseInt(eth_balance, 10).toString(16), // TODO: fix data convert in balance and tables
+          // TODO: remove actions like parseInt(balance_in_hex) / 10^decimals on front-end and apps
+          // TODO: balance recalc via web3 utils
         contract: 0, // dummy
         innertxcount: 0, // dummy
         tokentxcount: 0, // dummy
