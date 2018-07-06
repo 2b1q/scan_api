@@ -233,9 +233,26 @@ const findQuery = async (collection, query = {}) => {
     if(count === 0) resolve ({ rows: count }) // fix (reject to resolve)
     else db_col.find(query)
           .toArray((err, docs) => {
-            if(err) resolve({ rows: 0 })
+            if(err) {
+              console.log(`mongo err: ${err}`);
+              resolve({ rows: 0 })
+            }
             else resolve(docs)
           })
+  });
+}
+
+// Mongo distinct key, query, collection
+const distinct = async (collection, query = {}, key) => {
+  let db_col = await col(collection)
+  return new Promise(function(resolve) {
+    db_col.distinct(key, query, (err, docs) => {
+      if(err) {
+        console.log(`mongo err: ${err}`);
+        resolve({ rows: 0 })
+      }
+      else resolve(docs)
+    })
   });
 }
 
@@ -270,5 +287,6 @@ module.exports = {
   TxDetails:          TxDetails,
   getBlock:           GetBlock,          // get block details by options
   findOne:            findOneQuery,      // find one db doc from collection using query pattern
-  find:               findQuery          // find db docs from collection using query pattern
+  find:               findQuery,         // find db docs from collection using query pattern
+  distinct:           distinct           // mongo distinct query
 }
