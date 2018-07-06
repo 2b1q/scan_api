@@ -7,7 +7,21 @@
 const MAX_SKIP  = require('../config/config').store.mongo.max_skip,
       cfg       = require('../config/config'),
       dbquery   = require('./db_query'),
-      eth       = require('../ether/functions'); //getAddrBalance
+      config  = require('../config/config'),
+      c       = config.color,
+      cluster = require('cluster');
+      ethProxy  = require('../ether/proxy').getInstance();
+      // eth       = require('../ether/functions'); //getAddrBalance
+
+// worker id pattern
+const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[eth_db_model] ${c.white}`)()
+const txt_ptrn = txt => `${c.yellow}${txt}${c.white}`
+
+/* eth get data timeouts. */
+const wait_ms = 50; // wait ms after each query
+const get_provider_retries = 5;
+const wait = ms => new Promise(resolve => setTimeout(() => resolve(), ms));
+
 
 /* Get address details:
 *   GO api.GetAddress("2a65aca4d5fc5b5c859090a6c34d164135398226")
@@ -15,7 +29,6 @@ const MAX_SKIP  = require('../config/config').store.mongo.max_skip,
 const GetAddress = async addr => {
   let response = {},
       lastCachedBlock = 0,
-      wait_ms = 50, // wait ms after each query
       cache_col = 'erc20_cache'; // TODO move to config
   // construct query options for address details
   let options = {
@@ -31,33 +44,52 @@ const GetAddress = async addr => {
       'addr': addr, 'lastblock': {'$gt': 0}
     }
   }
+
+  // eth_proxy (Promise) Function executor
+  let provider  = async (fn, val) => {
+    for (let i = 0; i < get_provider_retries; i++) {
+      console.log(`${wid_ptrn}get provider ${txt_ptrn(i+1)} times`);
+      let provider = ethProxy.getBestProvider();
+      if(provider) {
+        console.log(`${wid_ptrn}${txt_ptrn('We have a ETH  provider!')}`);
+        switch (fn) {
+          case 'getbalance':
+            console.log(`\n${wid_ptrn}exec eth.getBalance(${txt_ptrn(val)})\n`);
+            return await provider.eth.getBalance(val)
+            break;
+          default:
+            return await provider.eth.getBalance(addr)
+        }
+      }
+      else await wait(wait_ms)
+    }
+  }
+
   // get addr ETH balance from eth_proxy (Promise)
-  let addr_balance_p = eth.getAddrBalance(addr)
+  let addr_balance_p = provider('getbalance', addr)
   let addrHeader_p = dbquery.findOne(options.addr_col, options.addr_selector)
   let mainTxCount_p = dbquery.countTnx(options.ether_col, options.tnx_selector)
-  // wait timeout promise
-  let wait = ms => new Promise(resolve => setTimeout(() => resolve(), ms));
   // let tokenCacheCol_p = await dbquery.find(cache_col, options.cache_col_selector)
   // console.log('--------------');
   // console.log({tokenCacheCol_p:tokenCacheCol_p});
   // console.log('--------------');
-  let cachedTokenBlocks = async () => {
-    for (let i = 0; i < 5; i++) {
-      let tokenCacheCol_p = await dbquery.find(cache_col, options.cache_col_selector)
-      if(tokenCacheCol_p.length === 0) await wait(wait_ms)
-      else {
-        tokenCacheCol_p.forEach(c_block => {
-          if(c_block.lastblock > lastCachedBlock) lastCachedBlock = c_block.lastblock
-          // console.log({cachedTokenBlock: c_block}); // DEBUG:
-        })
-        break;
-      }
-    }
-  }
-
-  console.log(`lastCachedBlock before: ${lastCachedBlock}`);
-  await cachedTokenBlocks();
-  console.log(`lastCachedBlock after: ${lastCachedBlock}`);
+  // let cachedTokenBlocks = async () => {
+  //   for (let i = 0; i < 5; i++) {
+  //     let tokenCacheCol_p = await dbquery.find(cache_col, options.cache_col_selector)
+  //     if(tokenCacheCol_p.length === 0) await wait(wait_ms)
+  //     else {
+  //       tokenCacheCol_p.forEach(c_block => {
+  //         if(c_block.lastblock > lastCachedBlock) lastCachedBlock = c_block.lastblock
+  //         // console.log({cachedTokenBlock: c_block}); // DEBUG:
+  //       })
+  //       break;
+  //     }
+  //   }
+  // }
+  //
+  // console.log(`lastCachedBlock before: ${lastCachedBlock}`);
+  // await cachedTokenBlocks();
+  // console.log(`lastCachedBlock after: ${lastCachedBlock}`);
 
 
   return await Promise.all([addrHeader_p, mainTxCount_p, addr_balance_p])
