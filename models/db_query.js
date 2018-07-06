@@ -5,11 +5,14 @@
 */
 const db        = require('../libs/db'),
       cfg       = require('../config/config'),
-      eth       = require('../ether/functions');
+      ethProxy  = require('../ether/proxy').getInstance(),
+      moment = require('moment'),
+      check = require('../utils/checker').cheker();
 
 /* eth get data timeouts */
 // wait timeout promise
 const wait_ms = 50; // wait ms after each query
+const get_provider_retries = 5;
 const wait = ms => new Promise(resolve => setTimeout(() => resolve(), ms));
 
 // get collection by name
@@ -107,25 +110,68 @@ const TxDetails = async (hash, query) => {
 
       if(ether_tnxs.length === 0) {  // if no ether tnxs ASK pending TNXS from eth_proxy node
         response.empty = true // no data flag
-        // TODO: get data from eth_proxy
+        /*
+        { blockHash: '0x3e11deb35e3d8a1193dcc56009a5adc5281184b158a859d2c0185cce2aed1f37',
+          blockNumber: 2581050,
+          from: '0xbF5Eaf0B9508c84A1d63553aE304848E3A0D3E71',
+          gas: 314150,
+          gasPrice: '1000000000',
+          hash: '0x28fc4495eaceaf8d37d7e401e31a2834cc2058fefa4f0ec9337432894e284207',
+          input: '0x',
+          nonce: 121315,
+          to: '0x9791a933394f1b4243d29868C9E86c2bd9BC67A1',
+          transactionIndex: 18,
+          value: '10000000000000000',
+          v: '0x2b',
+          r: '0x2336053749f123e34af6bb0059732ad7e45bfe311e0ce994cf5ac94ce6c163fd',
+          s: '0x31aa76931f2ea5863b87a9ea3f04a93456f887838f196e764d1e738a2dc39db4' }
+        */
 
+        /*
+         On start before we havnt any block or provider - return undefined
+         after we have a block - Web3 object return null OR data object
+         provider.eth.getTransaction(hash) return Promise with data or null
+        */
         let pending_tx = async () => {
-          for (let i = 0; i < 5; i++) {
-            // 0x28fc4495eaceaf8d37d7e401e31a2834cc2058fefa4f0ec9337432894e284207
-            // let pending_tx = await eth.getTransaction('0x'+hash)
-            let pending_tx = await eth.getTransaction('0x28fc4495eaceaf8d37d7e401e31a2834cc2058fefa4f0ec9337432894e284207')
-            if(pending_tx === -1) await wait(wait_ms)
-            else {
-              console.log(pending_tx);
-              break;
-            }
+          for (let i = 0; i < get_provider_retries; i++) {
+            let provider = ethProxy.getBestProvider();
+            if(provider) return await provider.eth.getTransaction('0x'+hash);
+            else await wait(wait_ms)
           }
         }
-        console.log(`-------get pending tx ${hash}-------`);
-        await pending_tx()
-        console.log('-------pending tx-------');
-
-        // if found tnx => delete property response.empty
+        let tx = await pending_tx() // return Promise with null/data/undefined
+        console.log(tx);
+        // construct response data if tx -> Not null and Not undefined
+        if(tx) {
+          delete response.empty // first delete empty flag
+          response.head = {
+            token: {
+              addr:     '',
+              name:     'Ether',
+              smbl:     'ETH',
+              dcm:      18,
+              type:     0,
+              balance:  '',
+              icon:     '',
+              dynamic:  0
+            },
+            hash: tx.hash, // hash 32 Bytes - String: Hash of the transaction.
+            block:  0,
+            txfee:  '0',
+            isotime: moment(),
+            addfrom: check.cut0x(tx.from), // from - String: Address of the sender
+            addrto: check.cut0x(tx.to), // to - String: Address of the receiver. null when its a contract creation transaction.
+            value: parseInt(tx.value, 10).toString(16).toUpperCase(), // value - String: Value transferred in wei
+            status: -1,
+            gascost: parseInt(tx.gasPrice), // gasPrice - String: Gas price provided by the sender in wei.
+            type: 'tx',
+            data: tx.input, //input - String: The data sent along with the transaction.
+            web3Paload: {
+              ...tx
+            }
+          }
+          response.rows = []
+        }
       } else {
         let txInner = [];
         ether_tnxs.forEach(tx => {
@@ -136,10 +182,9 @@ const TxDetails = async (hash, query) => {
               smbl:   tx.tokensmbl,
               dcm:    tx.tokendcm,
               type:   tx.tokentype,
-            // new fields
-            // "balance":"",
-            // "icon":"",
-            // "dynamic":0
+              balance:  '',
+              icon:     '',
+              dynamic:  0
             },
             ...tx // return all data AS IS
           }
