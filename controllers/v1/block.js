@@ -1,10 +1,10 @@
 /* - REST API transaction block controller
 */
-const block_model = require('../models/block'),
-      logger      = require('../utils/logger')(module),
+const block_model = require('../../models/block'),
+      logger      = require('../../utils/logger')(module),
       moment      = require('moment'),
-      check       = require('../utils/checker').cheker(),
-      cfg         = require('../config/config');
+      check       = require('../../utils/checker').cheker(),
+      cfg         = require('../../config/config');
 
 // simple query logger
 let logit = (req, msg = '') => {

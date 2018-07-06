@@ -1,12 +1,12 @@
 /*
 - REST API transaction controller
 */
-const tnx_model = require('../models/transaction'),
-      dbquery   = require('../models/db_query'),
-      logger = require('../utils/logger')(module),
+const tnx_model = require('../../models/transaction'),
+      dbquery   = require('../../models/db_query'),
+      logger = require('../../utils/logger')(module),
       moment = require('moment'),
-      check = require('../utils/checker').cheker(),
-      cfg = require('../config/config');
+      check = require('../../utils/checker').cheker(),
+      cfg = require('../../config/config');
 
 // simple query logger
 let logit = (req, msg = '') => {

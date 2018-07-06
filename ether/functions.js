@@ -18,9 +18,9 @@ async function getTokenBalance(walletAddr, tokenAddr) {
 
 async function getTransaction(hash) {
     let provider = await ethProxy.getBestProvider();
+    console.log(`invoke eth.functions.getTransaction(${hash})`);
     if (provider) {
-        console.log(hash);
-        let tx = await provider.eth.getTransaction(hash);
+        //let tx = await provider.eth.getTransaction(hash);
         /*
   { blockHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
   blockNumber: null,
@@ -38,9 +38,11 @@ async function getTransaction(hash) {
   s: '0x31aa76931f2ea5863b87a9ea3f04a93456f887838f196e764d1e738a2dc39db4' }
 
   */
-        console.log(tx);
-        return "ok"
-    } else return -1
+        return await provider.eth.getTransaction(hash);
+    } else {
+      console.log(`@@provider not ready yet@@`);
+      return -1
+    }
 }
 
 const transaction = async (req, res) =>
@@ -57,7 +59,7 @@ module.exports = {
     getTokenBalance: getTokenBalance,
     ethBalance: ethBalance,
     tokenBalance: tokenBalance,
-    getTransaction: transaction,
+    getTransaction: getTransaction,
 };
 
 

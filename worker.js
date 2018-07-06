@@ -70,7 +70,7 @@ app.set('port', config.server.ip+':'+port);
 const server = http.createServer(app);
 server.listen(port); // Listen Node server on provided port
 
-require('./controllers/middleware')(server) // init socket io
+require('./controllers/v1/middleware')(server) // init socket io
 
 // server event hanlers 'on.error', 'on.listening'
 server.on('error', onError);

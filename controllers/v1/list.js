@@ -1,8 +1,8 @@
-const check = require('../utils/checker').cheker(),
-      cfg = require('../config/config'),
+const check = require('../../utils/checker').cheker(),
+      cfg = require('../../config/config'),
       tnx_controller = require('./transaction'),
       block_controller = require('./block'),
-      logger = require('../utils/logger')(module),
+      logger = require('../../utils/logger')(module),
       moment = require('moment'),
       addr_controller = require('./address');
 

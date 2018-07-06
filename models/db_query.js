@@ -4,7 +4,13 @@
 * return DB data
 */
 const db        = require('../libs/db'),
-      cfg       = require('../config/config');
+      cfg       = require('../config/config'),
+      eth       = require('../ether/functions');
+
+/* eth get data timeouts */
+// wait timeout promise
+const wait_ms = 50; // wait ms after each query
+const wait = ms => new Promise(resolve => setTimeout(() => resolve(), ms));
 
 // get collection by name
 const col = name => new Promise((resolve, reject) =>
@@ -94,7 +100,7 @@ const TxDetails = async (hash, query) => {
       q2 = findTokens(token_col, query);  // Promise2 = token tnxs
   // Do in parallel
   return await Promise.all([q1,q2])
-    .then((data) => {
+    .then( async data => {
       let [ ether_tnxs, token_tnxs ] = data // 2d array destruct
       delete data;  // GC drop
       let response = {};
@@ -102,6 +108,23 @@ const TxDetails = async (hash, query) => {
       if(ether_tnxs.length === 0) {  // if no ether tnxs ASK pending TNXS from eth_proxy node
         response.empty = true // no data flag
         // TODO: get data from eth_proxy
+
+        let pending_tx = async () => {
+          for (let i = 0; i < 5; i++) {
+            // 0x28fc4495eaceaf8d37d7e401e31a2834cc2058fefa4f0ec9337432894e284207
+            // let pending_tx = await eth.getTransaction('0x'+hash)
+            let pending_tx = await eth.getTransaction('0x28fc4495eaceaf8d37d7e401e31a2834cc2058fefa4f0ec9337432894e284207')
+            if(pending_tx === -1) await wait(wait_ms)
+            else {
+              console.log(pending_tx);
+              break;
+            }
+          }
+        }
+        console.log(`-------get pending tx ${hash}-------`);
+        await pending_tx()
+        console.log('-------pending tx-------');
+
         // if found tnx => delete property response.empty
       } else {
         let txInner = [];
@@ -175,7 +198,7 @@ const findQuery = async (collection, query = {}) => {
 const GetBlock = async options => {
   console.log(options);
   let { block, block_col, ether_col, block_selector, tnx_selector } = options;
-  // assign new Object 'inner_selector' from 'tnx_selector' and change 'isinner' property 
+  // assign new Object 'inner_selector' from 'tnx_selector' and change 'isinner' property
   let inner_selector = Object.assign({}, tnx_selector, { isinner: 1 }); // fix bug with one object reference modification
   // TODO: mongo aggregation query (one group count query)
   // TODO: "tokentxcount" + "totaltxcount" (not used yet)

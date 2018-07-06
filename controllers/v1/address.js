@@ -1,10 +1,10 @@
 /* - REST API transaction address controller
 */
-const addr_model = require('../models/address'),
-      logger      = require('../utils/logger')(module),
+const addr_model = require('../../models/address'),
+      logger      = require('../../utils/logger')(module),
       moment      = require('moment'),
-      check       = require('../utils/checker').cheker(),
-      cfg         = require('../config/config');
+      check       = require('../../utils/checker').cheker(),
+      cfg         = require('../../config/config');
 
 // simple query logger
 let logit = (req, msg = '') => {

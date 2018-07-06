@@ -1,11 +1,11 @@
 // socket.io controller
-const config = require('../config/config'),
+const config = require('../../config/config'),
       c      = config.color,
       e      = config.events.client, // socket IO client events
       m      = config.modules,  // modules
-      logger = require('../utils/logger')(module),
+      logger = require('../../utils/logger')(module),
       moment = require('moment'),
-      check  = require('../utils/checker').cheker(),
+      check  = require('../../utils/checker').cheker(),
       tnx_controller = require('./transaction'),
       block_controller = require('./block'),
       addr_controller = require('./address');
