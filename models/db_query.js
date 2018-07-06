@@ -166,7 +166,7 @@ const TxDetails = async (hash, query) => {
             gascost: parseInt(tx.gasPrice), // gasPrice - String: Gas price provided by the sender in wei.
             type: 'tx',
             data: tx.input, //input - String: The data sent along with the transaction.
-            web3Paload: {
+            web3Payload: {
               ...tx
             }
           }
