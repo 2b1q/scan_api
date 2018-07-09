@@ -158,14 +158,19 @@ const GetAddrTokenBalance = async options => {
   }
 
   console.log("partToken len = ", partToken.length);
+
+  let balancePromise = [];
   partToken.forEach(t => {
     if (t.balance === '*') {
-      let balance = eth_func.providerEthProxy('tokenbalance', {walletAddr: addr, tokenAddr: t.addr});
-      console.log("balance = ", balance);
-      t.balance = balance;
+      t.balance = eth_func.providerEthProxy('tokenbalance', {walletAddr: addr, tokenAddr: t.addr});
+      balancePromise.push(t.balance)
     }
   });
 
+  await Promise.all(lastTokensPromiseList).then(() => {});
+
+  console.log('---------------- partToken ----------------');
+  console.log(partToken);
   return {tokens: partToken, total: totalTokens}
   //return {tokens: [], total: 0}
 };
