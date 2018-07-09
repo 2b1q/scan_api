@@ -135,6 +135,7 @@ const GetAddrTokenBalance = async options => {
 
   console.log('---------------- allTokensMap ----------------');
   console.log(allTokensMap);
+  console.log(allTokensMap.keys());
 
   let allTokens = allTokensMap.entries();
   console.log(allTokens);
