@@ -104,22 +104,6 @@ const TxDetails = async (hash, query) => {
 
       if(ether_tnxs.length === 0) {  // if no ether tnxs ASK pending TNXS from eth_proxy node
         response.empty = true // no data flag
-        /*
-        { blockHash: '0x3e11deb35e3d8a1193dcc56009a5adc5281184b158a859d2c0185cce2aed1f37',
-          blockNumber: 2581050,
-          from: '0xbF5Eaf0B9508c84A1d63553aE304848E3A0D3E71',
-          gas: 314150,
-          gasPrice: '1000000000',
-          hash: '0x28fc4495eaceaf8d37d7e401e31a2834cc2058fefa4f0ec9337432894e284207',
-          input: '0x',
-          nonce: 121315,
-          to: '0x9791a933394f1b4243d29868C9E86c2bd9BC67A1',
-          transactionIndex: 18,
-          value: '10000000000000000',
-          v: '0x2b',
-          r: '0x2336053749f123e34af6bb0059732ad7e45bfe311e0ce994cf5ac94ce6c163fd',
-          s: '0x31aa76931f2ea5863b87a9ea3f04a93456f887838f196e764d1e738a2dc39db4' }
-        */
 
         /*
          On start before we havnt any block or provider - return undefined

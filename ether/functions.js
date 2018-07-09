@@ -2,6 +2,7 @@ let ethProxy = require('./proxy').getInstance();
 let erc20ABI = require('./abi').erc20ABI;
 let config = require('../config/config');
 let cluster = require('cluster');
+const c  = config.color;
 
 const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[eth_db_model] ${c.white}`)();
 const txt_ptrn = txt => `${c.yellow}${txt}${c.white}`;
