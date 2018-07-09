@@ -32,7 +32,8 @@ const GetAddress = async addr => {
       response.head = {
         addr:         addrHeader.addr || addr,
         maintxcount:  cnt || 0,
-        toptokenbalances: tokenList,
+        toptokenbalances: tokenList.tokens,
+        totaltokens: tokenList.total,
         coin:         'ETH',
         data:         null,
         decimals:     18,
@@ -44,7 +45,6 @@ const GetAddress = async addr => {
         innertxcount: 0, // dummy
         tokentxcount: 0, // dummy
         totaltxcount: 0, // dummy
-        totaltokens: 0, // dummy
         maxtx:      0 // dummy
       };
       return response
@@ -181,7 +181,7 @@ const GetAddrTransactions = async options => {
   // count tnx by query selector
   let { cnt } = await dbquery.countTnx(collection, selector);
   if( cnt === 0 ) return { rows: [] }; // stop flow
-  if( cnt > MAX_SKIP ) cnt = MAX_SKIP;
+  //if( cnt > MAX_SKIP ) cnt = MAX_SKIP;
   // construct query options for addr tnxs
   options = {
     max_skip: MAX_SKIP,
