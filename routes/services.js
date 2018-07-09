@@ -3,19 +3,13 @@ const tnx_controller_v1 = require('../controllers/v1/transaction'),
       addr_controller_v1 = require('../controllers/v1/address'),
       list_controller_v1 = require('../controllers/v1/list'),
       eth_api = require('../ether/api'),
-      eth_func = require('../ether/functions'),
       router = require('express').Router();
 
 // v1 route RegExp pattern
 const v1_ptrn = path => new RegExp(`(^\/v1\/${path}$)|(^\/${path}$)`)
 
 /* ETH test endpoinds */
-router.get('/test/nodes',           eth_api.getLastBlocks);       // nodes last blocks
-router.get('/test/lastblock',       eth_api.getLastBlock);       // nodes last blocks
-router.get('/test/best',            eth_api.getBestProvider);       // nodes last blocks
-router.get('/test/balance/eth',     eth_func.ethBalance);       // nodes last blocks
-router.get('/test/balance/token',   eth_func.tokenBalance);       // nodes last blocks
-router.get('/test/tx',              eth_func.getTransaction);       // nodes last blocks
+router.get('/nodes',           eth_api.getLastBlocks);       // nodes last blocks
 
 /* REST API endpoint
 * - routing by path (new routing)

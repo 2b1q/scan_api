@@ -4,16 +4,10 @@
 * return DB data
 */
 const db        = require('../libs/db'),
-      cfg       = require('../config/config'),
-      ethProxy  = require('../ether/proxy').getInstance(),
-      moment = require('moment'),
-      check = require('../utils/checker').cheker();
-
-/* eth get data timeouts */
-// wait timeout promise
-const wait_ms = 50; // wait ms after each query
-const get_provider_retries = 5;
-const wait = ms => new Promise(resolve => setTimeout(() => resolve(), ms));
+    cfg       = require('../config/config'),
+    eth_func = require('../ether/functions'),
+    moment = require('moment'),
+    check = require('../utils/checker').cheker();
 
 // get collection by name
 const col = name => new Promise((resolve, reject) =>
@@ -132,15 +126,8 @@ const TxDetails = async (hash, query) => {
          after we have a block - Web3 object return null OR data object
          provider.eth.getTransaction(hash) return Promise with data or null
         */
-        let pending_tx = async () => {
-          for (let i = 0; i < get_provider_retries; i++) {
-            let provider = ethProxy.getBestProvider();
-            if(provider) return await provider.eth.getTransaction('0x'+hash);
-            else await wait(wait_ms)
-          }
-        }
-        let tx = await pending_tx() // return Promise with null/data/undefined
-        console.log(tx);
+        let tx = await eth_func.providerEthProxy('tx', {hash: hash});
+        console.log("Pending TX = ", tx);
         // construct response data if tx -> Not null and Not undefined
         if(tx) {
           delete response.empty // first delete empty flag
@@ -159,9 +146,9 @@ const TxDetails = async (hash, query) => {
             block:  0,
             txfee:  '0',
             isotime: moment(),
-            addfrom: check.cut0x(tx.from), // from - String: Address of the sender
+            addrfrom: check.cut0x(tx.from), // from - String: Address of the sender
             addrto: check.cut0x(tx.to), // to - String: Address of the receiver. null when its a contract creation transaction.
-            value: parseInt(tx.value, 10).toString(16).toUpperCase(), // value - String: Value transferred in wei
+            value: parseInt(tx.value, 10).toString(16), // value - String: Value transferred in wei
             status: -1,
             gascost: parseInt(tx.gasPrice), // gasPrice - String: Gas price provided by the sender in wei.
             type: 'tx',
