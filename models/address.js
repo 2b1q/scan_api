@@ -58,7 +58,8 @@ const GetAddrTokenBalance = async options => {
 
   let lastCachedBlock = 0;
   let cache_selector = {'addr': addr, 'lastblock': {'$gt': 0}};
-  console.log(`cache_selector: ${cache_selector}`);
+  console.log(`cache_selector addr: ${cache_selector.addr}`);
+  console.log(`cache_selector lastblock: ${cache_selector.lastblock}`);
   console.log(`erc20_cache col: ${config.store.cols.erc20_cache}`);
 
   let cachedTokenBlocks = async () => {
@@ -67,6 +68,7 @@ const GetAddrTokenBalance = async options => {
           if(tokenCacheCol_p.rows === 0) await wait(50);
           else {
               tokenCacheCol_p.forEach(c_block => {
+                  console.log(`c_block.lastblock = ${c_block.lastblock}`);
                   if(c_block.lastblock > lastCachedBlock) lastCachedBlock = c_block.lastblock;
                   return 0
               });
