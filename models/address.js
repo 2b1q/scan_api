@@ -137,9 +137,11 @@ const GetAddrTokenBalance = async options => {
   console.log(allTokensMap);
 
   let allTokens = allTokensMap.entries();
+  console.log(allTokens);
   allTokens.sort(function(a,b){return a[1].name > b[1].name});
 
   let totalTokens = allTokens.length;
+  console.log("totalTokens = ", totalTokens);
 
   let fromI = skip;
   let toI = skip + size;
@@ -154,10 +156,13 @@ const GetAddrTokenBalance = async options => {
     partToken.push(allTokens[i])
   }
 
+  console.log("partToken len = ", partToken.length);
   partToken.forEach(t => {
-    let balance = eth_func.providerEthProxy('tokenbalance', {walletAddr: addr, tokenAddr: t.addr})
-    console.log("balance = ", balance);
-    t.balance = balance;
+    if (t.balance === '*') {
+      let balance = eth_func.providerEthProxy('tokenbalance', {walletAddr: addr, tokenAddr: t.addr});
+      console.log("balance = ", balance);
+      t.balance = balance;
+    }
   });
 
   return {tokens: partToken, total: totalTokens}
