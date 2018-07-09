@@ -58,7 +58,7 @@ const GetAddrTokenBalance = async options => {
 
   let lastCachedBlock = 0;
   let cache_selector = {'addr': addr, 'lastblock': {'$gt': 0}};
-  let allTokensMap = {};
+  let allTokensMap = new Map();
   console.log(`cache_selector addr: ${cache_selector.addr}`);
   console.log(`cache_selector lastblock: ${cache_selector.lastblock}`);
   console.log(`erc20_cache col: ${config.store.cols.erc20_cache}`);
@@ -89,16 +89,18 @@ const GetAddrTokenBalance = async options => {
     console.log('---------------- cache_tokens_selector find query ----------------');
     console.log(ctl_p);
     ctl_p.forEach(tkn => {
-      allTokensMap[tkn.tokenaddr] = {
-        addr: tkn.tokenaddr,
-        name: tkn.tokenname,
-        smbl: tkn.tokensmbl,
-        dcm:  tkn.tokendcm,
-        type: 20,
-        balance: tkn.value,
-        icon: '/api/token/icon/'+tkn.tokenaddr,
-        dynamic: 0
-      };
+      allTokensMap.set(
+        tkn.tokenaddr,
+        {
+          addr: tkn.tokenaddr,
+          name: tkn.tokenname,
+          smbl: tkn.tokensmbl,
+          dcm:  tkn.tokendcm,
+          type: 20,
+          balance: tkn.value,
+          icon: '/api/token/icon/'+tkn.tokenaddr,
+          dynamic: 0
+        });
     });
   }
 
@@ -128,7 +130,7 @@ const GetAddrTokenBalance = async options => {
           tkn.balance = '*';
           tkn.icon = "/api/token/icon/" + tkn.addr;
           tkn.dynamic = 0;
-          allTokensMap[tkn.addr] = tkn;
+          allTokensMap.set(tkn.addr, tkn);
         }
       });
     });
