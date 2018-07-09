@@ -105,7 +105,7 @@ const GetAddrTokenBalance = async options => {
               tkn.balance = '*';
               tkn.icon = "/api/token/icon/" + tkn.addr;
               tkn.dynamic = 0;
-              allTokensMap[tkn.addr] = tkn;
+              allTokensMap[tkn.tokenaddr] = tkn;
           }
       });
   }
