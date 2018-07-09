@@ -154,7 +154,7 @@ const GetAddrTokenBalance = async options => {
 
   let partToken = [];
   for (let i=fromI; i<toI; i+=1){
-    partToken.push(allTokens[i])
+    partToken.push(allTokens[i][1])
   }
 
   console.log("partToken len = ", partToken.length);
