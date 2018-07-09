@@ -27,7 +27,7 @@ const providerEthProxy  = async (fn, options) => {
                     break;
                 case 'tx':
                     console.log(`${wid_ptrn}\n\nexec eth.getTransaction(${txt_ptrn(options.hash)})\n`);
-                    return await provider.eth.getTransaction(hash);
+                    return await provider.eth.getTransaction(options.hash);
                     break;
                 default:
                     return await provider.eth.getBalance(options.addr)
