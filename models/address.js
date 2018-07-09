@@ -88,25 +88,17 @@ const GetAddrTokenBalance = async options => {
   if(Array.isArray(ctl_p)) {
       console.log('---------------- cache_tokens_selector find query ----------------');
       console.log(ctl_p);
-      /*cachedTokensList = ctl_p.map(item => {
-          return {
-              addr: item.tokenaddr,
-              name: item.tokenname,
-              smbl: item.tokensmbl,
-              dcm:  item.tokendcm,
-              type: 20,
-              balance: item.value,
-              icon: '/api/token/icon/'+item.tokenaddr,
-              dynamic: 0
-          }
-      })*/
       ctl_p.forEach(tkn => {
-          if (tkn) {
-              tkn.balance = '*';
-              tkn.icon = "/api/token/icon/" + tkn.addr;
-              tkn.dynamic = 0;
-              allTokensMap[tkn.tokenaddr] = tkn;
-          }
+          allTokensMap[tkn.tokenaddr] = {
+              addr: tkn.tokenaddr,
+              name: tkn.tokenname,
+              smbl: tkn.tokensmbl,
+              dcm:  tkn.tokendcm,
+              type: 20,
+              balance: tkn.value,
+              icon: '/api/token/icon/'+tkn.tokenaddr,
+              dynamic: 0
+          };
       });
   }
 
