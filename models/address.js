@@ -24,7 +24,7 @@ const GetAddress = async addr => {
   let addr_balance_p = eth_func.providerEthProxy('getbalance', {addr: addr});
   let addrHeader_p = dbquery.findOne(cfg.store.cols.contract, { 'addr': addr });
   let mainTxCount_p = dbquery.countTnx(cfg.store.cols.eth, {$or:[{'addrto': addr }, {'addrfrom': addr}]});
-  let tokenList_p = GetAddrTokenBalance(addr, 0, 5);
+  let tokenList_p = GetAddrTokenBalance({addr: addr, skip: 0, size: 5});
 
   return await Promise.all([addrHeader_p, mainTxCount_p, addr_balance_p, tokenList_p])
     .then(([addrHeader, { cnt }, eth_balance, tokenList]) => {
