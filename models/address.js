@@ -88,7 +88,7 @@ const GetAddrTokenBalance = async options => {
   if(Array.isArray(ctl_p)) {
       console.log('---------------- cache_tokens_selector find query ----------------');
       console.log(ctl_p);
-      cachedTokensList = ctl_p.map(item => {
+      /*cachedTokensList = ctl_p.map(item => {
           return {
               addr: item.tokenaddr,
               name: item.tokenname,
@@ -99,7 +99,7 @@ const GetAddrTokenBalance = async options => {
               icon: '/api/token/icon/'+item.tokenaddr,
               dynamic: 0
           }
-      })
+      })*/
   }
 
 
@@ -113,6 +113,83 @@ const GetAddrTokenBalance = async options => {
 
   console.log('---------------- last_tokens_selector distinct query ----------------');
   console.log(lastTokens);
+
+  let lastTokensMap = {};
+  let allTokensMap = {};
+  let lastTokensPromiseList = [];
+
+  lastTokens.forEach(t => {
+      lastTokensPromiseList.push(dbquery.findOne(cfg.store.cols.token_head, { 'addr': t }));
+  });
+
+  lastTokensMap = await Promise.all(lastTokensPromiseList)
+      .then((lastTokensPromiseList) => {
+          lastTokensPromiseList.forEach(tkn => {
+              if (tkn) {
+                  tkn.balance = '*';
+                  tkn.icon = "/api/token/icon/" + tkn.addr;
+                  tkn.dynamic = 0;
+                  lastTokensMap[tkn.addr] = tkn;
+                  allTokensMap[tkn.addr] = tkn;
+              }
+          })
+      });
+
+  console.log('---------------- last_tokens_map ----------------');
+  console.log(lastTokensMap);
+
+  /*
+    for _, a := range lastTokens {
+		var tknHead structs.TokenHeader
+		err := tokenCol.Find(bson.M{"addr": a}).One(&tknHead)
+		if err == nil {
+			tknHead.Icon = "/api/token/icon/" + tknHead.Addr
+			tknHead.Dynamic = 0
+			tknHead.Balance = "*"
+			lastTokensMap[tknHead.Addr] = tknHead
+			allTokensMap[tknHead.Addr] = tknHead
+		}
+	}
+
+	for _, a := range allTokensMap {
+		allTokens = append(allTokens, a)
+	}
+
+	sort.Slice(allTokens, func(i, j int) bool {return allTokens[i].Addr < allTokens[j].Addr})
+	totalTokens := len(allTokens)
+
+	fromI := skip
+	toI := skip + size
+	if fromI < 0 {
+		fromI = 0
+	}
+	if fromI > totalTokens {
+		fromI = totalTokens
+	}
+	if toI < 0 {
+		toI = 0
+	}
+	if toI > totalTokens {
+		toI = totalTokens
+	}
+	if fromI > toI {
+		toI = fromI
+	}
+
+	part := allTokens[fromI:toI]
+
+	for i := range part{
+		if part[i].Balance == "*" {
+			balance, err := tokenBalance(clearAddr, part[i].Addr)
+			if err == nil {
+				part[i].Balance = balance
+			} else {
+				part[i].Balance = ""
+			}
+		}
+	}
+
+	return part, len(allTokens)*/
 
 };
 /*
