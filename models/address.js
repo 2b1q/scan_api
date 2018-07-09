@@ -58,6 +58,7 @@ const GetAddrTokenBalance = async options => {
 
   let lastCachedBlock = 0;
   let cache_selector = {'addr': addr, 'lastblock': {'$gt': 0}};
+  let allTokensMap = {};
   console.log(`cache_selector addr: ${cache_selector.addr}`);
   console.log(`cache_selector lastblock: ${cache_selector.lastblock}`);
   console.log(`erc20_cache col: ${config.store.cols.erc20_cache}`);
@@ -83,7 +84,6 @@ const GetAddrTokenBalance = async options => {
   await cachedTokenBlocks();
   console.log(`lastCachedBlock after: ${lastCachedBlock}`);
 
-  let cachedTokensList = [];
   let ctl_p = await dbquery.find(config.store.cols.erc20_cache, {'addr': addr, 'lastblock': 0});
   if(Array.isArray(ctl_p)) {
       console.log('---------------- cache_tokens_selector find query ----------------');
@@ -100,6 +100,14 @@ const GetAddrTokenBalance = async options => {
               dynamic: 0
           }
       })*/
+      ctl_p.forEach(tkn => {
+          if (tkn) {
+              tkn.balance = '*';
+              tkn.icon = "/api/token/icon/" + tkn.addr;
+              tkn.dynamic = 0;
+              allTokensMap[tkn.addr] = tkn;
+          }
+      });
   }
 
 
@@ -114,30 +122,23 @@ const GetAddrTokenBalance = async options => {
   console.log('---------------- last_tokens_selector distinct query ----------------');
   console.log(lastTokens);
 
-  let lastTokensMap = {};
   let lastTokensPromiseList = [];
-
-  console.log('---------------- last_tokens_map before ----------------');
-  console.log(lastTokensMap);
-
   lastTokens.forEach(t => {
       lastTokensPromiseList.push(dbquery.findOne(cfg.store.cols.token_head, { 'addr': t }));
   });
 
   console.log('lastTokensPromiseList = ', lastTokensPromiseList);
 
-  let allTokensMap = await Promise.all(lastTokensPromiseList)
+  await Promise.all(lastTokensPromiseList)
       .then((lastTokensPromiseList) => {
-          let tmp = {};
           lastTokensPromiseList.forEach(tkn => {
               if (tkn) {
                   tkn.balance = '*';
                   tkn.icon = "/api/token/icon/" + tkn.addr;
                   tkn.dynamic = 0;
-                  tmp[tkn.addr] = tkn;
+                  allTokensMap[tkn.addr] = tkn;
               }
           });
-          return tmp;
       });
 
   console.log('---------------- allTokensMap ----------------');
