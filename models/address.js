@@ -8,19 +8,9 @@ const MAX_SKIP  = require('../config/config').store.mongo.max_skip,
       cfg       = require('../config/config'),
       dbquery   = require('./db_query'),
       config  = require('../config/config'),
-      c       = config.color,
-      cluster = require('cluster');
       eth_func  = require('../ether/functions');
 
-      // eth       = require('../ether/functions'); //getAddrBalance
-
-// worker id pattern
-const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[eth_db_model] ${c.white}`)();
-const txt_ptrn = txt => `${c.yellow}${txt}${c.white}`;
-
 /* eth get data timeouts. */
-const wait_ms = 50; // wait ms after each query
-const get_provider_retries = 5;
 const wait = ms => new Promise(resolve => setTimeout(() => resolve(), ms));
 
 

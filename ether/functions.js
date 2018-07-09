@@ -16,8 +16,8 @@ const providerEthProxy  = async (fn, options) => {
             console.log(`${wid_ptrn}${txt_ptrn('We have a ETH  provider!')}`);
             switch (fn) {
                 case 'getbalance':
-                    console.log(`${wid_ptrn}\n\nexec eth.getBalance(${txt_ptrn(options.walletAddr)})\n`);
-                    return await provider.eth.getBalance(options.walletAddr);
+                    console.log(`${wid_ptrn}\n\nexec eth.getBalance(${txt_ptrn(options.addr)})\n`);
+                    return await provider.eth.getBalance(options.addr);
                     break;
                 case 'tokenbalance':
                     console.log(`${wid_ptrn}\n\nexec TokenBalance({ walletAddr: ${txt_ptrn(options.walletAddr)},
