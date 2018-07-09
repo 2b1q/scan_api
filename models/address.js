@@ -36,7 +36,8 @@ const GetAddress = async addr => {
         coin:         'ETH',
         data:         null,
         decimals:     18,
-        balance:      parseInt(eth_balance, 10).toString(16), // TODO: fix data convert in balance and tables
+        balance:      parseInt(eth_balance, 10).toString(16),
+          // TODO: fix data convert in balance and tables
           // TODO: remove actions like parseInt(balance_in_hex) / 10^decimals on front-end and apps
           // TODO: balance recalc via web3 utils
         contract: 0, // dummy
@@ -50,40 +51,19 @@ const GetAddress = async addr => {
     })
     .catch(e => e)
 
-  // TODO: GetAddrTokenBalance(clearAddr, 0, 5)
-/*
-"head":{
-      "addr":"67ce27e3687099e4145a01ef91304531a4f29feb",
-      "contract":0,
-      "data":null,
-      "maintxcount":1,
-      "innertxcount":0,
-      "tokentxcount":0,
-      "totaltxcount":0,
-      "maxtx":0,
-      "balance":"0",
-      "decimals":18,
-      "coin":"ETH",
-      "toptokenbalances":[
-
-      ],
-      "totaltokens":0
-   }
-*/
-  // return await dbquery.getBlock(options)
-
 };
 
 const GetAddrTokenBalance = async options => {
   let {addr, skip, size} = options;
 
   let lastCachedBlock = 0;
+  let cache_selector = {'addr': addr, 'lastblock': {'$gt': 0}};
+  console.log(`cache_selector: ${cache_selector}`);
+  console.log(`erc20_cache col: ${config.store.cols.erc20_cache}`);
 
   let cachedTokenBlocks = async () => {
-      for (i = 0; i < 5; i++) {
-          let tokenCacheCol_p = await dbquery.find(
-              config.store.cols.erc20_cache,
-              {'addr': addr, 'lastblock': {'$gt': 0}});
+      for (let i = 0; i < 5; i++) {
+          let tokenCacheCol_p = await dbquery.find(config.store.cols.erc20_cache, cache_selector);
           if(tokenCacheCol_p.rows === 0) await wait(50);
           else {
               tokenCacheCol_p.forEach(c_block => {
