@@ -4,7 +4,7 @@ require(
   cluster.isMaster
     ? './master'
     : './worker'
-)
+);
 
 // uncaughtException handler
 process.on('uncaughtException', function (err) {

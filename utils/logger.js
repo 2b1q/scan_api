@@ -8,7 +8,7 @@ function getLogger(module) {
     level: 'debug',
     label: path,
     timestamp: true
-  }
+  };
 
   logger.info = winston.createLogger({
     transports: [

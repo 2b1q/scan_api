@@ -10,7 +10,7 @@ let db = null, // reference to db
 
 let initDb = ()=>{
   return new Promise(function(resolve, reject) {
-    if(db) resolve(db) // if already have reference to mongo then resolve(db)
+    if(db) resolve(db); // if already have reference to mongo then resolve(db)
     MongoClient.connect(url, options)
       .then(client => {
         db = client.db(dbname);
@@ -22,11 +22,11 @@ let initDb = ()=>{
         reject()
       })
   });
-}
+};
 
 // wait mongo connection and return Promise with DB reference
 let getInstance = async () => await initDb();
 
 module.exports = {
   get:  getInstance() // get DB instance
-}
+};

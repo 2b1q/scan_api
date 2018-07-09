@@ -6,7 +6,7 @@ const tnx_controller_v1 = require('../controllers/v1/transaction'),
       router = require('express').Router();
 
 // v1 route RegExp pattern
-const v1_ptrn = path => new RegExp(`(^\/v1\/${path}$)|(^\/${path}$)`)
+const v1_ptrn = path => new RegExp(`(^\/v1\/${path}$)|(^\/${path}$)`);
 
 /* ETH test endpoinds */
 router.get('/nodes',           eth_api.getLastBlocks);       // nodes last blocks
@@ -34,9 +34,9 @@ router.post(v1_ptrn('address/details'),  addr_controller_v1.addrDetails); // Get
 
 /* current endpoints */
 /* API v1 routes -> can be /api/v1/route OR /api/route */
-router.post(v1_ptrn('txdetails'),       tnx_controller_v1.TnxDetails)      // Get Transaction details endpoint [HTTP POST]
-router.post(v1_ptrn('blockdetails'),    block_controller_v1.blockDetails)  // Block details [HTTP POST]
-router.post(v1_ptrn('addressdetails'),  addr_controller_v1.addrDetails)    // Get Address details endpoint [HTTP POST]
-router.post(v1_ptrn('list'),            list_controller_v1.list)
+router.post(v1_ptrn('txdetails'),       tnx_controller_v1.TnxDetails);      // Get Transaction details endpoint [HTTP POST]
+router.post(v1_ptrn('blockdetails'),    block_controller_v1.blockDetails);  // Block details [HTTP POST]
+router.post(v1_ptrn('addressdetails'),  addr_controller_v1.addrDetails);    // Get Address details endpoint [HTTP POST]
+router.post(v1_ptrn('list'),            list_controller_v1.list);
 
 module.exports = router;

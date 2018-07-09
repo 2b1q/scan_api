@@ -19,32 +19,32 @@ const get_tnx_col_by = listId => listId ==='listOfETH' ? 'ether_txn':'token_txn'
 
 // find tokens
 const findTokens = async (tnx_col, query) => {
-  let db_col = await col(tnx_col)
+  let db_col = await col(tnx_col);
   return new Promise((resolve, reject) =>
     db_col.find(query)
       .toArray((err, docs) => {
-        if(err) return reject(err) // stop flow and return reject with exeption
+        if(err) return reject(err); // stop flow and return reject with exeption
         resolve(docs)
       })
   );
-}
+};
 
 // common tnx get function (for block and tnx API)
 const GetDbTransactions = async options => {
   console.log(options);
   let { skip, page, size, listId, entityId, max_skip, selector, sort } = options;
-  let tnx_col = get_tnx_col_by(listId)
-  let db_col = await col(tnx_col)
-  let count = await db_col.find(selector).count({})
-  if(count === 0) return { rows: '' } // stop flow if 0 docs
-  if(count > max_skip) count = max_skip
+  let tnx_col = get_tnx_col_by(listId);
+  let db_col = await col(tnx_col);
+  let count = await db_col.find(selector).count({});
+  if(count === 0) return { rows: '' }; // stop flow if 0 docs
+  if(count > max_skip) count = max_skip;
   return new Promise((resolve,reject) =>
     db_col.find(selector,{allowDiskUse: true}) // allowDiskUse lets the server know if it can use disk to store temporary results for the aggregation (requires mongodb 2.6 >)
       .sort(sort)
       .skip(skip)
       .limit(size)
       .toArray((err, docs) => {
-        if(err) return reject(err) // stop flow and return reject with exeption
+        if(err) return reject(err); // stop flow and return reject with exeption
         let txns = docs.map(tx => {
           return {
             // construct token object
@@ -57,7 +57,7 @@ const GetDbTransactions = async options => {
             },
             ...tx // spread => return all data AS IS
           }
-        })
+        });
         resolve({
           page:page,
           size:size,
@@ -67,27 +67,27 @@ const GetDbTransactions = async options => {
         })
       })
   );
-}
+};
 
 // count collection docs by selector
 const countTnx = async (collection, selector = {}) => {
   if(Array.isArray(collection)) {
     let promise_all_result = collection.map(async col_type => {
-      let db_col = await col(col_type)
+      let db_col = await col(col_type);
       return {
         [col_type]:  await db_col.count(selector)
       }
-    })
+    });
     // wait all db request and construct one result object
     return await Promise.all(promise_all_result).then(data => Object.assign(...data))
   } else {
-    let db_col = await col(collection)
+    let db_col = await col(collection);
     return {
       type: collection,
       cnt: await db_col.count(selector)
     }
   }
-}
+};
 
 // Get tnx details by tx hash
 const TxDetails = async (hash, query) => {
@@ -98,12 +98,12 @@ const TxDetails = async (hash, query) => {
   // Do in parallel
   return await Promise.all([q1,q2])
     .then( async data => {
-      let [ ether_tnxs, token_tnxs ] = data // 2d array destruct
+      let [ ether_tnxs, token_tnxs ] = data; // 2d array destruct
       delete data;  // GC drop
       let response = {};
 
       if(ether_tnxs.length === 0) {  // if no ether tnxs ASK pending TNXS from eth_proxy node
-        response.empty = true // no data flag
+        response.empty = true; // no data flag
 
         /*
          On start before we havnt any block or provider - return undefined
@@ -140,7 +140,7 @@ const TxDetails = async (hash, query) => {
             web3Payload: {
               ...tx
             }
-          }
+          };
           response.rows = []
         }
       } else {
@@ -158,9 +158,9 @@ const TxDetails = async (hash, query) => {
               dynamic:  0
             },
             ...tx // return all data AS IS
-          }
+          };
           if(tx.isinner > 0) txInner.push(response.head)
-        })
+        });
 
         token_tnxs.forEach(tx => {
           txInner.push(
@@ -175,8 +175,8 @@ const TxDetails = async (hash, query) => {
               ...tx // return all data AS IS
             }
           )
-        })
-        response.rows = txInner
+        });
+        response.rows = txInner;
         delete txInner
       }
       return response // return response object
@@ -184,24 +184,24 @@ const TxDetails = async (hash, query) => {
     .catch((e) => {
       throw e // return mongoDB error
     })
-}
+};
 
 // find one db doc from collection using query pattern
 const findOneQuery = async (collection, query = {}) => {
-  let db_col = await col(collection)
+  let db_col = await col(collection);
   return new Promise(async (resolve, reject) => {
-    let count = await db_col.count(query)
-    if(count === 0) resolve ({ rows: count }) // fix (reject to resolve)
+    let count = await db_col.count(query);
+    if(count === 0) resolve ({ rows: count }); // fix (reject to resolve)
     else db_col.findOne(query).then(doc => resolve(doc))
   });
-}
+};
 
 // find db doc from collection using query pattern
 const findQuery = async (collection, query = {}) => {
-  let db_col = await col(collection)
+  let db_col = await col(collection);
   return new Promise(async (resolve) => {
-    let count = await db_col.count(query)
-    if(count === 0) resolve ({ rows: count }) // fix (reject to resolve)
+    let count = await db_col.count(query);
+    if(count === 0) resolve ({ rows: count }); // fix (reject to resolve)
     else db_col.find(query)
           .toArray((err, docs) => {
             if(err) {
@@ -211,11 +211,11 @@ const findQuery = async (collection, query = {}) => {
             else resolve(docs)
           })
   });
-}
+};
 
 // Mongo distinct key, query, collection
 const distinct = async (collection, query = {}, key) => {
-  let db_col = await col(collection)
+  let db_col = await col(collection);
   return new Promise(function(resolve) {
     db_col.distinct(key, query, (err, docs) => {
       if(err) {
@@ -225,7 +225,7 @@ const distinct = async (collection, query = {}, key) => {
       else resolve(docs)
     })
   });
-}
+};
 
 // get block details by options
 const GetBlock = async options => {
@@ -235,9 +235,9 @@ const GetBlock = async options => {
   let inner_selector = Object.assign({}, tnx_selector, { isinner: 1 }); // fix bug with one object reference modification
   // TODO: mongo aggregation query (one group count query)
   // TODO: "tokentxcount" + "totaltxcount" (not used yet)
-  let blockHeader_p = findOneQuery(block_col, block_selector)
-  let mainTxCount_p = countTnx(ether_col, tnx_selector)
-  let innerTxCount_p = countTnx(ether_col, inner_selector)
+  let blockHeader_p = findOneQuery(block_col, block_selector);
+  let mainTxCount_p = countTnx(ether_col, tnx_selector);
+  let innerTxCount_p = countTnx(ether_col, inner_selector);
   // do in parallel, if block not found reject and drop other promises
   return await Promise.all([blockHeader_p, mainTxCount_p, innerTxCount_p])
     .then(([block, main, inner] = data) => {
@@ -250,7 +250,7 @@ const GetBlock = async options => {
       })
     })
     .catch(e => e)
-}
+};
 
 module.exports = {
   getDbTransactions:  GetDbTransactions, // common tnx get function (for block and tnx API)
@@ -260,4 +260,4 @@ module.exports = {
   findOne:            findOneQuery,      // find one db doc from collection using query pattern
   find:               findQuery,         // find db docs from collection using query pattern
   distinct:           distinct           // mongo distinct query
-}
+};

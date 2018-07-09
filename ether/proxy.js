@@ -3,8 +3,8 @@ const config  = require('../config/config'),
       cluster = require('cluster');
 
 // worker id pattern
-const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[proxy] ${c.white}`)()
-const id_ptrn = id => `${c.yellow}${id}${c.white}`
+const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[proxy] ${c.white}`)();
+const id_ptrn = id => `${c.yellow}${id}${c.white}`;
 
 const check_eth_clients_singleton = (() => {
     let ethProxy;

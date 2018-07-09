@@ -4,8 +4,8 @@ const Web3    = require('web3'),
       cluster = require('cluster');
 
 // worker id pattern
-const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[subscribe] ${c.white}`)()
-const cid_ptrn = cid => `${c.yellow}${cid}${c.white}`
+const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[subscribe] ${c.white}`)();
+const cid_ptrn = cid => `${c.yellow}${cid}${c.white}`;
 
 function resubscribeIsRequired(c_id, ethProxy) {
   // let wid = cluster.worker.id;

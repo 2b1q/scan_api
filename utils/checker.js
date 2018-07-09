@@ -30,15 +30,15 @@ const check_module_singleton = (() => {
       no_entityId:          {Error: 'entityId not found'},
       bad_hash:             hash => Object({Error: `Bad Hash value "${hash}"`}),
       bad_addr:             addr => Object({Error: `Bad addr value "${addr}"`})
-    }
+    };
     // private functions
     let isFloat = n => n === +n && n !== (n|0),
-        isInteger = n => n === +n && n === (n|0)
+        isInteger = n => n === +n && n === (n|0);
     // build qury options
     let build_params = (req, listId, moduleId, entityId) => {
       let { page, size, filters } = req.body.params === undefined
         ? { page: 1, size: 20, filters: {} } // default values
-        : req.body.params
+        : req.body.params;
       return {
         listId:   listId,
         moduleId: moduleId,
@@ -47,12 +47,12 @@ const check_module_singleton = (() => {
         filters:  filters,
         entityId: entityId
       }
-    }
+    };
     // build qury options
     let build_params_io = (params, listId, moduleId, entityId) => {
       let { page, size, filters } = params === undefined
         ? { page: 1, size: 20, filters: {} } // default values
-        : params
+        : params;
       return {
         listId:   listId,
         moduleId: moduleId,
@@ -61,7 +61,7 @@ const check_module_singleton = (() => {
         filters:  filters,
         entityId: entityId.length >= 40 ? entityId : Number (entityId) // if entityId length >= 40 its address else its block
       }
-    }
+    };
     // build page options (Go safePageAndSize "bkxscan/blob/master/main/api/main.go")
     let queryoptions = (p, s) => {
       let page = (isNaN(p)) ? 1 :  Number (p).toFixed(); // default page = 1
@@ -80,7 +80,7 @@ const check_module_singleton = (() => {
         size: Number (size), // avoid string
         page: Number (page)  // avoid string
       }
-    }
+    };
 
     // check IF token exist
     let chek_token = token => cfg.restOptions.apiKeys.includes(token);
@@ -92,35 +92,35 @@ const check_module_singleton = (() => {
 
     // check AUTH by token
     let check_auth = (api_key, res) =>{
-      if(!api_key) send_response(res, msg.no_api_key, 401)
-      else if(!chek_token(api_key)) send_response(res, msg.wrong_api_key, 401)
+      if(!api_key) send_response(res, msg.no_api_key, 401);
+      else if(!chek_token(api_key)) send_response(res, msg.wrong_api_key, 401);
       else return true
-    }
+    };
 
     // TODO: chenge to regexp.test(str)
     // check hash from client request
     let check_Hash = (chash, hash, res) =>
       chash.length === 64
         ? true
-        : send_response(res, msg.bad_hash(hash), 404)
+        : send_response(res, msg.bad_hash(hash), 404);
 
     // check addr from client request
     let check_addr = (caddr, addr, res) =>
       caddr.length === 40
             ? true
-            : send_response(res, msg.bad_addr(addr), 404)
+            : send_response(res, msg.bad_addr(addr), 404);
 
     // check listId from client request
     let check_listId = (listId, res) =>
       Object.values(cfg.list_type).includes(listId)
         ? true
-        : send_response(res, msg.unknown_listid, 404)
+        : send_response(res, msg.unknown_listid, 404);
 
     // check ModuleId from client request
     let check_moduleId = (moduleId, res) =>
       Object.values(cfg.modules).includes(moduleId)
         ? true
-        : send_response(res, msg.unknown_module_id, 404)
+        : send_response(res, msg.unknown_module_id, 404);
 
     // check entityId from client request
     let check_entityId = (entityId, res) => {
@@ -128,7 +128,7 @@ const check_module_singleton = (() => {
       return entityId !== 0
         ? true
         : send_response(res, msg.wrong_entityId, 404)
-      }
+      };
 
     // check block from client request
     let check_block = (block, res) => {
@@ -136,7 +136,7 @@ const check_module_singleton = (() => {
       return block !== 0
         ? true
         : send_response(res, msg.wrong_block, 404)
-    }
+    };
 
     // check address from client request
     let check_addr_exist = (address, res) => {
@@ -144,23 +144,23 @@ const check_module_singleton = (() => {
       return address !== 0
         ? true
         : send_response(res, msg.wrong_addr, 404)
-    }
+    };
 
     // hash operations
     // cut '0x' from hash string
     let cut_0x = hash =>
       (typeof hash === 'string')
         ? hash.split('0x').pop()
-        : ''
+        : '';
 
     // remove unexpected chars from hex
     let clean_Hex = hash =>
       (typeof hash === 'string')
         ? hash.replace(/[^a-fA-F0-9]+/g, '')
-        : ''
+        : '';
 
     // cut '0x' then remove unexpected chars from hex
-    let cut0x_Clean = hash => clean_Hex(cut_0x(hash))
+    let cut0x_Clean = hash => clean_Hex(cut_0x(hash));
 
     // public interface
     return {
@@ -185,14 +185,14 @@ const check_module_singleton = (() => {
       block: (block, res) => check_block(block, res),                 // check block from client request
       addr: (address, res) => check_addr_exist(address, res)          // check IS address exists from client request
     }
-  }
+  };
   return {
     getInstance: () => {
       if(!instance) instance = initSingleton();
       return instance
     }
   }
-})()
+})();
 
 
 module.exports.cheker = () => check_module_singleton.getInstance();

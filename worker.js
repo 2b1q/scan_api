@@ -31,7 +31,7 @@ app.use(bodyParser.json())
    // .use(express.static(path.join(__dirname, 'public')));
 
 const rest = require('./routes/services');
-app.use('/api', rest)
+app.use('/api', rest);
 
 
  // Last ROUTE catch 404 and forward to error handler
@@ -48,7 +48,7 @@ app.use(function(err, req, res, next) {
  res.locals.error = req.app.get('env') === 'development' ? err : {};
  res.status(err.status || 500);
  // res.render('error')
- res.json({ error_msg: err.message })
+ res.json({ error_msg: err.message });
  console.error(err.message);
 });
 
@@ -70,7 +70,7 @@ app.set('port', config.server.ip+':'+port);
 const server = http.createServer(app);
 server.listen(port); // Listen Node server on provided port
 
-require('./controllers/v1/middleware')(server) // init socket io
+require('./controllers/v1/middleware')(server); // init socket io
 
 // server event hanlers 'on.error', 'on.listening'
 server.on('error', onError);

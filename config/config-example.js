@@ -24,7 +24,8 @@ config.store = {
         token:      'token_txn',
         block:      'block_header',
         token_head: 'token_header',
-        contract:   'contract_header'
+        contract:   'contract_header',
+        erc20_cache: 'erc20_cache',
     }
 };
 
@@ -58,7 +59,7 @@ config.events = {
         block_d: 'blockDetails',
         addr_d:  'addressDetails'
     }
-}
+};
 
 // REST API options
 config.restOptions = {
@@ -72,6 +73,9 @@ config.ethOptions = {
     gethURLs: ["ws://94.130.171.164:8556"],
     maxNodesDelta: 20,
     upNodeFrequency: 10000,
+    get_provider_retries: 5,
+    get_provider_wait: 50,
+
 };
 
 // colorize console

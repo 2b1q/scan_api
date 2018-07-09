@@ -28,7 +28,7 @@ const GetAddress = async addr => {
 
   return await Promise.all([addrHeader_p, mainTxCount_p, addr_balance_p, tokenList_p])
     .then(([addrHeader, { cnt }, eth_balance, tokenList]) => {
-      response.rows = []
+      response.rows = [];
       response.head = {
         addr:         addrHeader.addr || addr,
         maintxcount:  cnt || 0,
@@ -45,7 +45,7 @@ const GetAddress = async addr => {
         totaltxcount: 0, // dummy
         totaltokens: 0, // dummy
         maxtx:      0 // dummy
-      }
+      };
       return response
     })
     .catch(e => e)
@@ -72,7 +72,7 @@ const GetAddress = async addr => {
 */
   // return await dbquery.getBlock(options)
 
-}
+};
 
 const GetAddrTokenBalance = async options => {
   let {addr, skip, size} = options;
@@ -143,10 +143,10 @@ const GetAddrTransactions = async options => {
   let selector = {
     $or:[ { 'addrto':   addr },
           { 'addrfrom': addr } ]
-  }
+  };
   // count tnx by query selector
-  let { cnt } = await dbquery.countTnx(collection, selector)
-  if( cnt === 0 ) return { rows: [] } // stop flow
+  let { cnt } = await dbquery.countTnx(collection, selector);
+  if( cnt === 0 ) return { rows: [] }; // stop flow
   if( cnt > MAX_SKIP ) cnt = MAX_SKIP;
   // construct query options for addr tnxs
   options = {
@@ -154,13 +154,13 @@ const GetAddrTransactions = async options => {
     selector: selector,
     sort: { 'block': -1 },
     ...options  // spread other options
-  }
+  };
   return await dbquery.getDbTransactions(options)
-}
+};
 
 
 
 module.exports = {
   getAddr:  GetAddress,
   addrTnxs: GetAddrTransactions
-}
+};

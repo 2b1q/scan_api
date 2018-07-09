@@ -15,47 +15,47 @@ let logit = (req, msg = '') => {
     timestamp:        (() => moment().format('DD.MM.YYYY HH:mm:ss'))(),
     path:             module.filename.split('/').slice(-2).join('/')
   }
-}
+};
 
 // check block/address options (REST API).
 const checkOptions = (req, res, listId, moduleId, entityId) =>
   check.entityId(entityId, res)
     ? check.build_options(req, listId, moduleId, entityId)
-    : false
+    : false;
 
 // list API
 exports.list = (req, res) => {
-  logger.api_requests(logit(req)) // log query data any way
+  logger.api_requests(logit(req)); // log query data any way
   let listId   = req.body.listId || req.body.listid;
   let moduleId = req.body.moduleId || req.body.moduleid;
   let { entityId = 0 } = req.body.params || {}; // if entityId not set or no params => entityId = 0 => then "error"
-  let options = {}
+  let options = {};
   // check listId AND moduleId
   if(check.listId(listId, res) && check.moduleId(moduleId, res)) {
     switch (moduleId) {
       case 'block':
-        entityId = Number( parseInt(entityId) ) // parse any value and convert to Number
-        options = checkOptions(req, res, listId, moduleId, entityId)
-        if(options) block_controller.getBlockTnx(options, res)
+        entityId = Number( parseInt(entityId) ); // parse any value and convert to Number
+        options = checkOptions(req, res, listId, moduleId, entityId);
+        if(options) block_controller.getBlockTnx(options, res);
         break;
       case 'transactions': // listOfETH
-        options = check.build_options(req, 'listOfETH', moduleId)
-        logger.info(options) // log options to console
-        tnx_controller.getTnx(options, res)
+        options = check.build_options(req, 'listOfETH', moduleId);
+        logger.info(options); // log options to console
+        tnx_controller.getTnx(options, res);
         break;
       case 'tokens': // listOfTokens
-        options = check.build_options(req, 'listOfTokens', moduleId)
-        logger.info(options) // log options to console
-        tnx_controller.getTnx(options, res)
+        options = check.build_options(req, 'listOfTokens', moduleId);
+        logger.info(options); // log options to console
+        tnx_controller.getTnx(options, res);
         break;
       case 'address':
-        options = checkOptions(req, res, listId, moduleId, entityId)
-        if(options) addr_controller.getAddrTnx(options, res)
+        options = checkOptions(req, res, listId, moduleId, entityId);
+        if(options) addr_controller.getAddrTnx(options, res);
         break;
       default: res.json(check.get_msg().unknown_module_id)
     }
   }
-}
+};
 /*
 {
     "listId": "listOfETH",          // тип списка - эфир или токены (в будущем моет быть что-то еще)

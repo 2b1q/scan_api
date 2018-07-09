@@ -19,17 +19,17 @@ const GetLastTransactions = async (options = {}) => {
     selector: {}, // last tnx selector
     sort: { 'block': -1 },
     ...options  // spread other options
-  }
+  };
   return await dbquery.getDbTransactions(options)
-}
+};
 
 /* Get tnx details by tx hash
 * go e.g. api.GetTransaction("e25db473556c7ecda92ebf7226ff022ef2f49fb11f03404d04987f69894f4548")
 */
-const TxDetails = async hash => await dbquery.TxDetails(hash, { 'hash': hash })
+const TxDetails = async hash => await dbquery.TxDetails(hash, { 'hash': hash });
 
 
 module.exports = {
   getLastTnxs: GetLastTransactions, // from api.GetLastTransactions
   txDetails:   TxDetails            // from TxDetails > api.GetTransaction(req.Hash)
-}
+};

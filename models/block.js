@@ -19,9 +19,9 @@ const GetblockTransactions = async (options = {}) => {
     selector: { block: options.entityId || 'block' }, // block tnx selector
     sort: { 'hash': 1 },
     ...options  // spread other options
-  }
+  };
   return await dbquery.getDbTransactions(options)
-}
+};
 
 /*
 * Get block details:
@@ -35,12 +35,12 @@ const GetBlock = async block => {
     ether_col: cfg.store.cols.eth,                  // get ether collection name
     block_selector: { 'block': block },             // block selector
     tnx_selector: { 'block': block, 'isinner': 0 }  // tnx selector
-  }
+  };
   return await dbquery.getBlock(options)
-}
+};
 
 
 module.exports = {
   blockTnxs:    GetblockTransactions,  // Get block tnx (GO api.GetBlockTransactions(1000014, 2, 10, "txtype = 'tx'"))
   getBlock:     GetBlock               // get block details
-}
+};
