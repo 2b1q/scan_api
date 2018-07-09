@@ -138,8 +138,8 @@ const GetAddrTokenBalance = async options => {
   console.log('---------------- allTokensMap ----------------');
   console.log(allTokensMap);
 
-  let allTokens = allTokensMap.entries();
-  allTokens.sort(function(a,b){return a[1].name > b[1].name});
+  let allTokens = Array.from(allTokensMap);
+  allTokens.sort(function(a,b){if (a[1].name > b[1].name) return -1; else return 1;});
 
   let totalTokens = allTokens.length;
   console.log("totalTokens = ", totalTokens);
