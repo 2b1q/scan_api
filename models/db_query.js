@@ -110,11 +110,12 @@ const TxDetails = async (hash, query) => {
          after we have a block - Web3 object return null OR data object
          provider.eth.getTransaction(hash) return Promise with data or null
         */
-        let tx = await eth_func.providerEthProxy('tx', {hash: hash});
+        let pending_tx = eth_func.providerEthProxy('tx', {hash: hash});
+        let tx = await pending_tx();  // return Promise with null/data/undefined
         console.log("Pending TX = ", tx);
         // construct response data if tx -> Not null and Not undefined
         if(tx) {
-          delete response.empty // first delete empty flag
+          delete response.empty; // first delete empty flag
           response.head = {
             token: {
               addr:     '',
