@@ -115,28 +115,33 @@ const GetAddrTokenBalance = async options => {
   console.log(lastTokens);
 
   let lastTokensMap = {};
-  let allTokensMap = {};
   let lastTokensPromiseList = [];
+
+  console.log('---------------- last_tokens_map before ----------------');
+  console.log(lastTokensMap);
 
   lastTokens.forEach(t => {
       lastTokensPromiseList.push(dbquery.findOne(cfg.store.cols.token_head, { 'addr': t }));
   });
 
-  lastTokensMap = await Promise.all(lastTokensPromiseList)
+  console.log('lastTokensPromiseList = ', lastTokensPromiseList);
+
+  let allTokensMap = await Promise.all(lastTokensPromiseList)
       .then((lastTokensPromiseList) => {
+          let tmp = {};
           lastTokensPromiseList.forEach(tkn => {
               if (tkn) {
                   tkn.balance = '*';
                   tkn.icon = "/api/token/icon/" + tkn.addr;
                   tkn.dynamic = 0;
-                  lastTokensMap[tkn.addr] = tkn;
-                  allTokensMap[tkn.addr] = tkn;
+                  tmp[tkn.addr] = tkn;
               }
-          })
+          });
+          return tmp;
       });
 
-  console.log('---------------- last_tokens_map ----------------');
-  console.log(lastTokensMap);
+  console.log('---------------- allTokensMap ----------------');
+  console.log(allTokensMap);
 
   /*
     for _, a := range lastTokens {
