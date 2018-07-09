@@ -159,6 +159,7 @@ const GetAddrTokenBalance = async options => {
     console.log(tkn);
     if (tkn.balance === '*') {
       tkn.balance = await eth_func.providerEthProxy('tokenbalance', {walletAddr: addr, tokenAddr: tkn.addr});
+      tkn.balance = parseInt(tkn.balance, 10).toString(16);
     }
 
     partToken.push(tkn)
