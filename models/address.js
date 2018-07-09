@@ -138,13 +138,7 @@ const GetAddrTokenBalance = async options => {
   console.log('---------------- allTokensMap ----------------');
   console.log(allTokensMap);
 
-  console.log('---------------- allTokensMap keys ----------------');
-  console.log(allTokensMap.keys());
-
-  console.log('---------------- allTokensMap entries ----------------');
-  console.log(allTokensMap.entries());
-
-  /*let allTokens = allTokensMap.entries();
+  let allTokens = allTokensMap.entries();
   allTokens.sort(function(a,b){return a[1].name > b[1].name});
 
   let totalTokens = allTokens.length;
@@ -170,10 +164,10 @@ const GetAddrTokenBalance = async options => {
       console.log("balance = ", balance);
       t.balance = balance;
     }
-  });*/
+  });
 
-  // return {tokens: partToken, total: totalTokens}
-  return {tokens: [], total: 0}
+  return {tokens: partToken, total: totalTokens}
+  //return {tokens: [], total: 0}
 };
 /*
 * Get address tnx:
