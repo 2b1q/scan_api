@@ -78,6 +78,10 @@ const addrTokenBalance = async options => {
   let cache_selector = {'addr': addr, 'lastblock': {'$gt': 0}};
   let allTokensMap = new Map();
 
+  console.log(`addr = ${addr}`);
+  console.log(`skip = ${skip}`);
+  console.log(`size = ${size}`);
+
   let cachedTokenBlocks = async () => {
     for (let i = 0; i < 5; i++) {
       let tokenCacheCol_p = await dbquery.find(config.store.cols.erc20_cache, cache_selector);
