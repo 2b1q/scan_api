@@ -24,7 +24,7 @@ const GetAddress = async addr => {
   let addr_balance_p = eth_func.providerEthProxy('getbalance', {addr: addr});
   let addrHeader_p = dbquery.findOne(cfg.store.cols.contract, { 'addr': addr });
   let mainTxCount_p = dbquery.countTnx(cfg.store.cols.eth, {$or:[{'addrto': addr }, {'addrfrom': addr}]});
-  let tokenList_p = GetAddrTokenBalance({addr: addr, skip: 0, size: 5});
+  let tokenList_p = addrTokenBalance({addr: addr, skip: 0, size: 5});
 
   return await Promise.all([addrHeader_p, mainTxCount_p, addr_balance_p, tokenList_p])
     .then(([addrHeader, { cnt }, eth_balance, tokenList]) => {
@@ -54,14 +54,29 @@ const GetAddress = async addr => {
 };
 
 const GetAddrTokenBalance = async options => {
+  let response = {};
+  // construct query options for address details
+  let tokenList_p = addrTokenBalance(options);
+
+  return await Promise.all([tokenList_p]).then((data) => {
+    response.rows = data.tokens;
+    response.head = {
+      entityId: options.addr,
+      totalEntities:  data.total,
+      pageSize: options.size,
+      skip: options.skip,
+      InfinityScroll: 1,
+    };
+    return response
+  }).catch(e => e)
+};
+
+const addrTokenBalance = async options => {
   let {addr, skip, size} = options;
 
   let lastCachedBlock = 0;
   let cache_selector = {'addr': addr, 'lastblock': {'$gt': 0}};
   let allTokensMap = new Map();
-  console.log(`cache_selector addr: ${cache_selector.addr}`);
-  console.log(`cache_selector lastblock: ${cache_selector.lastblock}`);
-  console.log(`erc20_cache col: ${config.store.cols.erc20_cache}`);
 
   let cachedTokenBlocks = async () => {
     for (let i = 0; i < 5; i++) {
@@ -79,15 +94,10 @@ const GetAddrTokenBalance = async options => {
     return 0 // done
   };
 
-  // DEBUG: lastCachedBlock
-  console.log(`lastCachedBlock before: ${lastCachedBlock}`);
   await cachedTokenBlocks();
-  console.log(`lastCachedBlock after: ${lastCachedBlock}`);
 
   let ctl_p = await dbquery.find(config.store.cols.erc20_cache, {'addr': addr, 'lastblock': 0});
   if(Array.isArray(ctl_p)) {
-    console.log('---------------- cache_tokens_selector find query ----------------');
-    console.log(ctl_p);
     ctl_p.forEach(tkn => {
       allTokensMap.set(
         tkn.tokenaddr,
@@ -113,15 +123,10 @@ const GetAddrTokenBalance = async options => {
   };
   let lastTokens = await dbquery.distinct(cfg.store.cols.token, last_tokens_selector, 'tokenaddr');
 
-  console.log('---------------- last_tokens_selector distinct query ----------------');
-  console.log(lastTokens);
-
   let lastTokensPromiseList = [];
   lastTokens.forEach(t => {
     lastTokensPromiseList.push(dbquery.findOne(cfg.store.cols.token_head, { 'addr': t }));
   });
-
-  console.log('lastTokensPromiseList = ', lastTokensPromiseList);
 
   await Promise.all(lastTokensPromiseList)
     .then((lastTokensPromiseList) => {
@@ -135,15 +140,10 @@ const GetAddrTokenBalance = async options => {
       });
     });
 
-  console.log('---------------- allTokensMap ----------------');
-  console.log(allTokensMap);
-
   let allTokens = Array.from(allTokensMap);
   allTokens.sort(function(a,b){if (a[1].name > b[1].name) return 1; else return -1;});
 
   let totalTokens = allTokens.length;
-  console.log("totalTokens = ", totalTokens);
-
   let fromI = skip;
   let toI = skip + size;
   if (fromI < 0) fromI = 0;
@@ -155,21 +155,16 @@ const GetAddrTokenBalance = async options => {
   let partToken = [];
   for (let i=fromI; i<toI; i+=1){
     let tkn = allTokens[i][1];
-    console.log('---------------- tkn ----------------');
-    console.log(tkn);
     if (tkn.balance === '*') {
       tkn.balance = await eth_func.providerEthProxy('tokenbalance', {walletAddr: addr, tokenAddr: tkn.addr});
       tkn.balance = parseInt(tkn.balance, 10).toString(16);
     }
-
     partToken.push(tkn)
   }
 
-  console.log('---------------- partToken ----------------');
-  console.log(partToken);
   return {tokens: partToken, total: totalTokens}
-  //return {tokens: [], total: 0}
 };
+
 /*
 * Get address tnx:
 *  GO api.GetAddrTransactions("2a65aca4d5fc5b5c859090a6c34d164135398226", 1, 10, "txtype = 'tx'")
@@ -195,9 +190,8 @@ const GetAddrTransactions = async options => {
   return await dbquery.getDbTransactions(options)
 };
 
-
-
 module.exports = {
   getAddr:  GetAddress,
-  addrTnxs: GetAddrTransactions
+  addrTnxs: GetAddrTransactions,
+  addrTokenBalance: GetAddrTokenBalance
 };

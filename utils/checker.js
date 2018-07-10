@@ -36,13 +36,14 @@ const check_module_singleton = (() => {
         isInteger = n => n === +n && n === (n|0);
     // build qury options
     let build_params = (req, listId, moduleId, entityId) => {
-      let { page, size, filters } = req.body.params === undefined
-        ? { page: 1, size: 20, filters: {} } // default values
+      let { page, size, skip, filters } = req.body.params === undefined
+        ? { page: 1, size: 20, skip: 0, filters: {} } // default values
         : req.body.params;
       return {
         listId:   listId,
         moduleId: moduleId,
         page:     Number (parseInt(page)),
+        skip:     Number (parseInt(skip)),
         size:     Number (parseInt(size)),
         filters:  filters,
         entityId: entityId
@@ -50,20 +51,21 @@ const check_module_singleton = (() => {
     };
     // build qury options
     let build_params_io = (params, listId, moduleId, entityId) => {
-      let { page, size, filters } = params === undefined
-        ? { page: 1, size: 20, filters: {} } // default values
+      let { page, size, skip, filters } = params === undefined
+        ? { page: 1, size: 20, skip: 0, filters: {} } // default values
         : params;
       return {
         listId:   listId,
         moduleId: moduleId,
         page:     Number (parseInt(page)),
+        skip:     Number (parseInt(skip)),
         size:     Number (parseInt(size)),
         filters:  filters,
         entityId: entityId.length >= 40 ? entityId : Number (entityId) // if entityId length >= 40 its address else its block
       }
     };
     // build page options (Go safePageAndSize "bkxscan/blob/master/main/api/main.go")
-    let queryoptions = (p, s) => {
+    let pageandsize = (p, s) => {
       let page = (isNaN(p)) ? 1 :  Number (p).toFixed(); // default page = 1
       let size = (isNaN(s)) ? 20 : Number (s).toFixed(); // default size = 20 (if size 'undefined')
       // set page limits
@@ -166,7 +168,7 @@ const check_module_singleton = (() => {
     return {
       isInt: n => isInteger(n),                                       // handy tools
       isFloat: n => isFloat(n),                                       // handy tools
-      safePageAndSize: (p,s) => queryoptions(p,s),                    // build page options => harcoded limits constants from (Go safePageAndSize)
+      safePageAndSize: (p,s) => pageandsize(p,s),                    // build page options => harcoded limits constants from (Go safePageAndSize)
       apiToken: token => chek_token(token),                           // check API_KEY token (not used yet)
       auth: (api_key, res) => check_auth(api_key, res),               // auth using API_KEY token (not used yet)
       listId: (lid, res) => check_listId(lid, res),                   // check is correct ListId

@@ -51,6 +51,20 @@ const get_addr_tnxs = async (options, moduleId, listId, clearAddr) => {
   }
 };
 
+// common get address transaction func
+const get_addr_token_balance = async (options, moduleId, listId) => {
+  try {
+    let response = await addr_model.addrTokenBalance(options);
+    if(response.rows.length > 0) {
+      response.head.moduleId = moduleId;
+      response.head.ListId = listId;
+      return response
+    } else  return check.get_msg().not_found
+  } catch (e) {
+    return { error: e }
+  }
+};
+
 /* GetAddrTransactions from tnx_model (REST API + Socket IO)
 * if we have res object its REST request, otherwise its IO request
 */
@@ -71,6 +85,20 @@ const GetAddrTnx = async ({ listId, moduleId, page, size, entityId } = opts, res
             });
   // ITS socket IO data
   else return await get_addr_tnxs(options, moduleId, listId, clearAddr)
+};
+
+const GetAddrTokensBalance = async ({skip, size, entityId } = opts, res) => {
+  let clearAddr = check.cut0xClean(entityId);
+  let options = {addr: clearAddr, skip: skip, size: size};
+  logger.info(options);
+  // if we have res object -> its REST API else ITS socket IO data
+  if(res) ChekAddr(clearAddr, entityId, res)
+    .then(async result => {
+      if(result) res.json(await get_addr_token_balance(options, moduleId, listId));
+      else console.log(`result status is ${result}`);
+    });
+  // ITS socket IO data
+  else return await get_addr_token_balance(options, moduleId, listId)
 };
 
 // check Address options (REST API). Set moduleId = 'address'
@@ -121,7 +149,7 @@ const GetAddrEth = (req, res) => {
 };
 
 // Get Address details
-const GetAddrkDetails = (req, res) => {
+const GetAddrDetails = (req, res) => {
   let addr = checkOptions(req,res);
   if(addr) {
     let clearAddr = check.cut0xClean(addr);      // clear address
@@ -136,7 +164,8 @@ const GetAddrkDetails = (req, res) => {
 module.exports = {
   addrTokens:    GetAddrTokens,     // Get Address Tokens Transactions endpoint [HTTP POST]
   addrEth:       GetAddrEth,        // Get Address ETH Transactions endpoint    [HTTP POST]
-  addrDetails:   GetAddrkDetails,   // Get Address details endpoint     [HTTP POST]
+  addrDetails:   GetAddrDetails,   // Get Address details endpoint     [HTTP POST]
   getAddrTnx:    GetAddrTnx,        // list API support (address transactions)
-  getAddrIo:     GetAddr            // address details - direct support (REST API + Socket IO)
+  getAddrIo:     GetAddr,           // address details - direct support (REST API + Socket IO)
+  addrTokensBalance: GetAddrTokensBalance
 };

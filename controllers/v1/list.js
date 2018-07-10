@@ -50,7 +50,13 @@ exports.list = (req, res) => {
         break;
       case 'address':
         options = checkOptions(req, res, listId, moduleId, entityId);
-        if(options) addr_controller.getAddrTnx(options, res);
+        if(options) {
+          if (options.listId === cfg.list_type.token_balance){
+            addr_controller.addrTokensBalance(options, res);
+          } else {
+            addr_controller.getAddrTnx(options, res);
+          }
+        }
         break;
       default: res.json(check.get_msg().unknown_module_id)
     }
