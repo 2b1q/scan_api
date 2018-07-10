@@ -55,6 +55,8 @@ const get_addr_tnxs = async (options, moduleId, listId, clearAddr) => {
 const get_addr_token_balance = async (options, moduleId, listId) => {
   try {
     let response = await addr_model.addrTokenBalance(options);
+    console.log("---------- response ---------------");
+    console.log(response);
     if(response.rows.length > 0) {
       response.head.moduleId = moduleId;
       response.head.ListId = listId;
