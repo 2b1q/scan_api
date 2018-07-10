@@ -52,8 +52,10 @@ exports.list = (req, res) => {
         options = checkOptions(req, res, listId, moduleId, entityId);
         if(options) {
           if (options.listId === cfg.list_type.token_balance){
+            console.log("==>addrTokensBalance");
             addr_controller.addrTokensBalance(options, res);
           } else {
+            console.log("==>getAddrTnx");
             addr_controller.getAddrTnx(options, res);
           }
         }
