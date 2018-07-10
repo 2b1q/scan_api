@@ -85,14 +85,14 @@ const emit = async (event, socket, data, con_obj, err) => {
           options.entityId = checkAddr(entityId);
           if(options.entityId === false) err(err_msg);
           else {
-
-            if (options.listId === config.list_type.token_balance){
+            /*if (options.listId === cfg.list_type.token_balance){
               console.log("==>addrTokensBalance");
-              response = addr_controller.addrTokensBalance(options);
+              addr_controller.addrTokensBalance(options, res);
             } else {
               console.log("==>getAddrTnx");
-              response = addr_controller.getAddrTnx(options);
-            }
+              addr_controller.getAddrTnx(options, res);
+            }*/
+            response = await addr_controller.getAddrTnx(options);
 
             if(response.hasOwnProperty('Error')) err(err_msg);
             else emitMsg(socket, event, response)
