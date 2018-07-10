@@ -70,7 +70,7 @@ const GetAddrTokenBalance = async options => {
       totalEntities:  data.total,
       pageSize: options.size,
       skip: options.skip,
-      InfinityScroll: 1,
+      infinityScroll: 1,
     };
     console.log("-------------");
     console.log(response);

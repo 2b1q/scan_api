@@ -59,7 +59,10 @@ const get_addr_token_balance = async (options, moduleId, listId) => {
     console.log(response);
     if(response.rows.length > 0) {
       response.head.moduleId = moduleId;
-      response.head.ListId = listId;
+      response.head.listId = listId;
+      response.head.updateTime = moment();
+
+
       return response
     } else  return check.get_msg().not_found
   } catch (e) {
