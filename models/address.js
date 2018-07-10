@@ -59,6 +59,8 @@ const GetAddrTokenBalance = async options => {
   let tokenList_p = addrTokenBalance(options);
 
   return await Promise.all([tokenList_p]).then((data) => {
+    console.log("-------------data------------");
+    console.log(data);
     response.rows = data.tokens;
     response.head = {
       entityId: options.addr,
@@ -67,6 +69,7 @@ const GetAddrTokenBalance = async options => {
       skip: options.skip,
       InfinityScroll: 1,
     };
+    console.log(response);
     return response
   }).catch(e => e)
 };
