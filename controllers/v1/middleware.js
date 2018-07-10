@@ -89,7 +89,8 @@ const emit = async (event, socket, data, con_obj, err) => {
             if (options.listId === l.token_balance){
               console.log("==> addrTokensBalance");
               response = await addr_controller.addrTokensBalance(options);
-              console.log(`response = ${response}`)
+              console.log("response = ");
+              console.log(response);
             } else {
               console.log("==> getAddrTnx");
               response = await addr_controller.getAddrTnx(options);
