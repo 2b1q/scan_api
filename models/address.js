@@ -58,7 +58,7 @@ const GetAddrTokenBalance = async options => {
   // construct query options for address details
   let tokenList_p = addrTokenBalance(options);
 
-  return await Promise.all([tokenList_p]).then((data) => {
+  return await Promise.all([tokenList_p]).then(([data]) => {
     console.log("-------------data------------");
     console.log(data);
     console.log(data.tokens);
