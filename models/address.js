@@ -166,6 +166,8 @@ const addrTokenBalance = async options => {
     partToken.push(tkn)
   }
 
+  console.log(`totalTokens = ${totalTokens}`);
+  console.log(`partToken.length = ${partToken.length}`);
   return {tokens: partToken, total: totalTokens}
 };
 
