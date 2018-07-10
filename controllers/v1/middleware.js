@@ -85,7 +85,15 @@ const emit = async (event, socket, data, con_obj, err) => {
           options.entityId = checkAddr(entityId);
           if(options.entityId === false) err(err_msg);
           else {
-            response = await addr_controller.getAddrTnx(options);
+
+            if (options.listId === config.list_type.token_balance){
+              console.log("==>addrTokensBalance");
+              response = addr_controller.addrTokensBalance(options);
+            } else {
+              console.log("==>getAddrTnx");
+              response = addr_controller.getAddrTnx(options);
+            }
+
             if(response.hasOwnProperty('Error')) err(err_msg);
             else emitMsg(socket, event, response)
           }
