@@ -87,7 +87,7 @@ const GetAddrTnx = async ({ listId, moduleId, page, size, entityId } = opts, res
   else return await get_addr_tnxs(options, moduleId, listId, clearAddr)
 };
 
-const GetAddrTokensBalance = async ({skip, size, entityId } = opts, res) => {
+const GetAddrTokensBalance = async ({listId, moduleId, skip, size, entityId } = opts, res) => {
   let clearAddr = check.cut0xClean(entityId);
   let options = {addr: clearAddr, skip: skip, size: size};
   logger.info(options);
