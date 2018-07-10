@@ -3,6 +3,7 @@ const config = require('../../config/config'),
       c      = config.color,
       e      = config.events.client, // socket IO client events
       m      = config.modules,  // modules
+      l      = config.list_type,  // modules
       logger = require('../../utils/logger')(module),
       moment = require('moment'),
       check  = require('../../utils/checker').cheker(),
@@ -85,14 +86,14 @@ const emit = async (event, socket, data, con_obj, err) => {
           options.entityId = checkAddr(entityId);
           if(options.entityId === false) err(err_msg);
           else {
-            /*if (options.listId === cfg.list_type.token_balance){
-              console.log("==>addrTokensBalance");
-              addr_controller.addrTokensBalance(options, res);
+            if (options.listId === l.token_balance){
+              console.log("==> addrTokensBalance");
+              response = await addr_controller.addrTokensBalance(options);
             } else {
-              console.log("==>getAddrTnx");
-              addr_controller.getAddrTnx(options, res);
-            }*/
-            response = await addr_controller.getAddrTnx(options);
+              console.log("==> getAddrTnx");
+              response = await addr_controller.getAddrTnx(options);
+            }
+            //response = await addr_controller.getAddrTnx(options);
 
             if(response.hasOwnProperty('Error')) err(err_msg);
             else emitMsg(socket, event, response)
