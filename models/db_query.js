@@ -10,7 +10,7 @@ const db        = require('../libs/db'),
     check = require('../utils/checker').cheker();
 
 // get collection by name
-const col = name => new Promise((resolve, reject) =>
+const col = name => new Promise((resolve) =>
   db.get.then(db_con => resolve(db_con.collection(name)))
 );
 
@@ -32,7 +32,7 @@ const findTokens = async (tnx_col, query) => {
 // common tnx get function (for block and tnx API)
 const GetDbTransactions = async options => {
   console.log(options);
-  let { skip, page, size, listId, entityId, max_skip, selector, sort } = options;
+  let { skip, page, size, listId, max_skip, selector, sort } = options;
   let tnx_col = get_tnx_col_by(listId);
   let db_col = await col(tnx_col);
   let count = await db_col.find(selector).count({});
@@ -99,7 +99,6 @@ const TxDetails = async (hash, query) => {
   return await Promise.all([q1,q2])
     .then( async data => {
       let [ ether_tnxs, token_tnxs ] = data; // 2d array destruct
-      delete data;  // GC drop
       let response = {};
 
       if(ether_tnxs.length === 0) {  // if no ether tnxs ASK pending TNXS from eth_proxy node
@@ -177,7 +176,6 @@ const TxDetails = async (hash, query) => {
           )
         });
         response.rows = txInner;
-        delete txInner
       }
       return response // return response object
     })
@@ -189,7 +187,7 @@ const TxDetails = async (hash, query) => {
 // find one db doc from collection using query pattern
 const findOneQuery = async (collection, query = {}) => {
   let db_col = await col(collection);
-  return new Promise(async (resolve, reject) => {
+  return new Promise(async (resolve) => {
     let count = await db_col.count(query);
     if(count === 0) resolve ({ rows: count }); // fix (reject to resolve)
     else db_col.findOne(query).then(doc => resolve(doc))
@@ -230,7 +228,7 @@ const distinct = async (collection, query = {}, key) => {
 // get block details by options
 const GetBlock = async options => {
   console.log(options);
-  let { block, block_col, ether_col, block_selector, tnx_selector } = options;
+  let {block_col, ether_col, block_selector, tnx_selector } = options;
   // assign new Object 'inner_selector' from 'tnx_selector' and change 'isinner' property
   let inner_selector = Object.assign({}, tnx_selector, { isinner: 1 }); // fix bug with one object reference modification
   // TODO: mongo aggregation query (one group count query)

@@ -1,15 +1,15 @@
 // socket.io controller
-const config = require('../../config/config'),
+const config = require('../config/config'),
       c      = config.color,
       e      = config.events.client, // socket IO client events
       m      = config.modules,  // modules
       l      = config.list_type,  // modules
-      logger = require('../../utils/logger')(module),
+      logger = require('../utils/logger')(module),
       moment = require('moment'),
-      check  = require('../../utils/checker').cheker(),
-      tnx_controller = require('./transaction'),
-      block_controller = require('./block'),
-      addr_controller = require('./address');
+      check  = require('../utils/checker').cheker(),
+      tnx_controller = require('../controllers/v1/transaction'),
+      block_controller = require('../controllers/v1/block'),
+      addr_controller = require('../controllers/v1/address');
 
 // log Event
 const log_event = (event, data, con_obj) => logger.socket_requests(
