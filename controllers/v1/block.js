@@ -92,13 +92,13 @@ const GetBlock = async (block, res) => {
 
 // Get block Tokens Transactions
 const GetBlockTokens = (req, res) => {
- let options = checkOptions(req,res, cfg.list_type.token);
+ let options = checkOptions(req, res, cfg.list_type.token);
  if(options) GetBlockTnx(options, res)
 };
 
 // Get block ETH Transactions
 const GetBlockEth = (req, res) => {
-  let options = checkOptions(req,res, cfg.list_type.eth);
+  let options = checkOptions(req, res, cfg.list_type.eth);
   if(options) GetBlockTnx(options, res)
 };
 

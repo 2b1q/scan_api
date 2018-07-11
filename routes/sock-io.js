@@ -49,7 +49,6 @@ const checkHash = hash => {
 
 // send msg to client
 const emitMsg = (socket, event, msg) => socket.emit(event, JSON.stringify(msg));
-const err_msg = { Error: 404, msg: 'Not found'};
 
 // emmit/log/event/error wrapper
 const emit = async (event, socket, data, con_obj, err) => {
@@ -59,49 +58,61 @@ const emit = async (event, socket, data, con_obj, err) => {
       response = {},
       { listId, moduleId, params, addr = 0, block, hash = 0 } = JSON.parse(data),
       { entityId = 0 } = params || {},
-      tx_opts = check.build_io_opts(params, listId, moduleId, entityId); // buil tx options for GetlastTx
+      tx_opts = check.build_io_opts(params, listId, moduleId, entityId); // built tx options for GetlastTx
   switch (event) {
     case e.list: // event = 'list'
       options = checkOptions(listId, moduleId, entityId, params);
       switch (moduleId) {
         case m.tnx: // moduleId => transactions
-          response = await tnx_controller.getTnx(tx_opts);
-          if(response.hasOwnProperty('Error')) err(err_msg);
-          else emitMsg(socket, event, response);
+          switch (listId) {
+            case l.eth:
+              response = await tnx_controller.getTnx(tx_opts);
+              break;
+            default:
+              response = {error: 404, msg: 'Unknown listId'}
+          }
           break;
         case m.token: // moduleId => tokens
-          response = await tnx_controller.getTnx(tx_opts);
-          if(response.hasOwnProperty('Error')) err(err_msg);
-          else emitMsg(socket, event, response);
+          switch (listId) {
+            case l.token:
+              response = await tnx_controller.getTnx(tx_opts);
+              break;
+            default:
+              response = {error: 404, msg: 'Unknown listId'}
+          }
           break;
         case m.block: // moduleId => block
-          if(options === false || isNaN(entityId)) err(err_msg);
-          else {
-            response = await block_controller.getBlockTnx(options);
-            if(response.hasOwnProperty('Error')) err(err_msg);
-            else emitMsg(socket, event, response)
+          if(options === false || isNaN(entityId)) {
+            response = {error: 404, msg: 'Bad params'}
+          } else {
+            switch (listId) {
+              case l.token: case l.eth:
+                response = await block_controller.getBlockTnx(options);
+                break;
+              default:
+                response = {error: 404, msg: 'Unknown listId'}
+            }
           }
           break;
         case m.addr: // moduleId => address
           options.entityId = checkAddr(entityId);
-          if(options.entityId === false) err(err_msg);
-          else {
-            if (options.listId === l.token_balance){
-              console.log("==> addrTokensBalance");
-              response = await addr_controller.addrTokensBalance(options);
-            } else {
-              console.log("==> getAddrTnx");
-              response = await addr_controller.getAddrTnx(options);
+          if(options.entityId === false) {
+            response = {error: 404, msg: 'Bad params'}
+          } else {
+            switch (listId) {
+              case l.token: case l.eth:
+                response = await addr_controller.getAddrTnx(options);
+                break;
+              case l.token_balance:
+                response = await addr_controller.addrTokensBalance(options);
+                break;
+              default:
+                response = {error: 404, msg: 'Unknown listId'}
             }
-            //response = await addr_controller.getAddrTnx(options);
-
-            if(response.hasOwnProperty('Error')) err(err_msg);
-            else emitMsg(socket, event, response)
+            break;
           }
-          break;
-        default: emitMsg(socket, event, 'Unknown ModuleId')
       }
-      console.log(`${c.green}=socket.io > ${event} > ${moduleId} =`);
+      console.log(`${c.green}=socket.io > ${event} > ${moduleId} > ${listId} =`);
       if(options) console.log(`${c.yellow}${JSON.stringify(options,null,2)}`);
       console.log(`${c.green}====================================${c.white}`);
       break;
@@ -109,35 +120,25 @@ const emit = async (event, socket, data, con_obj, err) => {
       let caddr = checkAddr(addr);
       console.log(`${c.green}===== socket.io > addressDetails ===${c.yellow}`);
       console.log({ addr: addr, cleared_addr: caddr });
-      // console.log(await addr_controller.getAddrIo(caddr)); DEBUG
-      /*
-      ===== socket.io > addressDetails ===
-{ addr: '99e793f74ebeda76005a83396e63493f7f26f4a2',
-  cleared_addr: '99e793f74ebeda76005a83396e63493f7f26f4a2' }
-connection not open on send()
-{ error: Error: connection not open
-    at WebsocketProvider.send (/home/bbq/BANKEX/playground/dev/bkx-scan-api/node_modules/web3-providers-ws/src/index.js:247:18)
-      */
       console.log(`${c.green}====================================${c.white}`);
-      if(caddr === false) err(err_msg);
-      // else emitMsg(socket, event, await addr_controller.getAddrIo(caddr))
+      if(caddr === false) {
+        response = {error: 404, msg: 'Bad params'};
+      }
       else {
         response = await addr_controller.getAddrIo(caddr);
-        if(response.hasOwnProperty('Error')) err(err_msg);
-        else emitMsg(socket, event, response)
       }
       break;
     case e.block_d: // get block details event = 'blockDetails'
       block = Number (block);
-      if(isNaN(block)) err(err_msg);
-      else {
-        response = await block_controller.getBlockIo(block);
-        if(response.hasOwnProperty('Error')) err(err_msg);
-        else emitMsg(socket, event, response)
-      }
       console.log(`${c.green}===== socket.io > blockDetails =====${c.yellow}`);
       console.log({ block: block });
       console.log(`${c.green}====================================${c.white}`);
+      if(isNaN(block)) {
+        response = {error: 404, msg: 'Bad params'};
+      }
+      else {
+        response = await block_controller.getBlockIo(block);
+      }
       break;
     case e.tx_d: // get tnx details event = 'txDetails'
       let chash = checkHash(hash);
@@ -146,14 +147,16 @@ connection not open on send()
       console.log(`${c.green}====================================${c.white}`);
       if(chash) {
         response = await tnx_controller.getTxIo(chash);
-        if(response.hasOwnProperty('Error')) err(err_msg);
-        else emitMsg(socket, event, response)
+      } else {
+        response = {error: 404, msg: 'Bad params'};
       }
-      else err(err_msg);
       break;
     default:
-      emitMsg(socket, event, 'Unknown event')
+      response = {error: 404, msg: 'Unknown moduleId'}
   }
+
+  if(response.hasOwnProperty('error')) err(response);
+  else emitMsg(socket, event, response);
 };
 
 // init io handler

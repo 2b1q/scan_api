@@ -19,17 +19,17 @@ const check_module_singleton = (() => {
           MAX_SKIP = cfg.store.mongo.max_skip;
     // client msgs
     const msg = {
-      not_found:            {Error: 'Not found', Head: {}, Rows: []},
-      unknown_listid:       {Error: 'Unknown listId', Head: {}, Rows: []},
-      no_api_key:           {Error: 'unable to set "api_key" param' },
-      wrong_api_key:        {Error: 'bad "api_key"' },
-      wrong_block:          {Error: 'Wrong block number'},
-      wrong_addr:           {Error: 'Wrong addr property'},
-      wrong_entityId:       {Error: 'Wrong entityId property'},
-      unknown_module_id:    {Error: 'Unknown moduleId', Head: {}, Rows: []},
-      no_entityId:          {Error: 'entityId not found'},
-      bad_hash:             hash => Object({Error: `Bad Hash value "${hash}"`}),
-      bad_addr:             addr => Object({Error: `Bad addr value "${addr}"`})
+      not_found:            {error: 'Not found', Head: {}, Rows: []},
+      unknown_listid:       {error: 'Unknown listId', Head: {}, Rows: []},
+      no_api_key:           {error: 'unable to set "api_key" param' },
+      wrong_api_key:        {error: 'bad "api_key"' },
+      wrong_block:          {error: 'Wrong block number'},
+      wrong_addr:           {error: 'Wrong addr property'},
+      wrong_entityId:       {error: 'Wrong entityId property'},
+      unknown_module_id:    {error: 'Unknown moduleId', Head: {}, Rows: []},
+      no_entityId:          {error: 'entityId not found'},
+      bad_hash:             hash => Object({error: `Bad Hash value "${hash}"`}),
+      bad_addr:             addr => Object({error: `Bad addr value "${addr}"`})
     };
     // private functions
     let isFloat = n => n === +n && n !== (n|0),

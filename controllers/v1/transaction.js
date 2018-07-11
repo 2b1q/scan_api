@@ -58,16 +58,6 @@ const GetTnx = async ({ listId, moduleId, page, size } = opts, res) => {
   }
 };
 
-/* ChekListId Promise (use it to check ListId param)
-* e.g. check ListId then GetTnx (use it in IO requests)
-* ChekListId(ListId, res)
-*  .then(() => GetTnx(options, res))
-*/
-const ChekListId = (listId, res) => new Promise((resolve) =>
-  check.listId(listId, res)
-    ? resolve()
-    : false
-);
 
 const ChekHash = (clear_hash, hash, res) => new Promise((resolve) =>
   check.checkHash(clear_hash, hash, res)

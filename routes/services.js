@@ -8,8 +8,12 @@ const tnx_controller_v1 = require('../controllers/v1/transaction'),
 // v1 route RegExp pattern
 const v1_ptrn = path => new RegExp(`(^\/v1\/${path}$)|(^\/${path}$)`);
 
+//const test = async (req, res) =>{
+//  res.sendFile("/home/lriman/Development/Projects/JsProjects/bkxscan-api/index.html")
+//};
 /* ETH test endpoinds */
-router.get('/nodes',           eth_api.getLastBlocks);       // nodes last blocks
+router.get('/nodes',    eth_api.getLastBlocks);       // nodes last blocks
+//router.get('/test',     test );       // count all tnxs endpoint [HTTP GET]
 
 /* REST API endpoint
 * - routing by path (new routing)
@@ -20,7 +24,6 @@ router.post(v1_ptrn('transactions/ether'),    tnx_controller_v1.lastTnxEth);    
 router.post(v1_ptrn('transactions/tokens'),   tnx_controller_v1.lastTnxTokens);  // GetLast Tokens Transactions endpoint [HTTP POST]
 router.post(v1_ptrn('transactions/details'),  tnx_controller_v1.TnxDetails);     // Get Transaction details endpoint [HTTP POST]
 router.get(v1_ptrn('transactions/count'),     tnx_controller_v1.countTnx);       // count all tnxs endpoint [HTTP GET]
-
 
 /* block  endpoints */
 router.post(v1_ptrn('block/tokens'),   block_controller_v1.blockTokens);  // GetLast block tokens Transactions tendpoint [HTTP POST]

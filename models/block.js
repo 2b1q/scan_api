@@ -12,7 +12,7 @@ const MAX_SKIP  = require('../config/config').store.mongo.max_skip,
 * Get block tnx:
 *  GO api.GetBlockTransactions(1000014, 2, 10, "txtype = 'tx'")
 */
-const GetblockTransactions = async (options = {}) => {
+const GetBlockTransactions = async (options = {}) => {
   // construct query options for block tnxs
   options = {
     max_skip: MAX_SKIP,
@@ -41,6 +41,6 @@ const GetBlock = async block => {
 
 
 module.exports = {
-  blockTnxs:    GetblockTransactions,  // Get block tnx (GO api.GetBlockTransactions(1000014, 2, 10, "txtype = 'tx'"))
+  blockTnxs:    GetBlockTransactions,  // Get block tnx (GO api.GetBlockTransactions(1000014, 2, 10, "txtype = 'tx'"))
   getBlock:     GetBlock               // get block details
 };

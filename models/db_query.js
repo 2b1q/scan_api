@@ -15,7 +15,16 @@ const col = name => new Promise((resolve) =>
 );
 
 // get tnx db collection name by listId
-const get_tnx_col_by = listId => listId ==='listOfETH' ? 'ether_txn':'token_txn';
+const get_tnx_col_by = listId => {
+  switch (listId) {
+    case cfg.list_type.eth:
+      return cfg.store.cols.eth;
+    case cfg.list_type.token:
+      return cfg.store.cols.token;
+    default:
+      return '';
+  }
+};
 
 // find tokens
 const findTokens = async (tnx_col, query) => {
