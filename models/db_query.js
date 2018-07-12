@@ -156,12 +156,6 @@ const TxDetails = async (hash, query) => {
           };
           response.rows = []
         }
-
-        if (tx === null){
-          console.log("=============================== TX = NULL ======================");
-          response.error = 404;
-          response.msg = "Not found";
-        }
       } else {
         let txInner = [];
         ether_tnxs.forEach(tx => {
