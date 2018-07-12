@@ -153,6 +153,9 @@ const TxDetails = async (hash, query) => {
             }
           };
           response.rows = []
+        } else {
+          response.error = 404;
+          response.hash = "Not found";
         }
       } else {
         let txInner = [];
@@ -251,14 +254,14 @@ const GetBlock = async options => {
   // do in parallel, if block not found reject and drop other promises
   return await Promise.all([blockHeader_p, mainTxCount_p, innerTxCount_p])
     .then(([block, main, inner] = data) => {
-      if (block.block) return {error: 404, msg: "Not found"}; else
-      return({
-        head: {
-          ...block,
-          maintxcount:  main.cnt,
-          innertxcount: inner.cnt
-        }
-      })
+      if (block.block)
+        return({
+          head: {
+            ...block,
+            maintxcount:  main.cnt,
+            innertxcount: inner.cnt
+          }
+        }); else return {error: 404, msg: "Not found"};
     })
     .catch(e => e)
 };
