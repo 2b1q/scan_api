@@ -55,7 +55,7 @@ const GetDbTransactions = async options => {
       .toArray((err, docs) => {
         if(err) return reject(err); // stop flow and return reject with exeption
         let txns = docs.map(tx => {
-          return {
+          let t = {
             // construct token object
             token: {
               addr:   tx.tokenaddr,
@@ -65,7 +65,10 @@ const GetDbTransactions = async options => {
               type:   tx.tokentype
             },
             ...tx // spread => return all data AS IS
-          }
+          };
+          delete t.data;
+          delete t.rcplogs;
+          return t;
         });
         resolve({
           page:page,
