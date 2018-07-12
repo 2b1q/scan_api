@@ -251,6 +251,9 @@ const GetBlock = async options => {
   // do in parallel, if block not found reject and drop other promises
   return await Promise.all([blockHeader_p, mainTxCount_p, innerTxCount_p])
     .then(([block, main, inner] = data) => {
+      console.log("============ block ================");
+      console.log(block);
+      console.log(block._id);
       return({
         head: {
           ...block,
