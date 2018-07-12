@@ -125,6 +125,8 @@ const TxDetails = async (hash, query) => {
         console.log("Pending TX = ", tx);
         // construct response data if tx -> Not null and Not undefined
         if(tx) {
+          console.log("=============================== TX ======================");
+          console.log(tx);
           delete response.empty; // first delete empty flag
           response.head = {
             token: {
@@ -153,9 +155,12 @@ const TxDetails = async (hash, query) => {
             }
           };
           response.rows = []
-        } else {
+        }
+
+        if (tx === null){
+          console.log("=============================== TX = NULL ======================");
           response.error = 404;
-          response.hash = "Not found";
+          response.msg = "Not found";
         }
       } else {
         let txInner = [];
