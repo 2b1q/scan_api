@@ -114,6 +114,7 @@ const checkOptions = (req, res, listId = '', moduleId = 'address' ) => {
       : false
   } else { // if listId not passed then its Address details OR bad query
     let addr = req.body.addr || 0;
+    console.log(addr);
     return check.addr(addr, res)
       ? addr
       : false
