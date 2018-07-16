@@ -142,6 +142,7 @@ const check_module_singleton = (() => {
 
     // check address from client request
     let check_addr_exist = (address, res) => {
+      console.log(address);
       if(isNaN(address)) address = 0;
       console.log(address);
       return address !== 0
