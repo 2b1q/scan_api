@@ -59,13 +59,13 @@ const check_module_singleton = (() => {
       let { page, size, filters } = req.body.params === undefined
         ? { page: 1, size: 20, filters: {} } // default values
         : req.body.params;
-      let { skip } = pageandsize(page, size)
+      let { skip, s = size, p = page } = pageandsize(page, size)
       return {
         listId:   listId,
         moduleId: moduleId,
-        page:     Number (parseInt(page)),
+        page:     p,
         skip:     skip,
-        size:     Number (parseInt(size)),
+        size:     s,
         filters:  filters,
         entityId: entityId
       }

@@ -55,8 +55,6 @@ exports.list = (req, res) => {
               res.json(check.get_msg().bad_addr(entityId))
               break
           }
-
-        options = checkOptions(req, res, listId, moduleId, c_addr);
         if(options) {
           if (options.listId === cfg.list_type.token_balance){
             console.log("==>addrTokensBalance");

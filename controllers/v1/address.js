@@ -152,13 +152,15 @@ const GetAddrEth = (req, res) => {
 
 // Get Address details
 const GetAddrDetails = (req, res) => {
-  let addr = checkOptions(req,res);
-  if(addr) {
-    let clearAddr = check.cut0xClean(addr);      // clear address
-    logger.info({addr: addr, cleared_addr: clearAddr});
-    if(check.checkAddr(clearAddr, addr, res)) GetAddr(clearAddr, res)
-
-  }
+    let addr = req.body.addr;
+    let c_addr = check.cut0xClean(addr) // cut 0x and clean address
+    // check cleared address by length
+    if( !check.checkAddr(c_addr, addr) ) {
+        res.json(check.get_msg().bad_addr(addr))
+    } else {
+        logger.info({addr: addr, cleared_addr: c_addr});
+        GetAddr(c_addr, res)
+    }
 };
 
 
