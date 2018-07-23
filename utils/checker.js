@@ -34,16 +34,37 @@ const check_module_singleton = (() => {
     // private functions
     let isFloat = n => n === +n && n !== (n|0),
         isInteger = n => n === +n && n === (n|0);
+    // build page options (Go safePageAndSize "bkxscan/blob/master/main/api/main.go")
+    let pageandsize = (p, s) => {
+          let page = (isNaN(p)) ? 1 :  Number (p).toFixed(); // default page = 1
+          let size = (isNaN(s)) ? 20 : Number (s).toFixed(); // default size = 20 (if size 'undefined')
+          // set page limits
+          if(page < MIN_PAGE) page = MIN_PAGE;
+          if(page > MAX_PAGE) page = MAX_PAGE;
+          if(size < MIN_SIZE) size = MIN_SIZE;
+          if(size > MAX_SIZE) size = MAX_SIZE;
+          let skip = (page - 1) * size;
+          if(skip > MAX_SKIP) page = MAX_SKIP / size;
+          skip = (page - 1) * size;
+          // return safePageAndSize
+          return {
+              skip: Number (skip),
+              size: Number (size), // avoid string
+              page: Number (page)  // avoid string
+          }
+      };
+
     // build qury options
     let build_params = (req, listId, moduleId, entityId) => {
-      let { page, size, skip, filters } = req.body.params === undefined
-        ? { page: 1, size: 20, skip: 0, filters: {} } // default values
+      let { page, size, filters } = req.body.params === undefined
+        ? { page: 1, size: 20, filters: {} } // default values
         : req.body.params;
+      let { skip } = pageandsize(page, size)
       return {
         listId:   listId,
         moduleId: moduleId,
         page:     Number (parseInt(page)),
-        skip:     Number (parseInt(skip)),
+        skip:     skip,
         size:     Number (parseInt(size)),
         filters:  filters,
         entityId: entityId
@@ -64,25 +85,7 @@ const check_module_singleton = (() => {
         entityId: entityId.length >= 40 ? entityId : Number (entityId) // if entityId length >= 40 its address else its block
       }
     };
-    // build page options (Go safePageAndSize "bkxscan/blob/master/main/api/main.go")
-    let pageandsize = (p, s) => {
-      let page = (isNaN(p)) ? 1 :  Number (p).toFixed(); // default page = 1
-      let size = (isNaN(s)) ? 20 : Number (s).toFixed(); // default size = 20 (if size 'undefined')
-      // set page limits
-      if(page < MIN_PAGE) page = MIN_PAGE;
-      if(page > MAX_PAGE) page = MAX_PAGE;
-      if(size < MIN_SIZE) size = MIN_SIZE;
-      if(size > MAX_SIZE) size = MAX_SIZE;
-      let skip = (page - 1) * size;
-      if(skip > MAX_SKIP) page = MAX_SKIP / size;
-      skip = (page - 1) * size;
-      // return safePageAndSize
-      return {
-        skip: Number (skip),
-        size: Number (size), // avoid string
-        page: Number (page)  // avoid string
-      }
-    };
+
 
     // check IF token exist
     let chek_token = token => cfg.restOptions.apiKeys.includes(token);
