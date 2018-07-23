@@ -169,7 +169,7 @@ const check_module_singleton = (() => {
         : '';
 
     // cut '0x' then remove unexpected chars from hex
-    let cut0x_Clean = hash => clean_Hex(cut_0x(hash));
+    let cut0x_Clean = hash => clean_Hex(cut_0x(hash)).toLowerCase();
 
     // public interface
     return {
