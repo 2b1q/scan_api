@@ -26,8 +26,8 @@ const checkOptions = (req, res, listId, moduleId, entityId) =>
 // list API
 exports.list = (req, res) => {
   logger.api_requests(logit(req)); // log query data any way
-  let listId   = req.body.listId || req.body.listid;
-  let moduleId = req.body.moduleId || req.body.moduleid;
+  let listId   = req.body.listId || req.body.listid;      // TODO in API v.2 - remove lower case 'listid' parameter, use onle lowerCamelCase (listid)
+  let moduleId = req.body.moduleId || req.body.moduleid;  // TODO in API v.2 - remove lower case 'moduleid' parameter, use onle lowerCamelCase (moduleId)
   let { entityId = 0 } = req.body.params || {}; // if entityId not set or no params => entityId = 0 => then "error"
   let options = {};
   // check listId AND moduleId
@@ -49,7 +49,13 @@ exports.list = (req, res) => {
         tnx_controller.getTnx(options, res);
         break;
       case 'address':
-        options = checkOptions(req, res, listId, moduleId, entityId);
+          let c_addr = check.cut0xClean(entityId) // cut 0x and clean address
+          // check cleared address by length
+          if( !check.checkAddr(c_addr, entityId) ) {
+              res.json(check.get_msg().bad_addr(entityId))
+              break
+          }
+        options = checkOptions(req, res, listId, moduleId, c_addr);
         if(options) {
           if (options.listId === cfg.list_type.token_balance){
             console.log("==>addrTokensBalance");

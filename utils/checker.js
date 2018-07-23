@@ -106,11 +106,17 @@ const check_module_singleton = (() => {
         ? true
         : send_response(res, msg.bad_hash(hash), 404);
 
-    // check addr from client request
-    let check_addr = (caddr, addr, res) =>
+    // check addr from client request WITH respose (OLD)
+    let _check_addr = (caddr, addr, res) =>
       caddr.length === 40
             ? true
             : send_response(res, msg.bad_addr(addr), 404);
+
+    // check addr from client request
+    let check_addr = (caddr, addr) =>
+      caddr.length === 40
+            ? true
+            : false
 
     // check listId from client request
     let check_listId = (listId, res) =>
@@ -125,8 +131,7 @@ const check_module_singleton = (() => {
         : send_response(res, msg.unknown_module_id, 404);
 
     // check entityId from client request
-    let check_entityId = (entityId, res) => {
-      if(isNaN(entityId)) entityId = 0;
+    let check_entityId = (entityId = 0, res) => {
       return entityId !== 0
         ? true
         : send_response(res, msg.wrong_entityId, 404)
@@ -181,7 +186,8 @@ const check_module_singleton = (() => {
       cleanHex: hash => clean_Hex(hash),                              // remove unexpected chars from hex
       cut0xClean: hash => cut0x_Clean(hash),                          // cut '0x' then remove unexpected chars from hex
       checkHash: (chash, hash, res) => check_Hash(chash, hash, res),  // check hash from client request
-      checkAddr: (caddr, addr, res) => check_addr(caddr, addr, res),  // check address from client request
+      _checkAddr: (caddr, addr, res) => _check_addr(caddr, addr, res),  // check address from client request // OLD
+      checkAddr: (caddr, addr) => check_addr(caddr, addr),            // check address from client request
       entityId: (eid, res) => check_entityId(eid, res),               // check entityId from client request
       block: (block, res) => check_block(block, res),                 // check block from client request
       addr: (address, res) => check_addr_exist(address, res)          // check IS address exists from client request
