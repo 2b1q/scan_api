@@ -11,7 +11,9 @@ cluster.on('online', worker => {
     console.log(config.color.magenta+'Worker %d '+config.color.white+'online', worker.id)
 });
 
-// fork workers process (not by CPU cores)
-for(let i = 0; i < config.workers; ++i) {
+let cpuCount = require('os').cpus().length;
+
+// fork workers by CPU cores
+for(let i = 0; i < cpuCount; ++i) {
   cluster.fork();
 }
