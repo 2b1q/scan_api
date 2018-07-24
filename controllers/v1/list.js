@@ -6,7 +6,12 @@ const check = require('../../utils/checker').cheker(),
   moment = require('moment'),
   addr_controller = require('./address'),
   block_types = Object.values(cfg.list_type).filter(vals => vals !== 'listOfTokenBalance'), // convert JSON to Array and exclude 'listOfTokenBalance'
-  list_type = cfg.list_type;
+  list_type = cfg.list_type,
+  cluster = require('cluster'),
+  c = cfg.color;
+
+// worker id pattern
+const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[list controller] ${c.white}`)();
 
 // simple query logger
 let logit = (req, msg = '') => {
@@ -27,6 +32,7 @@ exports.list = (req, res) => {
   let moduleId = req.body.moduleId || req.body.moduleid;  // TODO in API v.2 - remove lower case 'moduleid' parameter, use onle lowerCamelCase (moduleId)
   let { entityId = 0 } = req.body.params || {}; // if entityId not set or no params => entityId = 0 => then "error"
   let options = {};
+  console.log(`${wid_ptrn}`);
   // check listId AND moduleId
   if(check.listId(listId) && check.moduleId(moduleId)){
     switch(moduleId){
