@@ -1,41 +1,51 @@
 const check = require('../../utils/checker').cheker(),
-      cfg = require('../../config/config'),
-      tnx_controller = require('./transaction'),
-      block_controller = require('./block'),
-      logger = require('../../utils/logger')(module),
-      moment = require('moment'),
-      addr_controller = require('./address');
+  cfg = require('../../config/config'),
+  tnx_controller = require('./transaction'),
+  block_controller = require('./block'),
+  logger = require('../../utils/logger')(module),
+  moment = require('moment'),
+  addr_controller = require('./address'),
+  block_types = Object.values(cfg.list_type).filter(vals => vals !== 'listOfTokenBalance'); // convert JSON to Array and exclude 'listOfTokenBalance'
 
 // simple query logger
 let logit = (req, msg = '') => {
   return {
-    msg:              msg,
-    post_params:      req.body,
-    get_params:       req.query,
-    timestamp:        (() => moment().format('DD.MM.YYYY HH:mm:ss'))(),
-    path:             module.filename.split('/').slice(-2).join('/')
+    msg: msg,
+    post_params: req.body,
+    get_params: req.query,
+    timestamp: (() => moment().format('DD.MM.YYYY HH:mm:ss'))(),
+    path: module.filename.split('/').slice(-2).join('/')
   }
 };
 
-// check block/address options (REST API).
-const checkOptions = (req, res, listId, moduleId, entityId) =>
-  check.entityId(entityId, res)
-    ? check.build_options(req, listId, moduleId, entityId)
-    : false;
 
 // list API
 exports.list = (req, res) => {
   logger.api_requests(logit(req)); // log query data any way
-  let listId   = req.body.listId || req.body.listid;      // TODO in API v.2 - remove lower case 'listid' parameter, use onle lowerCamelCase (listid)
+  let listId = req.body.listId || req.body.listid;      // TODO in API v.2 - remove lower case 'listid' parameter, use onle lowerCamelCase (listid)
   let moduleId = req.body.moduleId || req.body.moduleid;  // TODO in API v.2 - remove lower case 'moduleid' parameter, use onle lowerCamelCase (moduleId)
   let { entityId = 0 } = req.body.params || {}; // if entityId not set or no params => entityId = 0 => then "error"
   let options = {};
   // check listId AND moduleId
-  if(check.listId(listId, res) && check.moduleId(moduleId, res)) {
-    switch (moduleId) {
+  if(check.listId(listId) && check.moduleId(moduleId)){
+    switch(moduleId){
       case 'block':
-        entityId = Number( parseInt(entityId) ); // parse any value and convert to Number
-        options = checkOptions(req, res, listId, moduleId, entityId);
+        // check listId type for block query (fixed if listId = 'listOfTokenBalance' its REQ without RESP)
+        if(!block_types.includes(listId)){
+          res.status(400);
+          res.json(check.get_msg().wrong_listId);
+          break
+        }
+        // check block parameter is integer && > 0
+        let block = Number(parseInt(entityId)); // convert to Number
+        if(!check.block(block)){
+          res.status(400);
+          res.json(check.get_msg().wrong_block);
+          break
+        }
+        // build options
+        options = check.build_options(req, listId, moduleId, block);
+        logger.info(options); // log options to console
         if(options) block_controller.getBlockTnx(options, res);
         break;
       case 'transactions': // listOfETH
@@ -49,40 +59,28 @@ exports.list = (req, res) => {
         tnx_controller.getTnx(options, res);
         break;
       case 'address':
-          let c_addr = check.cut0xClean(entityId) // cut 0x and clean address
-          // check cleared address by length
-          if( !check.checkAddr(c_addr, entityId) ) {
-              res.json(check.get_msg().bad_addr(entityId))
-              break
-          }
-          options = checkOptions(req, res, listId, moduleId, c_addr)
-        if(options) {
-          if (options.listId === cfg.list_type.token_balance){
+        let c_addr = check.cut0xClean(entityId); // cut 0x and clean address
+        // check cleared address by length
+        if(!check.checkAddr(c_addr, entityId)){
+          res.json(check.get_msg().bad_addr(entityId));
+          break
+        }
+        options = checkOptions(req, res, listId, moduleId, c_addr);
+        if(options){
+          if(options.listId === cfg.list_type.token_balance){
             console.log("==>addrTokensBalance");
             addr_controller.addrTokensBalance(options, res);
-          } else {
+          }else{
             console.log("==>getAddrTnx");
             addr_controller.getAddrTnx(options, res);
           }
         }
         break;
-      default: res.json(check.get_msg().unknown_module_id)
+      default:
+        res.json(check.get_msg().unknown_module_id) // not achievable
     }
+  }else{
+    res.status(400);
+    res.json({ error: `${check.get_msg().unknown_module_id.error} or ${check.get_msg().unknown_listid.error}` })
   }
 };
-/*
-{
-    "listId": "listOfETH",          // тип списка - эфир или токены (в будущем моет быть что-то еще)
-    "moduleId": "block",            // назначение модуля
-    "params": {
-        "entityId": "5000000",      // идентификатор поиска. Адрес или номер блока
-        "page": 1,                  // номер страницы
-        "size": 50,                 // кол-во элементов на странице
-    }
-}
-api/list "moduleId":
-  block, (принимает оба значения listId)
-  transactions (принимает только listId = listOfETH),
-  tokens,  (принимает только listId = listOfTokens)
-  address (принимает оба значения listId)
-*/

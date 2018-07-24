@@ -20,13 +20,14 @@ const check_module_singleton = (() => {
     // client msgs
     const msg = {
       not_found:            {error: 'Not found', Head: {}, Rows: []},
-      unknown_listid:       {error: 'Unknown listId', Head: {}, Rows: []},
+      unknown_listid:       {error: 'Unknown listId'},
       no_api_key:           {error: 'unable to set "api_key" param' },
       wrong_api_key:        {error: 'bad "api_key"' },
       wrong_block:          {error: 'Wrong block number'},
       wrong_addr:           {error: 'Wrong addr property'},
       wrong_entityId:       {error: 'Wrong entityId property'},
-      unknown_module_id:    {error: 'Unknown moduleId', Head: {}, Rows: []},
+      wrong_listId:         {error: 'Wrong listId property'},
+      unknown_module_id:    {error: 'Unknown moduleId'},
       no_entityId:          {error: 'entityId not found'},
       bad_hash:             hash => Object({error: `Bad Hash value "${hash}"`}),
       bad_addr:             addr => Object({error: `Bad addr value "${addr}"`})
@@ -116,36 +117,43 @@ const check_module_singleton = (() => {
             : send_response(res, msg.bad_addr(addr), 404);
 
     // check addr from client request
-    let check_addr = (caddr, addr) =>
+    let check_addr = caddr =>
       caddr.length === 40
             ? true
             : false
 
     // check listId from client request
-    let check_listId = (listId, res) =>
+    let check_listId = listId =>
       Object.values(cfg.list_type).includes(listId)
         ? true
-        : send_response(res, msg.unknown_listid, 404);
+        : false
 
     // check ModuleId from client request
-    let check_moduleId = (moduleId, res) =>
+    let check_moduleId = moduleId =>
       Object.values(cfg.modules).includes(moduleId)
         ? true
-        : send_response(res, msg.unknown_module_id, 404);
+        : false
 
     // check entityId from client request
-    let check_entityId = (entityId = 0, res) => {
+    let check_entityId = (entityId = 0) => {
       return entityId !== 0
         ? true
-        : send_response(res, msg.wrong_entityId, 404)
+        : false
       };
 
     // check block from client request
-    let check_block = (block, res) => {
+    let _check_block = (block, res) => {
       if(isNaN(block)) block = 0;
       return block !== 0
         ? true
         : send_response(res, msg.wrong_block, 404)
+    };
+
+    // check block from client request
+    let check_block = block => {
+      return (isInteger(block) && block > 0)
+        ? true
+        : false
     };
 
     // check address from client request
@@ -175,11 +183,13 @@ const check_module_singleton = (() => {
     return {
       isInt: n => isInteger(n),                                       // handy tools
       isFloat: n => isFloat(n),                                       // handy tools
-      safePageAndSize: (p,s) => pageandsize(p,s),                    // build page options => harcoded limits constants from (Go safePageAndSize)
+      safePageAndSize: (p,s) => pageandsize(p,s),                     // build page options => harcoded limits constants from (Go safePageAndSize)
       apiToken: token => chek_token(token),                           // check API_KEY token (not used yet)
       auth: (api_key, res) => check_auth(api_key, res),               // auth using API_KEY token (not used yet)
-      listId: (lid, res) => check_listId(lid, res),                   // check is correct ListId
-      moduleId: (mid, res) => check_moduleId(mid, res),               // check is correct ModuleId
+      _listId: (lid, res) => check_listId(lid, res),                  // check is correct ListId
+      listId: lid => check_listId(lid),                               // check is correct ListId
+      moduleId: mid => check_moduleId(mid),                           // check is correct ModuleId
+      _moduleId: (mid, res) => check_moduleId(mid, res),              // check is correct ModuleId
       get_msg: () => msg,                                             // get client msgs object
       build_options: (req, lid, mid, eid) =>
         build_params(req, lid, mid, eid),                             // build qury options
@@ -190,9 +200,11 @@ const check_module_singleton = (() => {
       cut0xClean: hash => cut0x_Clean(hash),                          // cut '0x' then remove unexpected chars from hex
       checkHash: (chash, hash, res) => check_Hash(chash, hash, res),  // check hash from client request
       _checkAddr: (caddr, addr, res) => _check_addr(caddr, addr, res),  // check address from client request // OLD
-      checkAddr: (caddr, addr) => check_addr(caddr, addr),            // check address from client request
-      entityId: (eid, res) => check_entityId(eid, res),               // check entityId from client request
-      block: (block, res) => check_block(block, res),                 // check block from client request
+      checkAddr: caddr => check_addr(caddr),                          // check address from client request
+      _entityId: (eid, res) => check_entityId(eid, res),               // check entityId from client request
+      entityId: eid => check_entityId(eid),                           // check entityId from client request
+      _block: (block, res) => _check_block(block, res),                // check block from client request
+      block: block => check_block(block),                             // check block from client request
       addr: (address, res) => check_addr_exist(address, res)          // check IS address exists from client request
     }
   };
