@@ -5,7 +5,8 @@ const check = require('../../utils/checker').cheker(),
   logger = require('../../utils/logger')(module),
   moment = require('moment'),
   addr_controller = require('./address'),
-  block_types = Object.values(cfg.list_type).filter(vals => vals !== 'listOfTokenBalance'); // convert JSON to Array and exclude 'listOfTokenBalance'
+  block_types = Object.values(cfg.list_type).filter(vals => vals !== 'listOfTokenBalance'), // convert JSON to Array and exclude 'listOfTokenBalance'
+  list_type = cfg.list_type;
 
 // simple query logger
 let logit = (req, msg = '') => {
@@ -46,7 +47,7 @@ exports.list = (req, res) => {
         // build options
         options = check.build_options(req, listId, moduleId, block);
         logger.info(options); // log options to console
-        if(options) block_controller.getBlockTnx(options, res);
+        block_controller.getBlockTnx(options, res);
         break;
       case 'transactions': // listOfETH
         options = check.build_options(req, 'listOfETH', moduleId);
@@ -62,24 +63,25 @@ exports.list = (req, res) => {
         let c_addr = check.cut0xClean(entityId); // cut 0x and clean address
         // check cleared address by length
         if(!check.checkAddr(c_addr, entityId)){
+          res.status(400)
           res.json(check.get_msg().bad_addr(entityId));
           break
         }
-        options = checkOptions(req, res, listId, moduleId, c_addr);
-        if(options){
-          if(options.listId === cfg.list_type.token_balance){
-            console.log("==>addrTokensBalance");
-            addr_controller.addrTokensBalance(options, res);
-          }else{
-            console.log("==>getAddrTnx");
-            addr_controller.getAddrTnx(options, res);
-          }
+        options = check.build_options(req, listId, moduleId, c_addr);
+        logger.info(options); // log options to console
+        if(options.listId === list_type.token_balance){
+          console.log("==>addrTokensBalance");
+          addr_controller.addrTokensBalance(options, res);
+        } else {
+          console.log("==>getAddrTnx");
+          addr_controller.getAddrTnx(options, res);
         }
         break;
-      default:
-        res.json(check.get_msg().unknown_module_id) // not achievable
+      default: // not achievable
+        res.status(400);
+        res.json(check.get_msg().unknown_module_id)
     }
-  }else{
+  } else {
     res.status(400);
     res.json({ error: `${check.get_msg().unknown_module_id.error} or ${check.get_msg().unknown_listid.error}` })
   }

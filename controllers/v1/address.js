@@ -17,12 +17,6 @@ let logit = (req, msg = '') => {
   }
 };
 
-// check address format
-const ChekAddr = (clearAddr, entityId, res) => new Promise(resolve =>
-  check.checkAddr(clearAddr, entityId, res)
-    ? resolve(true)
-    : resolve(false)
-);
 
 // common get address transaction func
 const get_addr_tnxs = async (options, moduleId, listId, clearAddr) => {
@@ -71,34 +65,22 @@ const get_addr_token_balance = async (options, moduleId, listId) => {
 */
 const GetAddrTnx = async ({ listId, moduleId, page, size, entityId } = opts, res) => {
   let options = check.safePageAndSize(page, size); // build page, skip, size options
-  let clearAddr = check.cut0xClean(entityId);      // clear address
   options.listId     = listId;                     // tx type (listOfETH/Tokens)
-  options.entityId   = entityId;                   // not cleared address (AS IS from client)
-  options.addr       = clearAddr;                  // cleared address
+  options.entityId   = entityId;                   // cleared address
+  options.addr       = entityId;                  // cleared address
   // get tnx db collection name by listId (IIFE + AF + ternary)
   options.collection = (listId => listId ==='listOfETH' ? 'ether_txn':'token_txn')(listId);
-  logger.info({addr: entityId, cleared_addr: clearAddr});
+  logger.info({addr: entityId});
   // if we have res object -> its REST API else ITS socket IO data
-  if(res) ChekAddr(clearAddr, entityId, res)
-            .then(async result => {
-                if(result) res.json(await get_addr_tnxs(options, moduleId, listId, clearAddr));
-              else console.log(`result status is ${result}`);
-            });
-  // ITS socket IO data
-  else return await get_addr_tnxs(options, moduleId, listId, clearAddr)
+  if(res) res.json(await get_addr_tnxs(options, moduleId, listId, entityId));
+  else return await get_addr_tnxs(options, moduleId, listId, entityId)
 };
 
 const GetAddrTokensBalance = async ({listId, moduleId, skip, size, entityId } = opts, res) => {
-  let clearAddr = check.cut0xClean(entityId);
-  let options = {addr: clearAddr, skip: skip, size: size};
+  let options = {addr: entityId, skip: skip, size: size};
   logger.info(options);
   // if we have res object -> its REST API else ITS socket IO data
-  if(res) ChekAddr(clearAddr, entityId, res)
-    .then(async result => {
-      if(result) res.json(await get_addr_token_balance(options, moduleId, listId));
-      else console.log(`result status is ${result}`);
-    });
-  // ITS socket IO data
+  if(res) res.json(await get_addr_token_balance(options, moduleId, listId));
   else return await get_addr_token_balance(options, moduleId, listId)
 };
 
