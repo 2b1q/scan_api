@@ -110,12 +110,6 @@ const check_module_singleton = (() => {
         ? true
         : send_response(res, msg.bad_hash(hash), 404);
 
-    // check addr from client request WITH respose (OLD)
-    let _check_addr = (caddr, addr, res) =>
-      caddr.length === 40
-            ? true
-            : send_response(res, msg.bad_addr(addr), 404);
-
     // check addr from client request
     let check_addr = caddr =>
       caddr.length === 40
@@ -140,14 +134,6 @@ const check_module_singleton = (() => {
         ? true
         : false
       };
-
-    // check block from client request
-    let _check_block = (block, res) => {
-      if(isNaN(block)) block = 0;
-      return block !== 0
-        ? true
-        : send_response(res, msg.wrong_block, 404)
-    };
 
     // check block from client request
     let check_block = block => {
@@ -186,24 +172,18 @@ const check_module_singleton = (() => {
       safePageAndSize: (p,s) => pageandsize(p,s),                     // build page options => harcoded limits constants from (Go safePageAndSize)
       apiToken: token => chek_token(token),                           // check API_KEY token (not used yet)
       auth: (api_key, res) => check_auth(api_key, res),               // auth using API_KEY token (not used yet)
-      _listId: (lid, res) => check_listId(lid, res),                  // check is correct ListId
       listId: lid => check_listId(lid),                               // check is correct ListId
       moduleId: mid => check_moduleId(mid),                           // check is correct ModuleId
-      _moduleId: (mid, res) => check_moduleId(mid, res),              // check is correct ModuleId
       get_msg: () => msg,                                             // get client msgs object
       build_options: (req, lid, mid, eid) =>
-        build_params(req, lid, mid, eid),                             // build qury options
+        build_params(req, lid, mid, eid),                             // build query options
       build_io_opts: (params, listId, moduleId, entityId) =>
         build_params_io(params, listId, moduleId, entityId),
       cut0x: hash => cut_0x(hash),                                    // cut '0x' from hash string
-      cleanHex: hash => clean_Hex(hash),                              // remove unexpected chars from hex
       cut0xClean: hash => cut0x_Clean(hash),                          // cut '0x' then remove unexpected chars from hex
       checkHash: (chash, hash, res) => check_Hash(chash, hash, res),  // check hash from client request
-      _checkAddr: (caddr, addr, res) => _check_addr(caddr, addr, res),  // check address from client request // OLD
       checkAddr: caddr => check_addr(caddr),                          // check address from client request
-      _entityId: (eid, res) => check_entityId(eid, res),               // check entityId from client request
       entityId: eid => check_entityId(eid),                           // check entityId from client request
-      _block: (block, res) => _check_block(block, res),                // check block from client request
       block: block => check_block(block),                             // check block from client request
       addr: (address, res) => check_addr_exist(address, res)          // check IS address exists from client request
     }

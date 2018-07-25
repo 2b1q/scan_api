@@ -142,7 +142,7 @@ const GetAddrEth = (req, res) => {
   if(options) GetAddrTnx(options, res)
 };
 
-// Get Address details
+// Get Address details REST API
 const GetAddrDetails = (req, res) => {
   console.log(`${wid_ptrn}`);
   let addr = req.body.addr;
@@ -160,7 +160,7 @@ const GetAddrDetails = (req, res) => {
 module.exports = {
   addrTokens: GetAddrTokens,     // Get Address Tokens Transactions endpoint [HTTP POST]
   addrEth: GetAddrEth,        // Get Address ETH Transactions endpoint    [HTTP POST]
-  addrDetails: GetAddrDetails,   // Get Address details endpoint     [HTTP POST]
+  addrDetails: GetAddrDetails,   // Get Address details REST API endpoint     [HTTP POST]
   getAddrTnx: GetAddrTnx,        // list API support (address transactions)
   getAddrIo: GetAddr,           // address details - direct support (REST API + Socket IO)
   addrTokensBalance: GetAddrTokensBalance

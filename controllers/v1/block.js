@@ -64,19 +64,19 @@ const GetBlockTnx = async ({ listId, moduleId, page, size, entityId } = opts, re
 };
 
 // check block options (REST API). set moduleId = 'block'
-const checkOptions = (req, res, listId = '', moduleId = 'block') => {
+const checkOptions = (req, listId = '', moduleId = 'block') => {
   logger.api_requests(logit(req));               // log query data any way
   if(listId.length > 0){ // check options for get block tnx Else check block param
-    let { entityId = 0 } = req.body.params || {}; // if entityId not set or no params => entityId = 0 => then "error":"ModuleId not found"
-    entityId = Number(entityId);       // convert to Number
+    let { block = 0 } = req.body.params || {}; // if entityId not set or no params => entityId = 0 => then "error":"ModuleId not found"
+    block = Number(parseInt(block));       // convert to Number
     // check entityId from client
-    return check.entityId(entityId, res)
-      ? check.build_options(req, listId, moduleId, entityId)
+    return check.block(block)
+      ? check.build_options(req, listId, moduleId, block)
       : false
   } else {
     let block = req.body.block || 0;
-    block = Number(block);       // convert to Number
-    return check.block(block, res)
+    block = Number(parseInt(block));       // convert to Number
+    return check.block(block)
       ? block
       : false
   }
@@ -87,11 +87,14 @@ const GetBlock = async (block, res) => {
   console.log(`${wid_ptrn}`)
   try{
     let response = await block_model.getBlock(block);
-    if(res) res.json(response);
+    if(res) {
+      if(response.hasOwnProperty('error')) res.status(404);
+      res.json(response);
+    }
     else return response
   } catch (e) {
     if(res){
-      res.status(500);
+      res.status(200); // ? real 200
       res.json({ error: e }) // FWD exception to client
     } else return { error: e }
   }
@@ -111,8 +114,12 @@ const GetBlockEth = (req, res) => {
 
 // Get block details
 const GetBlockDetails = (req, res) => {
-  let block = checkOptions(req, res);
-  if(block) GetBlock(block, res)
+  let block = checkOptions(req);
+  if(block) GetBlock(block, res);
+  else {
+    res.status(400);
+    res.json(check.get_msg().wrong_block)
+  }
 };
 
 
