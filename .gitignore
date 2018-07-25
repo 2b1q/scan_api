@@ -9,6 +9,9 @@ node.log
 .idea
 config.js
 
+# test results
+tests/test_result/
+
 # OS X files
 .DS_Store
 
