@@ -37,8 +37,10 @@ const check_module_singleton = (() => {
       isInteger = n => n === +n && n === (n | 0);
     // build page options (Go safePageAndSize "bkxscan/blob/master/main/api/main.go")
     let pageandsize = (p, s) => {
-      let page = (isNaN(p)) ? 1 : Number(p).toFixed(); // default page = 1
-      let size = (isNaN(s)) ? 20 : Number(s).toFixed(); // default size = 20 (if size 'undefined')
+      let page = (isNaN(p)) ? 1 :   Number(p).toFixed(); // default page = 1
+      let size = (isNaN(s)) ? 20 :  Number(s).toFixed(); // default size = 20 (if size 'undefined')
+      page = Number(parseInt(page)); // avoid string
+      size = Number(parseInt(size)); // avoid string
       // set page limits
       if(page < MIN_PAGE) page = MIN_PAGE;
       if(page > MAX_PAGE) page = MAX_PAGE;
@@ -49,24 +51,27 @@ const check_module_singleton = (() => {
       skip = (page - 1) * size;
       // return safePageAndSize
       return {
-        skip: Number(skip),
-        size: Number(size), // avoid string
-        page: Number(page)  // avoid string
+        skip: skip,
+        size: size,
+        page: page,
+        sz: size, // BUG fix with distruct in c.68
+        pg: page // BUG fix with distruct in c.68
       }
     };
 
     // build qury options
     let build_params = (req, listId, moduleId, entityId) => {
-      let { page, size, filters } = req.body.params === undefined
-        ? { page: 1, size: 20, filters: {} } // default values
+      let { page = 1, size = 10, filters } = (req.body.params === undefined)
+        ? { page: 1, size: 10, filters: {} } // default values if params = undefined
         : req.body.params;
-      let { skip, s = size, p = page } = pageandsize(page, size)
+      // destruct object
+      let { skip, sz, pg } = pageandsize(page, size)
       return {
         listId: listId,
         moduleId: moduleId,
-        page: p,
+        page: pg,
         skip: skip,
-        size: s,
+        size: sz,
         filters: filters,
         entityId: entityId
       }
