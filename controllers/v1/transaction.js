@@ -29,7 +29,7 @@ const GetTnx = async ({ listId, moduleId, page, size } = opts, res) => {
   console.log(`${wid_ptrn}GetLastTransactions`);
   let options = check.safePageAndSize(page, size);
   options.listId = listId;
-  logger.info(options)
+  logger.info(options);
   try{
     let response = await tnx_model.getLastTnxs(options);
     if(response.rows.length > 0){
@@ -66,10 +66,10 @@ const GetTnx = async ({ listId, moduleId, page, size } = opts, res) => {
 };
 
 
-const ChekHash = (clear_hash, hash, res) => new Promise((resolve) =>
-  check.checkHash(clear_hash, hash, res)
+const ChekHash = clear_hash => new Promise((resolve, reject) =>
+  check.checkHash(clear_hash)
     ? resolve()
-    : false
+    : reject()
 );
 
 // GetLast Tokens Transactions endpoint [HTTP POST]
@@ -119,8 +119,9 @@ const GetTnxDetails = async (req, res) => {
   let hash = req.body.hash;
   let clear_hash = check.cut0xClean(hash);
   logger.info({ hash: hash, cleared_hash: clear_hash });
-  ChekHash(clear_hash, hash, res)
+  ChekHash(clear_hash)
     .then(async () => res.json(await txDetails(clear_hash)))
+    .catch(() => res.status(400).json(check.get_msg().bad_hash(hash)))
 };
 
 // count TNXS

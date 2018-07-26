@@ -50,15 +50,12 @@ const GetBlockTnx = async ({ listId, moduleId, page, size, entityId } = opts, re
       if(res) res.json(response);
       else return response
     } else {
-      if(res) res.json(check.get_msg().not_found);
+      if(res) res.status(404).json(check.get_msg().not_found);
       else return check.get_msg().not_found
     }
     // handle exception from DB tnx_model
   } catch (e) {
-    if(res){
-      res.status(500);
-      res.json({ error: e }) // FWD exception to client
-    }
+    if(res) res.status(400).json({ error: e }) // FWD exception to client
     else return { error: e }
   }
 };
@@ -87,16 +84,14 @@ const GetBlock = async (block, res) => {
   console.log(`${wid_ptrn}`)
   try{
     let response = await block_model.getBlock(block);
-    if(res) {
-      if(response.hasOwnProperty('error')) res.status(404);
-      res.json(response);
+    if(res){
+      if(response.hasOwnProperty('error')) res.status(404); // if Not Found -> change HTTP Status code
+      res.json(response); // send 200 with data OR 404 if not found
     }
     else return response
   } catch (e) {
-    if(res){
-      res.status(200); // ? real 200
-      res.json({ error: e }) // FWD exception to client
-    } else return { error: e }
+    if(res) res.status(400).json({ error: e }) // FWD exception to client
+    else return { error: e }
   }
 };
 
@@ -116,10 +111,7 @@ const GetBlockEth = (req, res) => {
 const GetBlockDetails = (req, res) => {
   let block = checkOptions(req);
   if(block) GetBlock(block, res);
-  else {
-    res.status(400);
-    res.json(check.get_msg().wrong_block)
-  }
+  else res.status(400).json(check.get_msg().wrong_block)
 };
 
 
