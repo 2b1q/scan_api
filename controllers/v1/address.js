@@ -158,10 +158,10 @@ const GetAddrDetails = (req, res) => {
 
 
 module.exports = {
-  addrTokens: GetAddrTokens,     // Get Address Tokens Transactions endpoint [HTTP POST]
-  addrEth: GetAddrEth,        // Get Address ETH Transactions endpoint    [HTTP POST]
-  addrDetails: GetAddrDetails,   // Get Address details REST API endpoint     [HTTP POST]
-  getAddrTnx: GetAddrTnx,        // list API support (address transactions)
-  getAddrIo: GetAddr,           // address details - direct support (REST API + Socket IO)
-  addrTokensBalance: GetAddrTokensBalance
+  addrTokens: GetAddrTokens,              // [HTTP REST] (API v.1) Get Address Tokens Transactions endpoint
+  addrEth: GetAddrEth,                    // [HTTP REST] (API v.1) Get Address ETH Transactions endpoint
+  addrDetails: GetAddrDetails,            // [HTTP REST] (API v.1) Get Address details REST API endpoint
+  getAddrTnx: GetAddrTnx,                 // [socket.io] (API v.1) list
+  getAddrIo: GetAddr,                     // [socket.io] (API v.1) address details
+  addrTokensBalance: GetAddrTokensBalance // [socket.io] (API v.1) address token balance
 };

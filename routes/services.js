@@ -7,6 +7,7 @@ const tnx_controller_v1 = require('../controllers/v1/transaction'),
 
 // v1 route RegExp pattern
 const v1_ptrn = path => new RegExp(`(^\/v1\/${path}$)|(^\/${path}$)`);
+const v2_ptrn = path => new RegExp(`(^\/v2\/${path}$)`);
 
 /* ETH test endpoinds */
 router.get('/nodes',    eth_api.getLastBlocks);       // nodes last blocks
@@ -16,10 +17,10 @@ router.get('/nodes',    eth_api.getLastBlocks);       // nodes last blocks
 * - routing by moduleId parameter (current)
 */
 /* tnxs endpoints */
-router.post(v1_ptrn('transactions/ether'),    tnx_controller_v1.lastTnxEth);     // GetLast ETH Transactions endpoint [HTTP POST]
-router.post(v1_ptrn('transactions/tokens'),   tnx_controller_v1.lastTnxTokens);  // GetLast Tokens Transactions endpoint [HTTP POST]
-router.post(v1_ptrn('transactions/details'),  tnx_controller_v1.TnxDetails);     // Get Transaction details endpoint [HTTP POST]
-router.get(v1_ptrn('transactions/count'),     tnx_controller_v1.countTnx);       // count all tnxs endpoint [HTTP GET]
+router.post(v2_ptrn('transactions/ether'),    tnx_controller_v1.lastTnxEth);     // GetLast ETH Transactions endpoint [HTTP POST]
+router.post(v2_ptrn('transactions/tokens'),   tnx_controller_v1.lastTnxTokens);  // GetLast Tokens Transactions endpoint [HTTP POST]
+router.post(v2_ptrn('transactions/details'),  tnx_controller_v1.TnxDetails);     // Get Transaction details endpoint [HTTP POST]
+router.get(v2_ptrn('transactions/count'),     tnx_controller_v1.countTnx);       // count all tnxs endpoint [HTTP GET]
 
 /* block  endpoints */
 router.post(v1_ptrn('block/tokens'),   block_controller_v1.blockTokens);  // GetLast block tokens Transactions tendpoint [HTTP POST]

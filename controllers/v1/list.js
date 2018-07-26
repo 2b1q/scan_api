@@ -25,7 +25,7 @@ let logit = (req, msg = '') => {
 };
 
 
-// list API
+// [HTTP REST] (API v.1) list
 exports.list = (req, res) => {
   logger.api_requests(logit(req)); // log query data any way
   let listId = req.body.listId || req.body.listid;      // TODO in API v.2 - remove lower case 'listid' parameter, use onle lowerCamelCase (listid)

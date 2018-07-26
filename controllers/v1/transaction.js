@@ -130,10 +130,10 @@ const CountTnx = async (req, res) =>
   && res.json(await dbquery.countTnx(Object.values(cfg.store.cols)));      // fwd data to model => count all
 
 module.exports = {
-  lastTnxTokens: GetLastTnxTokens,  // GetLast Tokens Transactions endpoint [HTTP POST]
-  lastTnxEth: GetLastTnxEth,        // GetLast ETH Transactions endpoint    [HTTP POST]
-  TnxDetails: GetTnxDetails,        // Get Transaction details endpoint     [HTTP POST]
-  countTnx: CountTnx,               // count TNXS                           [HTTP GET]
-  getTnx: GetTnx,                 // list API support
-  getTxIo: txDetails               // (Get Transaction detailsdirect access for socket IO
+  lastTnxTokens: GetLastTnxTokens,  // [HTTP REST] (API v.1) GetLast Tokens Transactions endpoint
+  lastTnxEth: GetLastTnxEth,        // [HTTP REST] (API v.1) GetLast ETH Transactions endpoint
+  TnxDetails: GetTnxDetails,        // [HTTP REST] (API v.1) Get Transaction details endpoint
+  countTnx: CountTnx,               // [HTTP REST] (API v.1) count TNXS
+  getTnx: GetTnx,                   // [Socket.io] (API v.1) list
+  getTxIo: txDetails                // [Socket.io] (API v.1) (Get Transaction detailsdirect access for socket IO
 };
