@@ -6,7 +6,7 @@ const chai = require('chai'),
 const url = 'http://localhost:3000';
 const api = supertest(url);
 
-describe('List API', () => {
+describe('REST API "api/list"', () => {
   let endpoint = '/api/list';
   let addr = '1b9f3068783c0cab4ccf9e0fc60416dbf4ece3b5';
   let addr_0x = '0x' + addr;

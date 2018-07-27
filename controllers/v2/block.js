@@ -1,7 +1,7 @@
-/* - REST API v.1
- * transaction block controller
+/* REST API v.2
+   block controller
  */
-const block_model = require('../../models/v1/block'),
+const block_model = require('../../models/v2/block'),
   logger = require('../../utils/logger')(module),
   moment = require('moment'),
   check = require('../../utils/checker').cheker(),
@@ -10,7 +10,7 @@ const block_model = require('../../models/v1/block'),
   c = cfg.color;
 
 // worker id pattern
-const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[block controller][API v.1] ${c.white}`)();
+const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[block controller][API v.2] ${c.white}`)();
 
 // simple query logger
 let logit = (req, msg = '') => {
@@ -30,7 +30,7 @@ const GetBlockTnx = async ({ listId, moduleId, page, size, entityId } = opts, re
   options.listId = listId;
   options.entityId = entityId;
   try{
-    let response = await block_model.blockTnxs(options);
+    let response = await block_model.transactions(options);
     if(response.rows.length > 0){
       let { count, page, size, skip } = response;
       delete response.size;
@@ -84,7 +84,7 @@ const checkOptions = (req, listId = '', moduleId = 'block') => {
 const GetBlock = async (block, res) => {
   console.log(`${wid_ptrn}`)
   try{
-    let response = await block_model.getBlock(block);
+    let response = await block_model.details(block);
     if(res){
       if(response.hasOwnProperty('error')) res.status(404); // if Not Found -> change HTTP Status code
       res.json(response); // send 200 with data OR 404 if not found
@@ -117,9 +117,7 @@ const GetBlockDetails = (req, res) => {
 
 
 module.exports = {
-  blockTokens: GetBlockTokens,      // [HTTP REST] (API v.1) Get block Tokens Transactions endpoint
-  blockEth: GetBlockEth,            // [HTTP REST] (API v.1) Get block ETH Transactions endpoint
-  blockDetails: GetBlockDetails,    // [HTTP REST] (API v.1) Get block details endpoint
-  getBlockTnx: GetBlockTnx,         // [socket.io] (API v.1) list
-  getBlockIo: GetBlock              // [socket.io] (API v.1) direct access (get block details socket IO + rest)
+  tokens: GetBlockTokens,      // [HTTP REST] (API v.2) Get block Tokens Transactions endpoint
+  eth: GetBlockEth,            // [HTTP REST] (API v.2) Get block ETH Transactions endpoint
+  details: GetBlockDetails,    // [HTTP REST] (API v.2) Get block details endpoint
 };

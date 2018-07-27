@@ -1,8 +1,9 @@
 /*
- - REST API transaction controller
+ - REST API v.1
+ transaction controller
  */
-const tnx_model = require('../../models/transaction'),
-  dbquery = require('../../models/db_query'),
+const tnx_model = require('../../models/v1/transaction'),
+  dbquery = require('../../models/v1/db_query'),
   logger = require('../../utils/logger')(module),
   moment = require('moment'),
   check = require('../../utils/checker').cheker(),
@@ -11,7 +12,7 @@ const tnx_model = require('../../models/transaction'),
   c = cfg.color;
 
 // worker id pattern
-const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[transaction controller] ${c.white}`)();
+const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[transaction controller][API v.1] ${c.white}`)();
 
 // simple query logger
 let logit = (req, msg = '') => {

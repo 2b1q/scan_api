@@ -1,8 +1,9 @@
 /*
- - REST API transaction controller
+ REST API v.2
+ transaction controller
  */
-const tnx_model = require('../../models/transaction'),
-  dbquery = require('../../models/db_query'),
+const tnx_model = require('../../models/v2/transaction'),
+  dbquery = require('../../models/v1/db_query'),
   logger = require('../../utils/logger')(module),
   moment = require('moment'),
   check = require('../../utils/checker').cheker(),
@@ -11,7 +12,7 @@ const tnx_model = require('../../models/transaction'),
   c = cfg.color;
 
 // worker id pattern
-const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[transaction controller] ${c.white}`)();
+const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[transaction controller][API v.2] ${c.white}`)();
 
 // simple query logger
 let logit = (req, msg = '') => {
@@ -31,7 +32,7 @@ const GetTnxRest = async ({ listId, moduleId, page, size } = opts, res) => {
   options.listId = listId;
   logger.info(options);
   try{
-    let response = await tnx_model.getLastTnxs(options);
+    let response = await tnx_model.lastTransactions(options);
     if(response.rows.length > 0){
       let { count, page, size, skip } = response;
       delete response.size;
@@ -88,7 +89,7 @@ const GetLastTnxEthRest = async (req, res) => {
 const txDetails = async hash => {
   console.log(`${wid_ptrn}Get tx "0x${hash}" details`);
   try{
-    let response = await tnx_model.txDetails(hash); // get tx details by hash
+    let response = await tnx_model.details(hash); // get tx details by hash
     return response.hasOwnProperty('empty')
       ? check.get_msg().not_found
       : response
@@ -114,8 +115,8 @@ const CountTnxRest = async (req, res) =>
   && res.json(await dbquery.countTnx(Object.values(cfg.store.cols)));      // fwd data to model => count all
 
 module.exports = {
-  lastTnxTokens: GetLastTnxTokensRest,  // [HTTP REST] (API v.2) GetLast Tokens Transactions endpoint
-  lastTnxEth: GetLastTnxEthRest,        // [HTTP REST] (API v.2) GetLast ETH Transactions endpoint
-  TnxDetails: GetTnxDetailsRest,        // [HTTP REST] (API v.2) Get Transaction details endpoint
-  countTnx: CountTnxRest,               // [HTTP REST] (API v.2) count TNXS
+  tokens: GetLastTnxTokensRest,  // [HTTP REST] (API v.2) GetLast Tokens Transactions endpoint
+  eth: GetLastTnxEthRest,        // [HTTP REST] (API v.2) GetLast ETH Transactions endpoint
+  details: GetTnxDetailsRest,    // [HTTP REST] (API v.2) Get Transaction details endpoint
+  count: CountTnxRest,           // [HTTP REST] (API v.2) count TNXS
 };

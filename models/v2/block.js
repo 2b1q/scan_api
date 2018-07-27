@@ -1,17 +1,15 @@
 /*
-* Block model.
-* inherited from GO API:
-    api.GetBlockTransactions(1000014, 2, 10, "txtype = 'tx'")
-    api.GetBlock(1000014)
-*/
-const MAX_SKIP  = require('../config/config').store.mongo.max_skip,
-      cfg       = require('../config/config'),
-      dbquery   = require('./db_query');
+ * Block model. API v.2
+ */
+const
+  cfg = require('../../config/config'),
+  MAX_SKIP = cfg.store.mongo.max_skip,
+  dbquery = require('./db_query');
 
 /*
-* Get block tnx:
-*  GO api.GetBlockTransactions(1000014, 2, 10, "txtype = 'tx'")
-*/
+ * Get block tnx:
+ *  GO api.GetBlockTransactions(1000014, 2, 10, "txtype = 'tx'")
+ */
 const GetBlockTransactions = async (options = {}) => {
   // construct query options for block tnxs
   options = {
@@ -24,10 +22,10 @@ const GetBlockTransactions = async (options = {}) => {
 };
 
 /*
-* Get block details:
-*  GO api.GetBlock(1000014)
-*/
-const GetBlock = async block => {
+ * Get block details:
+ *  GO api.GetBlock(1000014)
+ */
+const GetBlockDetails = async block => {
   // construct query options for block details
   let options = {
     block: block,
@@ -41,6 +39,6 @@ const GetBlock = async block => {
 
 
 module.exports = {
-  blockTnxs:    GetBlockTransactions,  // Get block tnx (GO api.GetBlockTransactions(1000014, 2, 10, "txtype = 'tx'"))
-  getBlock:     GetBlock               // get block details
+  transactions: GetBlockTransactions,  // Get block tnx (GO api.GetBlockTransactions(1000014, 2, 10, "txtype = 'tx'"))
+  details: GetBlockDetails               // get block details
 };

@@ -1,3 +1,7 @@
+/* - REST API v.1
+ * list controller
+ */
+
 const check = require('../../utils/checker').cheker(),
   cfg = require('../../config/config'),
   tnx_controller = require('./transaction'),
@@ -11,7 +15,7 @@ const check = require('../../utils/checker').cheker(),
   c = cfg.color;
 
 // worker id pattern
-const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[list controller] ${c.white}`)();
+const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[list controller][API v.1] ${c.white}`)();
 
 // simple query logger
 let logit = (req, msg = '') => {

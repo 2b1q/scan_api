@@ -1,7 +1,7 @@
-/* - REST API v.1
- * transaction address controller
+/* REST API v.2
+   address controller
  */
-const addr_model = require('../../models/v1/address'),
+const addr_model = require('../../models/v2/address'),
   logger = require('../../utils/logger')(module),
   moment = require('moment'),
   check = require('../../utils/checker').cheker(),
@@ -10,7 +10,7 @@ const addr_model = require('../../models/v1/address'),
   c = cfg.color;
 
 // worker id pattern
-const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[address controller][API v.1] ${c.white}`)();
+const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[address controller][API v.2] ${c.white}`)();
 
 // simple query logger
 let logit = (req, msg = '') => {
@@ -27,7 +27,7 @@ let logit = (req, msg = '') => {
 // common get address transaction func
 const get_addr_tnxs = async (options, moduleId, listId, clearAddr) => {
   try{
-    let response = await addr_model.addrTnxs(options);
+    let response = await addr_model.transactions(options);
     if(response.rows.length > 0){
       let { count, page, size, skip } = response;
       delete response.size;
@@ -51,20 +51,6 @@ const get_addr_tnxs = async (options, moduleId, listId, clearAddr) => {
   }
 };
 
-// common get address transaction func
-const get_addr_token_balance = async (options, moduleId, listId) => {
-  try{
-    let response = await addr_model.addrTokenBalance(options);
-    if(response.rows.length > 0){
-      response.head.moduleId = moduleId;
-      response.head.listId = listId;
-      response.head.updateTime = moment();
-      return response
-    } else return check.get_msg().not_found
-  } catch (e) {
-    return { error: e }
-  }
-};
 
 /* GetAddrTransactions from tnx_model (REST API + Socket IO)
  * if we have res object its REST request, otherwise its IO request
@@ -83,14 +69,6 @@ const GetAddrTnx = async ({ listId, moduleId, page, size, entityId } = opts, res
   else return await get_addr_tnxs(options, moduleId, listId, entityId)
 };
 
-const GetAddrTokensBalance = async ({ listId, moduleId, skip, size, entityId } = opts, res) => {
-  console.log(`${wid_ptrn}`);
-  let options = { addr: entityId, skip: skip, size: size };
-  logger.info(options);
-  // if we have res object -> its REST API else ITS socket IO data
-  if(res) res.json(await get_addr_token_balance(options, moduleId, listId));
-  else return await get_addr_token_balance(options, moduleId, listId)
-};
 
 // check Address options (REST API). Set moduleId = 'address'
 const checkOptions = (req, res, listId = '', moduleId = 'address') => {
@@ -115,7 +93,7 @@ const checkOptions = (req, res, listId = '', moduleId = 'address') => {
 const GetAddr = async (address, res) => {
   console.log(`${wid_ptrn}`);
   try{
-    let response = await addr_model.getAddr(address);
+    let response = await addr_model.details(address);
     if(!response.hasOwnProperty('head')) response = check.get_msg().not_found;
     // if we have res object -> its REST API else ITS socket IO data
     if(res) res.json(response);
@@ -159,10 +137,7 @@ const GetAddrDetails = (req, res) => {
 
 
 module.exports = {
-  addrTokens: GetAddrTokens,              // [HTTP REST] (API v.1) Get Address Tokens Transactions endpoint
-  addrEth: GetAddrEth,                    // [HTTP REST] (API v.1) Get Address ETH Transactions endpoint
-  addrDetails: GetAddrDetails,            // [HTTP REST] (API v.1) Get Address details REST API endpoint
-  getAddrTnx: GetAddrTnx,                 // [socket.io] (API v.1) list
-  getAddrIo: GetAddr,                     // [socket.io] (API v.1) address details
-  addrTokensBalance: GetAddrTokensBalance // [socket.io] (API v.1) address token balance
+  tokens: GetAddrTokens,              // [HTTP REST] (API v.2) Get Address Tokens Transactions endpoint
+  eth: GetAddrEth,                    // [HTTP REST] (API v.2) Get Address ETH Transactions endpoint
+  details: GetAddrDetails,            // [HTTP REST] (API v.2) Get Address details REST API endpoint
 };

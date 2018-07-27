@@ -1,13 +1,13 @@
 /*
-* Single DB query model
+* Single DB query model v.1
 * get collection query selector, params
 * return DB data
 */
-const db        = require('../libs/db'),
-    cfg       = require('../config/config'),
-    eth_func = require('../ether/functions'),
+const db        = require('../../libs/db'),
+    cfg       = require('../../config/config'),
+    eth_func = require('../../ether/functions'),
     moment = require('moment'),
-    check = require('../utils/checker').cheker();
+    check = require('../../utils/checker').cheker();
 
 // get collection by name
 const col = name => new Promise((resolve) =>
