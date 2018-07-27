@@ -10,7 +10,7 @@ node.log
 config.js
 
 # test results
-test_result/
+tests/test_result/
 
 # OS X files
 .DS_Store
