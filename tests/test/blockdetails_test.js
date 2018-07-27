@@ -9,10 +9,8 @@ const api = supertest(url);
 describe('REST API "api/blockdetails"', () => {
   let endpoint = '/api/blockdetails';
   let block = '5904606';
-  // let bad_hash_less_chars = hash.slice(0, -1);
-  // let bad_hash_more_chars = hash + '1';
-  // let bad_hash_caps = hash.substring(2).toUpperCase();
-
+  let not_exist_block = '5404606';
+  let wrong_block = 'p' + block;
 
   it(`block "${block}" => should return a 200 response`, done => {
     api.post(endpoint)
@@ -28,46 +26,31 @@ describe('REST API "api/blockdetails"', () => {
       })
   });
 
-  // it(`hash "${bad_hash_less_chars}" => should return a 400 response`, done => {
-  //   api.post(endpoint)
-  //     .set('Accept', 'application/json')
-  //     .send({
-  //       "hash": bad_hash_less_chars
-  //     })
-  //     .expect(400)
-  //     .end((err, res) => {
-  //       expect(res.body.error).to.have.string('Bad Hash value')
-  //       if(err) return done(err);
-  //       done();
-  //     })
-  // });
-  //
-  // it(`hash "${bad_hash_more_chars}" => should return a 400 response`, done => {
-  //   api.post(endpoint)
-  //     .set('Accept', 'application/json')
-  //     .send({
-  //       "hash": bad_hash_more_chars
-  //     })
-  //     .expect(400)
-  //     .end(err => {
-  //       if(err) return done(err);
-  //       done();
-  //     })
-  // });
-  //
-  // it(`hash "${bad_hash_caps}" => should return a 200 response`, done => {
-  //   api.post(endpoint)
-  //     .set('Accept', 'application/json')
-  //     .send({
-  //       "hash": bad_hash_caps
-  //     })
-  //     .expect(200)
-  //     .end(err => {
-  //       if(err) return done(err);
-  //       done();
-  //     })
-  // });
+  it(`block "${not_exist_block}" => should return a 404 response`, done => {
+    api.post(endpoint)
+      .set('Accept', 'application/json')
+      .send({
+        "block": not_exist_block
+      })
+      .expect(404)
+      .end(err => {
+        if(err) return done(err);
+        done();
+      })
+  });
 
+  it(`block "${wrong_block}" => should return a 400 response`, done => {
+    api.post(endpoint)
+      .set('Accept', 'application/json')
+      .send({
+        "block": wrong_block
+      })
+      .expect(400)
+      .end(err => {
+        if(err) return done(err);
+        done();
+      })
+  });
 
 })
 ;
