@@ -21,7 +21,8 @@ describe('REST API "api/txdetails"', () => {
         "hash": hash
       })
       .expect(200)
-      .end(err => {
+      .end((err, res) => {
+        expect(res.body.head).to.have.property('hash').that.is.not.empty;
         if(err) return done(err);
         done();
       })
