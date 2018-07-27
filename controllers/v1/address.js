@@ -159,8 +159,6 @@ const GetAddrDetails = (req, res) => {
 
 
 module.exports = {
-  addrTokens: GetAddrTokens,              // [HTTP REST] (API v.1) Get Address Tokens Transactions endpoint
-  addrEth: GetAddrEth,                    // [HTTP REST] (API v.1) Get Address ETH Transactions endpoint
   addrDetails: GetAddrDetails,            // [HTTP REST] (API v.1) Get Address details REST API endpoint
   getAddrTnx: GetAddrTnx,                 // [socket.io] (API v.1) list
   getAddrIo: GetAddr,                     // [socket.io] (API v.1) address details

@@ -18,7 +18,7 @@ const GetBlockTransactions = async (options = {}) => {
     sort: { 'hash': 1 },
     ...options  // spread other options
   };
-  return await dbquery.getDbTransactions(options)
+  return await dbquery.getDbTransactions(options) // TODO move behavior (getDbTransactions) from dbquery
 };
 
 /*
@@ -34,7 +34,29 @@ const GetBlockDetails = async block => {
     block_selector: { 'block': block },             // block selector
     tnx_selector: { 'block': block, 'isinner': 0 }  // tnx selector
   };
-  return await dbquery.getBlock(options)
+  console.log(options);
+  let { block_col, ether_col, block_selector, tnx_selector } = options;
+  // assign new Object 'inner_selector' from 'tnx_selector' and change 'isinner' property
+  let inner_selector = Object.assign({}, tnx_selector, { isinner: 1 }); // fix bug with one object reference modification
+  let blockHeader_p = dbquery.findOne(block_col, block_selector);
+  let mainTxCount_p = dbquery.colCount(ether_col, tnx_selector);
+  let innerTxCount_p = dbquery.colCount(ether_col, inner_selector);
+
+
+  return await dbquery.blockDetails(options) // TODO move behavior (GetBlock) from dbquery
+  Promise.all([blockHeader_p, mainTxCount_p, innerTxCount_p])
+    .then(([block, main, inner] = data) => {
+      if(block.block)
+        return ({
+          head: {
+            ...block,
+            maintxcount: main.cnt,
+            innertxcount: inner.cnt
+          }
+        });
+      else return { error: 404, msg: "Not found" };
+    })
+    .catch(e => e)
 };
 
 

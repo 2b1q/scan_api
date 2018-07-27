@@ -20,20 +20,20 @@ router.get('/nodes', eth_api.getLastBlocks);       // nodes last blocks
  * - routing by path (new routing)
  */
 /* tnxs v.2 endpoints */
-router.post(v2_ptrn('transactions/ether'), tnx_controller_v2.eth);        // GetLast ETH Transactions endpoint [HTTP POST]
-router.post(v2_ptrn('transactions/tokens'), tnx_controller_v2.tokens);    // GetLast Tokens Transactions endpoint [HTTP POST]
-router.post(v2_ptrn('transactions/details'), tnx_controller_v2.details);  // Get Transaction details endpoint [HTTP POST]
-router.get(v2_ptrn('transactions/count'), tnx_controller_v2.count);       // count all tnxs endpoint [HTTP GET]
+// router.post(v2_ptrn('transactions/ether'), tnx_controller_v2.eth);        // GetLast ETH Transactions endpoint [HTTP POST]
+// router.post(v2_ptrn('transactions/tokens'), tnx_controller_v2.tokens);    // GetLast Tokens Transactions endpoint [HTTP POST]
+// router.post(v2_ptrn('transactions/details'), tnx_controller_v2.details);  // Get Transaction details endpoint [HTTP POST]
+// router.get(v2_ptrn('transactions/count'), tnx_controller_v2.count);       // count all tnxs endpoint [HTTP GET]
 
 /* block v.2 endpoints */
-router.post(v2_ptrn('block/tokens'), block_controller_v2.tokens);   // GetLast block tokens Transactions tendpoint [HTTP POST]
-router.post(v2_ptrn('block/ether'), block_controller_v2.eth);       // GetLast ETH block ether Transactions endpoint [HTTP POST]
-router.post(v2_ptrn('block/details'), block_controller_v2.details); // Block details [HTTP POST]
+// router.post(v2_ptrn('block/tokens'), block_controller_v2.tokens);   // GetLast block tokens Transactions tendpoint [HTTP POST]
+// router.post(v2_ptrn('block/ether'), block_controller_v2.eth);       // GetLast ETH block ether Transactions endpoint [HTTP POST]
+// router.post(v2_ptrn('block/details'), block_controller_v2.details); // Block details [HTTP POST]
 
 /* address v.2 endpoints */
-router.post(v2_ptrn('address/tokens'), addr_controller_v2.tokens);    // Get Address Tokens Transactions endpoint [HTTP POST]
-router.post(v2_ptrn('address/ether'), addr_controller_v2.eth);        // Get Address ETH Transactions endpoint    [HTTP POST]
-router.post(v2_ptrn('address/details'), addr_controller_v2.details);  // Get Address details endpoint [HTTP POST]
+// router.post(v2_ptrn('address/tokens'), addr_controller_v2.tokens);    // Get Address Tokens Transactions endpoint [HTTP POST]
+// router.post(v2_ptrn('address/ether'), addr_controller_v2.eth);        // Get Address ETH Transactions endpoint    [HTTP POST]
+// router.post(v2_ptrn('address/details'), addr_controller_v2.details);  // Get Address details endpoint [HTTP POST]
 
 /* REST API v.1 endpoints
  * - routing by moduleId parameter (current)

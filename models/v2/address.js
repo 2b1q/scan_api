@@ -18,7 +18,7 @@ const GetAddressDetails = async addr => {
 
   let addr_balance_p = eth_func.providerEthProxy('getbalance', { addr: addr });
   let addrHeader_p = dbquery.findOne(cfg.store.cols.contract, { 'addr': addr });
-  let mainTxCount_p = dbquery.countTnx(cfg.store.cols.eth, { $or: [{ 'addrto': addr }, { 'addrfrom': addr }] });
+  let mainTxCount_p = dbquery.colCount(cfg.store.cols.eth, { $or: [{ 'addrto': addr }, { 'addrfrom': addr }] });
   let tokenList_p = addrTokenBalance({ addr: addr, skip: 0, size: 5 });
 
   return await Promise.all([addrHeader_p, mainTxCount_p, addr_balance_p, tokenList_p])
@@ -178,7 +178,7 @@ const GetAddrTransactions = async options => {
       { 'addrfrom': addr }]
   };
   // count tnx by query selector
-  let { cnt } = await dbquery.countTnx(collection, selector);
+  let { cnt } = await dbquery.colCount(collection, selector);
   if(cnt === 0) return { rows: [] }; // stop flow
   //if( cnt > MAX_SKIP ) cnt = MAX_SKIP;
   // construct query options for addr tnxs

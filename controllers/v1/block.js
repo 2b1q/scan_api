@@ -117,8 +117,6 @@ const GetBlockDetails = (req, res) => {
 
 
 module.exports = {
-  blockTokens: GetBlockTokens,      // [HTTP REST] (API v.1) Get block Tokens Transactions endpoint
-  blockEth: GetBlockEth,            // [HTTP REST] (API v.1) Get block ETH Transactions endpoint
   blockDetails: GetBlockDetails,    // [HTTP REST] (API v.1) Get block details endpoint
   getBlockTnx: GetBlockTnx,         // [socket.io] (API v.1) list
   getBlockIo: GetBlock              // [socket.io] (API v.1) direct access (get block details socket IO + rest)
