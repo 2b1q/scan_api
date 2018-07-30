@@ -22,41 +22,56 @@ const GetBlockTransactions = async (options = {}) => {
 };
 
 /*
- * Get block details:
- *  GO api.GetBlock(1000014)
+ Get block details model API v2
+ use this API do get data with socket.io and http.
+ Input data:
+ > validated block
+ Query options constructing here
+ clear model:
+ > dbquery module using only for mongo queries
+ > response payload constructing here
  */
 const GetBlockDetails = async block => {
   // construct query options for block details
   let options = {
     block: block,
-    block_col: cfg.store.cols.block,                // get block collection name
-    ether_col: cfg.store.cols.eth,                  // get ether collection name
-    block_selector: { 'block': block },             // block selector
-    tnx_selector: { 'block': block, 'isinner': 0 }  // tnx selector
+    block_col: cfg.store.cols.block,                  // get block collection name
+    ether_col: cfg.store.cols.eth,                    // get ether collection name
+    token_col: cfg.store.cols.token,                  // get token collection name
+    block_selector: { 'block': block },               // block selector
+    tnx_selector: { 'block': block, 'isinner': 0 },   // tnx selector
+    token_selector: { 'block': block }               // token tnx selector
   };
   console.log(options);
-  let { block_col, ether_col, block_selector, tnx_selector } = options;
+  let { block_col, ether_col, block_selector, tnx_selector, token_col, token_selector } = options;
   // assign new Object 'inner_selector' from 'tnx_selector' and change 'isinner' property
   let inner_selector = Object.assign({}, tnx_selector, { isinner: 1 }); // fix bug with one object reference modification
   let blockHeader_p = dbquery.findOne(block_col, block_selector);
   let mainTxCount_p = dbquery.colCount(ether_col, tnx_selector);
   let innerTxCount_p = dbquery.colCount(ether_col, inner_selector);
-
-
-  return await dbquery.blockDetails(options) // TODO move behavior (GetBlock) from dbquery
-  Promise.all([blockHeader_p, mainTxCount_p, innerTxCount_p])
-    .then(([block, main, inner] = data) => {
-      if(block.block)
-        return ({
-          head: {
-            ...block,
-            maintxcount: main.cnt,
-            innertxcount: inner.cnt
-          }
-        });
-      else return { error: 404, msg: "Not found" };
-    })
-    .catch(e => e)
+  let tokenTxCount_p = dbquery.colCount(token_col, token_selector);
+  // return cleared response payload data
+  return await
+    Promise.all([blockHeader_p, mainTxCount_p, innerTxCount_p, tokenTxCount_p])
+      .then(([block, main, inner, tokens] = data) => {
+        if(block.block)
+          return ({
+            head: {
+              hash: block.hash,         // хэш блока
+              block: block.block,       // номер блока
+              mainTxCount: main.cnt,    // кол-во основных транзакций эфира
+              innerTxCount: inner.cnt,  // кол-во внутренних транзакций эфира
+              tokenTxCount: tokens.cnt, // кол-во всех транзакций по токенам
+              gasLimit: block.gaslimit, // лимит газа
+              gasUsed: block.gasused,   // использовано газа
+              isoTime: block.isotime    // время появления блока
+            }
+          });
+        // if we haven`t block property -> it`s 404 error
+        else return { error: 404, msg: "Not found" };
+      })
+      // exception handler
+      .catch(e => e)
 };
 
 

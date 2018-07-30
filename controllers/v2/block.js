@@ -1,5 +1,5 @@
 /* REST API v.2
-   block controller
+ block controller
  */
 const block_model = require('../../models/v2/block'),
   logger = require('../../utils/logger')(module),
@@ -81,18 +81,14 @@ const checkOptions = (req, listId = '', moduleId = 'block') => {
 };
 
 // get block details
-const GetBlock = async (block, res) => {
+const http_GetBlock = async (block, res) => {
   console.log(`${wid_ptrn}`)
   try{
     let response = await block_model.details(block);
-    if(res){
-      if(response.hasOwnProperty('error')) res.status(404); // if Not Found -> change HTTP Status code
-      res.json(response); // send 200 with data OR 404 if not found
-    }
-    else return response
+    if(response.hasOwnProperty('error')) res.status(404); // if Not Found -> change HTTP Status code
+    res.json(response); // send 200 with data OR 404 if not found
   } catch (e) {
-    if(res) res.status(400).json({ error: e }) // FWD exception to client
-    else return { error: e }
+    res.status(400).json({ error: e }) // FWD exception to client
   }
 };
 
@@ -110,8 +106,8 @@ const GetBlockEth = (req, res) => {
 
 // Get block details
 const GetBlockDetails = (req, res) => {
-  let block = checkOptions(req);
-  if(block) GetBlock(block, res);
+  let block = req.body.block || 0;
+  if(check.block(block)) http_GetBlock(block, res);
   else res.status(400).json(check.get_msg().wrong_block)
 };
 

@@ -28,7 +28,7 @@ router.get('/nodes', eth_api.getLastBlocks);       // nodes last blocks
 /* block v.2 endpoints */
 // router.post(v2_ptrn('block/tokens'), block_controller_v2.tokens);   // GetLast block tokens Transactions tendpoint [HTTP POST]
 // router.post(v2_ptrn('block/ether'), block_controller_v2.eth);       // GetLast ETH block ether Transactions endpoint [HTTP POST]
-// router.post(v2_ptrn('block/details'), block_controller_v2.details); // Block details [HTTP POST]
+router.post(v2_ptrn('block/details'), block_controller_v2.details); // Block details [HTTP POST]
 
 /* address v.2 endpoints */
 // router.post(v2_ptrn('address/tokens'), addr_controller_v2.tokens);    // Get Address Tokens Transactions endpoint [HTTP POST]
