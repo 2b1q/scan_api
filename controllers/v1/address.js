@@ -148,13 +148,10 @@ const GetAddrDetails = (req, res) => {
   console.log(`${wid_ptrn}`);
   let addr = req.body.addr;
   let c_addr = check.cut0xClean(addr) // cut 0x and clean address
+  logger.info({ addr: addr, cleared_addr: c_addr });
   // check cleared address by length
-  if(!check.checkAddr(c_addr, addr)){
-    res.json(check.get_msg().bad_addr(addr))
-  } else {
-    logger.info({ addr: addr, cleared_addr: c_addr });
-    GetAddr(c_addr, res)
-  }
+  if(!check.checkAddr(c_addr, addr)) res.status(400).json(check.get_msg().bad_addr(addr))
+  else GetAddr(c_addr, res)
 };
 
 
