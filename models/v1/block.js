@@ -31,8 +31,10 @@ const GetBlock = async block => {
     block: block,
     block_col: cfg.store.cols.block,                // get block collection name
     ether_col: cfg.store.cols.eth,                  // get ether collection name
+    token_col: cfg.store.cols.token,                  // get token collection name
     block_selector: { 'block': block },             // block selector
-    tnx_selector: { 'block': block, 'isinner': 0 }  // tnx selector
+    tnx_selector: { 'block': block, 'isinner': 0 },  // tnx selector
+    token_selector: { 'block': block }               // token tnx selector
   };
   return await dbquery.getBlock(options)
 };

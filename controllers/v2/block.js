@@ -94,17 +94,29 @@ const http_GetBlock = async (block, res) => {
 
 // Get block Tokens Transactions
 const GetBlockTokens = (req, res) => {
-  let options = checkOptions(req, res, cfg.list_type.token);
+  // let options = checkOptions(req, res, cfg.list_type.token);
   if(options) GetBlockTnx(options, res)
 };
 
-// Get block ETH Transactions
+// Get block ETH Transactions API v.2
 const GetBlockEth = (req, res) => {
-  let options = checkOptions(req, res, cfg.list_type.eth);
-  if(options) GetBlockTnx(options, res)
+  let params = req.body.params || {}
+  // params destructing
+  let { blockNumber, pageNumber, pageSize } = params;
+  if(!pageNumber) res.status(400).json(check.get_msg().no_pageNumber)
+  else if(!pageSize) res.status(400).json(check.get_msg().no_pageSize)
+  else if(!blockNumber) res.status(400).json(check.get_msg().no_blockNumber)
+  let block = Number(parseInt(blockNumber));  // convert to Number
+  pageSize = Number(parseInt(pageSize));      // convert to Number
+  pageNumber = Number(parseInt(pageNumber));  // convert to Number
+  if(check.block(block)){
+    let options = check.build_block_opts(block, pageSize, pageNumber) // TODO
+    res.json(options)
+    // http_GetBlockTnx(options, res);
+  } else res.status(400).json(check.get_msg().wrong_block)
 };
 
-// Get block details
+// Get block details API v.2
 const GetBlockDetails = (req, res) => {
   let block = req.body.block || 0;
   if(check.block(block)) http_GetBlock(block, res);

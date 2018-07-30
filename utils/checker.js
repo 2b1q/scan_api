@@ -29,6 +29,9 @@ const check_module_singleton = (() => {
       wrong_listId: { error: 'Wrong listId property' },
       unknown_module_id: { error: 'Unknown moduleId' },
       no_entityId: { error: 'entityId not found' },
+      no_pageSize: { error: 'pageSize not found' },
+      no_pageNumber: { error: 'pageNumber not found' },
+      no_blockNumber: { error: 'blockNumber not found' },
       bad_hash: hash => Object({ error: `Bad Hash value "${hash}"` }),
       bad_addr: addr => Object({ error: `Bad addr value "${addr}"` })
     };
@@ -37,8 +40,8 @@ const check_module_singleton = (() => {
       isInteger = n => n === +n && n === (n | 0);
     // build page options (Go safePageAndSize "bkxscan/blob/master/main/api/main.go")
     let pageandsize = (p, s) => {
-      let page = (isNaN(p)) ? 1 :   Number(p).toFixed(); // default page = 1
-      let size = (isNaN(s)) ? 20 :  Number(s).toFixed(); // default size = 20 (if size 'undefined')
+      let page = (isNaN(p)) ? 1 : Number(p).toFixed(); // default page = 1
+      let size = (isNaN(s)) ? 20 : Number(s).toFixed(); // default size = 20 (if size 'undefined')
       page = Number(parseInt(page)); // avoid string
       size = Number(parseInt(size)); // avoid string
       // set page limits
@@ -58,6 +61,15 @@ const check_module_singleton = (() => {
         pg: page // BUG fix with distruct in c.68
       }
     };
+
+    let block_opts = (block, ps, pn) => {
+
+      return {
+        block: block,
+        ps: ps,
+        pn: pn
+      }
+    }
 
     // build qury options
     let build_params = (req, listId, moduleId, entityId) => {
@@ -180,6 +192,7 @@ const check_module_singleton = (() => {
       listId: lid => check_listId(lid),                               // check is correct ListId
       moduleId: mid => check_moduleId(mid),                           // check is correct ModuleId
       get_msg: () => msg,                                             // get client msgs object
+      build_block_opts: (block, ps, pn) => block_opts(block, ps, pn),  // API v.2 bulid block options
       build_options: (req, lid, mid, eid) =>
         build_params(req, lid, mid, eid),                             // build query options
       build_io_opts: (params, listId, moduleId, entityId) =>

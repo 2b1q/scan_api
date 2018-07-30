@@ -250,15 +250,17 @@ const GetBlock = async options => {
   let blockHeader_p = findOneQuery(block_col, block_selector);
   let mainTxCount_p = countTnx(ether_col, tnx_selector);
   let innerTxCount_p = countTnx(ether_col, inner_selector);
+  let tokenTxCount_p = dbquery.colCount(token_col, token_selector);
   // do in parallel, if block not found reject and drop other promises
-  return await Promise.all([blockHeader_p, mainTxCount_p, innerTxCount_p])
-    .then(([block, main, inner] = data) => {
+  return await Promise.all([blockHeader_p, mainTxCount_p, innerTxCount_p, tokenTxCount_p])
+    .then(([block, main, inner, tokens] = data) => {
       if (block.block)
         return({
           head: {
             ...block,
             maintxcount:  main.cnt,
-            innertxcount: inner.cnt
+            innertxcount: inner.cnt,
+            tokentxcount: tokens.cnt
           }
         }); else return {error: 404, msg: "Not found"};
     })
