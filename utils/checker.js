@@ -19,7 +19,8 @@ const check_module_singleton = (() => {
       MAX_SKIP = cfg.store.mongo.max_skip;
     // client msgs
     const msg = {
-      not_found: { error: 'Not found', Head: {}, Rows: [] },
+      // not_found: { error: 'Not found', Head: {}, Rows: [] },
+      not_found: { error: 'Not found' },
       unknown_listid: { error: 'Unknown listId' },
       no_api_key: { error: 'unable to set "api_key" param' },
       wrong_api_key: { error: 'bad "api_key"' },
@@ -62,12 +63,14 @@ const check_module_singleton = (() => {
       }
     };
 
-    let block_opts = (block, ps, pn) => {
-
+    // normalize block params (pagesize, pagenumber)
+    let block_opts = (block, pagesize, pagenumber) => {
+      let { skip, page, size } = pageandsize(pagenumber, pagesize)
       return {
         block: block,
-        ps: ps,
-        pn: pn
+        pageSize: size,
+        pageNumber: page,
+        skip: skip
       }
     }
 

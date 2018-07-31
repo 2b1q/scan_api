@@ -107,5 +107,6 @@ module.exports = {
   // blockDetails: GetBlock,          // get block details by options
   findOne: findOneQuery,      // find one db doc from collection using query pattern
   find: findQuery,         // find db docs from collection using query pattern
-  distinct: distinct           // mongo distinct query
+  distinct: distinct,           // mongo distinct query
+  getcol: col,
 };

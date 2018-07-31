@@ -7,18 +7,55 @@ const
   dbquery = require('./db_query');
 
 /*
- * Get block tnx:
- *  GO api.GetBlockTransactions(1000014, 2, 10, "txtype = 'tx'")
+ Get block ETH and token tnx model API v.2
  */
-const GetBlockTransactions = async (options = {}) => {
-  // construct query options for block tnxs
+const GetBlockTransactions = async options => {
+  // construct query options for block ETH and token tnxs
   options = {
-    max_skip: MAX_SKIP,
-    selector: { block: options.entityId || 'block' }, // block tnx selector
+    selector: { block: options.block },     // block tnx selector
     sort: { 'hash': 1 },
     ...options  // spread other options
   };
-  return await dbquery.getDbTransactions(options) // TODO move behavior (getDbTransactions) from dbquery
+  console.log(options);
+  let { selector, collection, sort, skip, pageSize, pageNumber, block } = options;
+  const db_col = await dbquery.getcol(collection);
+  let count = await db_col.count(selector);
+  if(count === 0) return 0;
+  if(count > MAX_SKIP) count = MAX_SKIP;
+  // TODO datamapping
+  return new Promise(resolve =>
+    db_col.find(selector, { allowDiskUse: true }) // allowDiskUse lets the server know if it can use disk to store temporary results for the aggregation (requires mongodb 2.6 >)
+      .sort(sort)
+      .skip(skip)
+      .limit(pageSize)
+      .toArray((err, docs) => {
+        if(err) resolve(false); // stop flow and return false without exeption
+        // let txns = docs.map(tx => {
+        //   let t = {
+        //     // construct token object
+        //     token: {
+        //       addr: tx.tokenaddr,
+        //       name: tx.tokenname,
+        //       smbl: tx.tokensmbl,
+        //       dcm: tx.tokendcm,
+        //       type: tx.tokentype
+        //     },
+        //     ...tx // spread => return all data AS IS
+        //   };
+        //   delete t.data;
+        //   delete t.rcplogs;
+        //   return t;
+        // });
+        resolve({
+          block: block,
+          pageNumber: pageNumber,
+          pageSize: pageSize,
+          count: count,
+          skip: skip,
+          rows: docs
+        })
+      })
+  )
 };
 
 /*
@@ -76,6 +113,6 @@ const GetBlockDetails = async block => {
 
 
 module.exports = {
-  transactions: GetBlockTransactions,  // Get block tnx (GO api.GetBlockTransactions(1000014, 2, 10, "txtype = 'tx'"))
-  details: GetBlockDetails               // get block details
+  transactions: GetBlockTransactions,  // get block ETH and Token tnx API v.2
+  details: GetBlockDetails             // get block details API v.2
 };
