@@ -139,7 +139,8 @@ const TxDetails = async (hash, query) => {
               icon:     '',
               dynamic:  0
             },
-            hash: tx.hash, // hash 32 Bytes - String: Hash of the transaction.
+            hash: check.cut0x(tx.hash), // SCAN-720 BUG FIX
+            // hash: tx.hash, // hash 32 Bytes - String: Hash of the transaction.
             block:  0,
             txfee:  '0',
             isotime: moment(),
