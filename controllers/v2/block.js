@@ -170,23 +170,27 @@ const GetBlockTokens = async (req, res) => {
       response.head.updateTime = moment(); // UTC time format
       response.rows = response.rows.map(tx => {
         return {
-          old_data: {...tx}
-          // id: tx._id,
-          // hash: tx.hash,
-          // block: tx.block,
-          // addrFrom: tx.addrfrom,
-          // addrTo: tx.addrto,
-          // isoTime: tx.isotime,
-          // type: tx.type,
-          // status: tx.status,
-          // error: tx.error,
-          // isContract: tx.iscontract,
-          // isInner: tx.isinner,
-          // value: tx.value,
-          // txFee: tx.txfee,
-          // dcm: tx.tokendcm,
-          // gasUsed: tx.gasused,
-          // gasCost: tx.gascost
+          id: tx._id,
+          hash: tx.hash,
+          block: tx.block,
+          addrFrom: tx.addrfrom,
+          addrTo: tx.addrto,
+          isoTime: tx.isotime,
+          type: tx.type,
+          status: tx.status,
+          error: tx.error,
+          isContract: tx.iscontract,
+          isInner: tx.isinner,
+          value: tx.value,
+          tokenAddr: tx.tokenaddr,
+          tokenName: tx.tokenname,
+          tokenSmbl: tx.tokensmbl,
+          tokenDcm: tx.tokendcm,
+          tokenType: tx.tokentype,
+          txFee: tx.txfee,
+          dcm: tx.tokendcm,
+          gasUsed: tx.gasused,
+          gasCost: tx.gascost
         }
       })
       res.json(response)
