@@ -157,7 +157,7 @@ const check_module_singleton = (() => {
 
     // check block from client request
     let check_block = block => {
-      return (isInteger(block) && block > 0)
+      return (block > 0)
         ? true
         : false
     };

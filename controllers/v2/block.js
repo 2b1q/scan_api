@@ -129,9 +129,11 @@ const GetBlockEth = async (req, res) => {
     // get ether collection name
     let response = await block_model.transactions(options);
     if(response){
-      response.head.updateTime = moment(); // TODO time format + timezone
+      // preparing data (map data from model)
+      response.head.updateTime = moment(); // UTC time format
       response.rows = response.rows.map(tx => {
         return {
+          id: tx._id,
           hash: tx.hash,
           block: tx.block,
           addrFrom: tx.addrfrom,
@@ -145,8 +147,46 @@ const GetBlockEth = async (req, res) => {
           value: tx.value,
           txFee: tx.txfee,
           dcm: tx.tokendcm,
-          gasused: tx.gasused,
-          gascost: tx.gascost
+          gasUsed: tx.gasused,
+          gasCost: tx.gascost
+        }
+      })
+      res.json(response)
+    }
+    else res.status(404).json(check.get_msg().not_found)
+  }
+};
+
+// Get block Tokens Transactions API v.2
+const GetBlockTokens = async (req, res) => {
+  let options = checkBlockParams(req, res);
+  if(options){
+    // add tokens collection property
+    options.collection = cfg.store.cols.token
+    // get tokens collection name
+    let response = await block_model.transactions(options);
+    if(response){
+      // preparing data (map data from model)
+      response.head.updateTime = moment(); // UTC time format
+      response.rows = response.rows.map(tx => {
+        return {
+          old_data: {...tx}
+          // id: tx._id,
+          // hash: tx.hash,
+          // block: tx.block,
+          // addrFrom: tx.addrfrom,
+          // addrTo: tx.addrto,
+          // isoTime: tx.isotime,
+          // type: tx.type,
+          // status: tx.status,
+          // error: tx.error,
+          // isContract: tx.iscontract,
+          // isInner: tx.isinner,
+          // value: tx.value,
+          // txFee: tx.txfee,
+          // dcm: tx.tokendcm,
+          // gasUsed: tx.gasused,
+          // gasCost: tx.gascost
         }
       })
       res.json(response)
@@ -165,7 +205,7 @@ const GetBlockDetails = (req, res) => {
 
 
 module.exports = {
-  // tokens: GetBlockTokens,      // [HTTP REST] (API v.2) Get block Tokens Transactions endpoint
+  tokens: GetBlockTokens,      // [HTTP REST] (API v.2) Get block Tokens Transactions endpoint
   eth: GetBlockEth,            // [HTTP REST] (API v.2) Get block ETH Transactions endpoint
   details: GetBlockDetails,    // [HTTP REST] (API v.2) Get block details endpoint
 };
