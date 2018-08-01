@@ -47,11 +47,13 @@ const GetBlockTransactions = async options => {
         //   return t;
         // });
         resolve({
-          block: block,
-          pageNumber: pageNumber,
-          pageSize: pageSize,
-          count: count,
-          skip: skip,
+          head: {
+            totalEntities: count,
+            pageNumber: pageNumber,
+            pageSize: pageSize,
+            blockNumber: block,
+            skip: skip, // do we need this property at API v.2 ?
+          },
           rows: docs
         })
       })

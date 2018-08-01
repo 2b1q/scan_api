@@ -128,7 +128,29 @@ const GetBlockEth = async (req, res) => {
     options.collection = cfg.store.cols.eth
     // get ether collection name
     let response = await block_model.transactions(options);
-    if(response) res.json(response)
+    if(response){
+      response.head.updateTime = moment(); // TODO time format + timezone
+      response.rows = response.rows.map(tx => {
+        return {
+          hash: tx.hash,
+          block: tx.block,
+          addrFrom: tx.addrfrom,
+          addrTo: tx.addrto,
+          isoTime: tx.isotime,
+          type: tx.type,
+          status: tx.status,
+          error: tx.error,
+          isContract: tx.iscontract,
+          isInner: tx.isinner,
+          value: tx.value,
+          txFee: tx.txfee,
+          dcm: tx.tokendcm,
+          gasused: tx.gasused,
+          gascost: tx.gascost
+        }
+      })
+      res.json(response)
+    }
     else res.status(404).json(check.get_msg().not_found)
   }
 };
