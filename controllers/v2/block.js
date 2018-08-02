@@ -23,53 +23,6 @@ let logit = (req, msg = '') => {
   }
 };
 
-// // GetBlockTransactions from tnx_model
-// const GetBlockTnx = async ({ listId, moduleId, page, size, entityId } = opts, res) => {
-//   console.log(`${wid_ptrn}`)
-//   let options = check.safePageAndSize(page, size);
-//   options.listId = listId;
-//   options.entityId = entityId;
-//   try{
-//     let response = await block_model.transactions(options);
-//     if(response.rows.length > 0){
-//       let { count, page, size, skip } = response;
-//       delete response.size;
-//       delete response.page;
-//       delete response.count;
-//       delete response.skip;
-//       response.head = {
-//         totalEntities: count,
-//         pageNumber: page,
-//         pageSize: size,
-//         skip: skip,
-//         moduleId: moduleId,
-//         infinityScroll: 0,  // hardcoded
-//         listId: listId,
-//         entityId: entityId.toString(), // bug if its Number - FE wont render
-//         updateTime: moment()
-//       };
-//       if(res) res.json(response);
-//       else return response
-//     } else {
-//       if(res) res.status(404).json(check.get_msg().not_found);
-//       else return check.get_msg().not_found
-//     }
-//     // handle exception from DB tnx_model
-//   } catch (e) {
-//     if(res) res.status(400).json({ error: e }) // FWD exception to client
-//     else return { error: e }
-//   }
-// };
-//
-// get block ETH transactions API v.2
-// - remove res object
-// const http_GetBlockTnx = async options => {
-//   // add eth collection property
-//   options.collection = cfg.store.cols.eth
-//   // get ether collection name
-//   return await block_model.transactions(options);
-// }
-
 // get block details API v.2
 const http_GetBlock = async (block, res) => {
   console.log(`${wid_ptrn}`)
@@ -81,12 +34,6 @@ const http_GetBlock = async (block, res) => {
     res.status(400).json({ error: e }) // FWD exception to client
   }
 };
-
-// // Get block Tokens Transactions
-// const GetBlockTokens = (req, res) => {
-//   // let options = checkOptions(req, res, cfg.list_type.token);
-//   if(options) GetBlockTnx(options, res)
-// };
 
 // check options function (getBlock ETH/Tokens)
 const checkBlockParams = (req, res) => {
@@ -153,7 +100,7 @@ const GetBlockEth = async (req, res) => {
       })
       res.json(response)
     }
-    else res.status(404).json(check.get_msg().not_found)
+    else res.json(check.get_msg().not_found)
   }
 };
 
@@ -195,7 +142,7 @@ const GetBlockTokens = async (req, res) => {
       })
       res.json(response)
     }
-    else res.status(404).json(check.get_msg().not_found)
+    else res.json(check.get_msg().not_found)
   }
 };
 
@@ -206,7 +153,6 @@ const GetBlockDetails = (req, res) => {
   if(check.block(block)) http_GetBlock(block, res);
   else res.status(400).json(check.get_msg().wrong_block)
 };
-
 
 module.exports = {
   tokens: GetBlockTokens,      // [HTTP REST] (API v.2) Get block Tokens Transactions endpoint

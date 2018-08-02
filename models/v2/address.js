@@ -5,42 +5,45 @@ const
   cfg = require('../../config/config'),
   MAX_SKIP = cfg.store.mongo.max_skip,
   dbquery = require('./db_query'),
-  eth_func = require('../../ether/functions');
+  eth_func = require('../../ether/functions'),
+  TOKEN_LIST_SIZE = 55; // TODO move to config
 
 /* eth get data timeouts. */
 const wait = ms => new Promise(resolve => setTimeout(() => resolve(), ms));
-
 
 // Get address details:
 const GetAddressDetails = async addr => {
   let response = {};
   // construct query options for address details
-
+  let main_tx_selector = { $or: [{ 'addrto': addr }, { 'addrfrom': addr }] }
+  let inner_tx_selector = { $or: [{ 'addrto': addr }, { 'addrfrom': addr }], isinner: 1 }
+  // let token_list_selector = { addr: addr, skip: 0, size: TOKEN_LIST_SIZE }
+  let token_list_selector = { addr: addr, skip: 0 }
+  // get DB collections
+  const eth_col = cfg.store.cols.eth, token_col = cfg.store.cols.token;
+  const eth_db_col = await dbquery.getcol(eth_col);
+  const token_db_col = await dbquery.getcol(token_col);
+  // eth count
+  let mainTxCount_p = eth_db_col.count(main_tx_selector);
+  let innerTxCount_p = eth_db_col.count(inner_tx_selector);
+  // ETH balance
   let addr_balance_p = eth_func.providerEthProxy('getbalance', { addr: addr });
-  let addrHeader_p = dbquery.findOne(cfg.store.cols.contract, { 'addr': addr });
-  let mainTxCount_p = dbquery.colCount(cfg.store.cols.eth, { $or: [{ 'addrto': addr }, { 'addrfrom': addr }] });
-  let tokenList_p = addrTokenBalance({ addr: addr, skip: 0, size: 5 });
+  // token count
+  let tokenTxCount_p = token_db_col.count(main_tx_selector);
+  let tokenList_p = addrTokenBalance(token_list_selector);
+  // let addrHeader_p = dbquery.findOne(cfg.store.cols.contract, { 'addr': addr });
 
-  return await Promise.all([addrHeader_p, mainTxCount_p, addr_balance_p, tokenList_p])
-    .then(([addrHeader, { cnt }, eth_balance = 0, tokenList]) => { // fix NaN if string is empty
+  return await Promise.all([mainTxCount_p, innerTxCount_p, addr_balance_p, tokenTxCount_p, tokenList_p])
+    .then(([main_cnt, inner_cnt, eth_balance = 0, token_tx_cnt, total_t]) => { // fix NaN if string is empty
       response.rows = [];
       response.head = {
-        addr: addrHeader.addr || addr,
-        maintxcount: cnt || 0,
-        toptokenbalances: tokenList.tokens,
-        totaltokens: tokenList.total,
-        coin: 'ETH',
-        data: null,
-        decimals: 18,
-        balance: parseInt(eth_balance, 10).toString(16),
-        // TODO: fix data convert in balance and tables
-        // TODO: remove actions like parseInt(balance_in_hex) / 10^decimals on front-end and apps
-        // TODO: balance recalc via web3 utils
-        contract: 0, // dummy
-        innertxcount: 0, // dummy
-        tokentxcount: 0, // dummy
-        totaltxcount: 0, // dummy
-        maxtx: 0 // dummy
+        addr: addr,                                       // адрес после "нормализации" (без 0х, малый регистр)
+        mainTxCount: main_cnt,                            // кол-во основных транзакций эфира
+        innerTxCount: inner_cnt,                          // кол-во внутренних транзакций эфира
+        tokenTxCount: token_tx_cnt,                       // кол-во всех транзакций по токенам
+        totalTokens: total_t.total,                             // кол-во токенов которые были или есть у данного адреса
+        balance: parseInt(eth_balance, 10).toString(16),  // баланс ETH
+        decimals: 18,                                     // знаков после "."
       };
       return response
     })
@@ -48,23 +51,24 @@ const GetAddressDetails = async addr => {
 
 };
 
-const GetAddrTokenBalance = async options => {
-  let response = {};
-  // construct query options for address details
-  let tokenList_p = addrTokenBalance(options);
 
-  return await Promise.all([tokenList_p]).then(([data]) => {
-    response.rows = data.tokens;
-    response.head = {
-      entityId: options.addr,
-      totalEntities: data.total,
-      pageSize: options.size,
-      skip: options.skip,
-      infinityScroll: 1,
-    };
-    return response
-  }).catch(e => e)
-};
+// const GetAddrTokenBalance = async options => {
+//   let response = {};
+//   // construct query options for address details
+//   let tokenList_p = addrTokenBalance(options);
+//
+//   return await Promise.all([tokenList_p]).then(([data]) => {
+//     response.rows = data.tokens;
+//     response.head = {
+//       entityId: options.addr,
+//       totalEntities: data.total,
+//       pageSize: options.size,
+//       skip: options.skip,
+//       infinityScroll: 1,
+//     };
+//     return response
+//   }).catch(e => e)
+// };
 
 const addrTokenBalance = async options => {
   let { addr, skip, size } = options;
@@ -165,34 +169,34 @@ const addrTokenBalance = async options => {
   console.log(`partToken.length = ${partToken.length}`);
   return { tokens: partToken, total: totalTokens }
 };
-
-/*
- * Get address tnx:
- *  GO api.GetAddrTransactions("2a65aca4d5fc5b5c859090a6c34d164135398226", 1, 10, "txtype = 'tx'")
- */
-const GetAddrTransactions = async options => {
-  let { addr, collection } = options;
-  // addr tnx selector
-  let selector = {
-    $or: [{ 'addrto': addr },
-      { 'addrfrom': addr }]
-  };
-  // count tnx by query selector
-  let { cnt } = await dbquery.colCount(collection, selector);
-  if(cnt === 0) return { rows: [] }; // stop flow
-  //if( cnt > MAX_SKIP ) cnt = MAX_SKIP;
-  // construct query options for addr tnxs
-  options = {
-    max_skip: MAX_SKIP,
-    selector: selector,
-    sort: { 'block': -1 },
-    ...options  // spread other options
-  };
-  return await dbquery.getDbTransactions(options)
-};
+//
+// /*
+//  * Get address tnx:
+//  *  GO api.GetAddrTransactions("2a65aca4d5fc5b5c859090a6c34d164135398226", 1, 10, "txtype = 'tx'")
+//  */
+// const GetAddrTransactions = async options => {
+//   let { addr, collection } = options;
+//   // addr tnx selector
+//   let selector = {
+//     $or: [{ 'addrto': addr },
+//       { 'addrfrom': addr }]
+//   };
+//   // count tnx by query selector
+//   let { cnt } = await dbquery.colCount(collection, selector);
+//   if(cnt === 0) return { rows: [] }; // stop flow
+//   //if( cnt > MAX_SKIP ) cnt = MAX_SKIP;
+//   // construct query options for addr tnxs
+//   options = {
+//     max_skip: MAX_SKIP,
+//     selector: selector,
+//     sort: { 'block': -1 },
+//     ...options  // spread other options
+//   };
+//   return await dbquery.getDbTransactions(options)
+// };
 
 module.exports = {
   details: GetAddressDetails,
-  transactions: GetAddrTransactions,
-  tokenBalance: GetAddrTokenBalance
+  // transactions: GetAddrTransactions,
+  // tokenBalance: GetAddrTokenBalance
 };

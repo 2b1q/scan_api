@@ -19,8 +19,8 @@ const check_module_singleton = (() => {
       MAX_SKIP = cfg.store.mongo.max_skip;
     // client msgs
     const msg = {
-      // not_found: { error: 'Not found', Head: {}, Rows: [] },
-      not_found: { error: 'Not found' },
+      not_found: { head: {}, rows: [] },
+      // not_found: { error: 'Not found' },
       unknown_listid: { error: 'Unknown listId' },
       no_api_key: { error: 'unable to set "api_key" param' },
       wrong_api_key: { error: 'bad "api_key"' },

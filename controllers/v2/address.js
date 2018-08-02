@@ -1,5 +1,5 @@
 /* REST API v.2
-   address controller
+ address controller
  */
 const addr_model = require('../../models/v2/address'),
   logger = require('../../utils/logger')(module),
@@ -89,21 +89,15 @@ const checkOptions = (req, res, listId = '', moduleId = 'address') => {
   }
 };
 
-// get Address details (REST API + Socket IO)
-const GetAddr = async (address, res) => {
-  console.log(`${wid_ptrn}`);
+// get Address details (REST API v.2)
+const http_GetAddr = async (address, res) => {
   try{
     let response = await addr_model.details(address);
     if(!response.hasOwnProperty('head')) response = check.get_msg().not_found;
-    // if we have res object -> its REST API else ITS socket IO data
-    if(res) res.json(response);
-    else return response
+    res.json(response);
   } catch (e) {
-    // if we have res object -> its REST API else ITS socket IO data
-    if(res){
-      res.status(500);
-      res.json({ error: e }) // FWD exception to client
-    } else return { error: e }
+    logger.error({ error: e, function: 'http_GetAddr' }) // log model error
+    res.json(check.get_msg().not_found) // don`t fwd errors from model to client
   }
 };
 
@@ -121,23 +115,24 @@ const GetAddrEth = (req, res) => {
   if(options) GetAddrTnx(options, res)
 };
 
-// Get Address details REST API
+// Get Address details REST API v.2
 const GetAddrDetails = (req, res) => {
+  logger.api_requests(logit(req));    // log query data any way
   console.log(`${wid_ptrn}`);
-  let addr = req.body.addr;
+  let addr = req.body.addr;           // addr from request
   let c_addr = check.cut0xClean(addr) // cut 0x and clean address
   // check cleared address by length
   if(!check.checkAddr(c_addr, addr)){
-    res.json(check.get_msg().bad_addr(addr))
+    res.status(400).json(check.get_msg().bad_addr(addr))
   } else {
-    logger.info({ addr: addr, cleared_addr: c_addr });
-    GetAddr(c_addr, res)
+    console.log({ addr: addr, cleared_addr: c_addr });
+    http_GetAddr(c_addr, res)
   }
 };
 
 
 module.exports = {
-  tokens: GetAddrTokens,              // [HTTP REST] (API v.2) Get Address Tokens Transactions endpoint
-  eth: GetAddrEth,                    // [HTTP REST] (API v.2) Get Address ETH Transactions endpoint
+  // tokens: GetAddrTokens,              // [HTTP REST] (API v.2) Get Address Tokens Transactions endpoint
+  // eth: GetAddrEth,                    // [HTTP REST] (API v.2) Get Address ETH Transactions endpoint
   details: GetAddrDetails,            // [HTTP REST] (API v.2) Get Address details REST API endpoint
 };

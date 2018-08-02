@@ -16,19 +16,19 @@ const GetBlockTransactions = async options => {
     sort: { 'hash': 1 },
     ...options  // spread other options
   };
-  console.log(options);
   let { selector, collection, sort, skip, pageSize, pageNumber, block } = options;
   // MongoDB data optimization => use only necessary fields/columns
   let fields = collection === 'ether_txn'
     ? {
       hash: 1, block: 1, addrfrom: 1, addrto: 1, isotime: 1, type: 1, status: 1,
-      error: 1, iscontract: 1, isinner: 1, value: 1, txfee: 1, gasused: 1, gascost: 1
+      error: 1, iscontract: 1, isinner: 1, value: 1, txfee: 1, gasused: 1, gascost: 1, tokendcm: 1
     }
     : {
       hash: 1, block: 1, addrfrom: 1, addrto: 1, isotime: 1, type: 1, status: 1,
       error: 1, iscontract: 1, isinner: 1, value: 1, txfee: 1, gasused: 1, gascost: 1,
       tokenaddr: 1, tokenname: 1, tokensmbl: 1, tokendcm: 1, tokentype: 1
     }
+  console.log(options);
   const db_col = await dbquery.getcol(collection);
   let count = await db_col.count(selector);
   if(count === 0) return 0;
