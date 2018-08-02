@@ -95,7 +95,7 @@ const checkBlockParams = (req, res) => {
   logger.api_requests(logit(req));
   let params = req.body.params || {}
   // params destructing
-  let { blockNumber, pageNumber, pageSize } = params;
+  let { blockNumber, pageNumber, pageSize, offset, count } = params; // TODO add offset & count support for iOS pagination
   // check params existing
   if(!pageNumber){
     res.status(400).json(check.get_msg().no_pageNumber)

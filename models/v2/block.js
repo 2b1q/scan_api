@@ -18,34 +18,29 @@ const GetBlockTransactions = async options => {
   };
   console.log(options);
   let { selector, collection, sort, skip, pageSize, pageNumber, block } = options;
+  // MongoDB data optimization => use only necessary fields/columns
+  let fields = collection === 'ether_txn'
+    ? {
+      hash: 1, block: 1, addrfrom: 1, addrto: 1, isotime: 1, type: 1, status: 1,
+      error: 1, iscontract: 1, isinner: 1, value: 1, txfee: 1, gasused: 1, gascost: 1
+    }
+    : {
+      hash: 1, block: 1, addrfrom: 1, addrto: 1, isotime: 1, type: 1, status: 1,
+      error: 1, iscontract: 1, isinner: 1, value: 1, txfee: 1, gasused: 1, gascost: 1,
+      tokenaddr: 1, tokenname: 1, tokensmbl: 1, tokendcm: 1, tokentype: 1
+    }
   const db_col = await dbquery.getcol(collection);
   let count = await db_col.count(selector);
   if(count === 0) return 0;
   if(count > MAX_SKIP) count = MAX_SKIP;
   // TODO datamapping
   return new Promise(resolve =>
-    db_col.find(selector, { allowDiskUse: true }) // allowDiskUse lets the server know if it can use disk to store temporary results for the aggregation (requires mongodb 2.6 >)
+    db_col.find(selector, { fields }, { allowDiskUse: true }) // allowDiskUse lets the server know if it can use disk to store temporary results for the aggregation (requires mongodb 2.6 >)
       .sort(sort)
       .skip(skip)
       .limit(pageSize)
       .toArray((err, docs) => {
         if(err) resolve(false); // stop flow and return false without exeption
-        // let txns = docs.map(tx => {
-        //   let t = {
-        //     // construct token object
-        //     token: {
-        //       addr: tx.tokenaddr,
-        //       name: tx.tokenname,
-        //       smbl: tx.tokensmbl,
-        //       dcm: tx.tokendcm,
-        //       type: tx.tokentype
-        //     },
-        //     ...tx // spread => return all data AS IS
-        //   };
-        //   delete t.data;
-        //   delete t.rcplogs;
-        //   return t;
-        // });
         resolve({
           head: {
             totalEntities: count,
