@@ -18,11 +18,14 @@ const GetAddressDetails = async (addr) => {
     let inner_tx_selector = { $or: [{ addrto: addr }, { addrfrom: addr }], isinner: 1 };
     // let token_list_selector = { addr: addr, skip: 0, size: TOKEN_LIST_SIZE }
     let token_list_selector = { addr: addr, skip: 0 };
+    let erc20_selector = { addr: addr };
     // get DB collections
     const eth_col = cfg.store.cols.eth,
-        token_col = cfg.store.cols.token;
+        token_col = cfg.store.cols.token,
+        erc_20_col = cfg.store.cols.erc20_cache;
     const eth_db_col = await dbquery.getcol(eth_col);
     const token_db_col = await dbquery.getcol(token_col);
+    const erc20_db_col = await dbquery.getcol(erc_20_col);
     // eth count
     let mainTxCount_p = eth_db_col.count(main_tx_selector);
     let innerTxCount_p = eth_db_col.count(inner_tx_selector);
@@ -30,7 +33,8 @@ const GetAddressDetails = async (addr) => {
     let addr_balance_p = eth_func.providerEthProxy('getbalance', { addr: addr });
     // token count
     let tokenTxCount_p = token_db_col.count(main_tx_selector);
-    let tokenList_p = addrTokenBalance(token_list_selector);
+    // let tokenList_p = addrTokenBalance(token_list_selector);
+    let token_erc20_p = erc20_db_col.count(erc20_selector);
     // let addrHeader_p = dbquery.findOne(cfg.store.cols.contract, { 'addr': addr });
 
     return await Promise.all([
@@ -38,9 +42,10 @@ const GetAddressDetails = async (addr) => {
         innerTxCount_p,
         addr_balance_p,
         tokenTxCount_p,
-        tokenList_p,
+        // tokenList_p,
+        token_erc20_p,
     ])
-        .then(([main_cnt, inner_cnt, eth_balance = 0, token_tx_cnt, total_t]) => {
+        .then(([main_cnt, inner_cnt, eth_balance = 0, token_tx_cnt, erc_20_cnt]) => {
             // fix NaN if string is empty
             response.rows = [];
             response.head = {
@@ -48,7 +53,7 @@ const GetAddressDetails = async (addr) => {
                 mainTxCount: main_cnt, // кол-во основных транзакций эфира
                 innerTxCount: inner_cnt, // кол-во внутренних транзакций эфира
                 tokenTxCount: token_tx_cnt, // кол-во всех транзакций по токенам
-                totalTokens: total_t.total, // кол-во токенов которые были или есть у данного адреса
+                totalTokens: erc_20_cnt, // кол-во токенов которые были или есть у данного адреса
                 balance: parseInt(eth_balance, 10).toString(16), // баланс ETH
                 decimals: 18, // знаков после "."
             };
