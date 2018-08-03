@@ -7,13 +7,13 @@ cluster.on('disconnect', (worker, code, signal) => {
     cluster.fork();
 });
 
-cluster.on('online', worker => {
-    console.log(config.color.magenta+'Worker %d '+config.color.white+'online', worker.id)
+cluster.on('online', (worker) => {
+    console.log(config.color.magenta + 'Worker %d ' + config.color.white + 'online', worker.id);
 });
 
 let cpuCount = require('os').cpus().length;
 
 // fork workers by CPU cores
-for(let i = 0; i < cpuCount; ++i) {
-  cluster.fork();
+for (let i = 0; i < cpuCount; ++i) {
+    cluster.fork();
 }

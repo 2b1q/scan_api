@@ -1,10 +1,10 @@
-const config  = require('../config/config'),
-      c       = config.color,
-      cluster = require('cluster');
+const config = require('../config/config'),
+    c = config.color,
+    cluster = require('cluster');
 
 // worker id pattern
 const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[proxy] ${c.white}`)();
-const id_ptrn = id => `${c.yellow}${id}${c.white}`;
+const id_ptrn = (id) => `${c.yellow}${id}${c.white}`;
 
 const check_eth_clients_singleton = (() => {
     let ethProxy;
@@ -15,13 +15,13 @@ const check_eth_clients_singleton = (() => {
         let gethUrls = config.ethOptions.gethURLs;
         let ethClients = [];
 
-        for (let i=0; i<gethUrls.length; i+=1){
+        for (let i = 0; i < gethUrls.length; i += 1) {
             ethClients.push({
                 url: gethUrls[i],
                 provider: null,
                 lastBlock: 0,
                 subscribe: null,
-                id: i
+                id: i,
             });
         }
 
@@ -34,16 +34,16 @@ const check_eth_clients_singleton = (() => {
                 let tmpProviders = [];
                 let clients = self.ethClients;
                 let last = self.lastBlock;
-                for (let i=0; i<clients.length; i+=1){
-                    if (last <= clients[i].lastBlock && clients[i].lastBlock > 0){
-                        tmpProviders.push(clients[i].provider)
+                for (let i = 0; i < clients.length; i += 1) {
+                    if (last <= clients[i].lastBlock && clients[i].lastBlock > 0) {
+                        tmpProviders.push(clients[i].provider);
                     }
                 }
 
-                if (tmpProviders.length > 0){
+                if (tmpProviders.length > 0) {
                     return tmpProviders[Math.floor(Math.random() * tmpProviders.length)];
                 } else {
-                    return false
+                    return false;
                 }
             },
 
@@ -51,8 +51,10 @@ const check_eth_clients_singleton = (() => {
                 let self = this.getInstance();
                 let tmpBlocks = [];
                 let clients = self.ethClients;
-                console.log(`${wid_ptrn}getProvidersBlock, clients length = ${id_ptrn(clients.length)}`);
-                for (let i=0; i<clients.length; i+=1){
+                console.log(
+                    `${wid_ptrn}getProvidersBlock, clients length = ${id_ptrn(clients.length)}`
+                );
+                for (let i = 0; i < clients.length; i += 1) {
                     tmpBlocks.push(clients[i].lastBlock);
                 }
                 return tmpBlocks;
@@ -63,21 +65,18 @@ const check_eth_clients_singleton = (() => {
                 console.log(`${wid_ptrn}getLastBlock, this = ${this}`);
                 console.log(`${wid_ptrn}getLastBlock, self.lastBlock = ${id_ptrn(self.lastBlock)}`);
                 return self.lastBlock;
-            }
-
-        }
+            },
+        };
     };
 
     return {
         getInstance: () => {
-            if(!ethProxy) {
+            if (!ethProxy) {
                 ethProxy = initSingleton();
             }
-            return ethProxy
-        }
-    }
-
+            return ethProxy;
+        },
+    };
 })();
-
 
 module.exports.getInstance = () => check_eth_clients_singleton.getInstance();

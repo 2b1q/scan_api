@@ -1,33 +1,30 @@
 /*
  * Transaction model v.2
  */
-const
-  cfg = require('../../config/config'),
-  MAX_SKIP = cfg.store.mongo.max_skip,
-  dbquery = require('./db_query');
-
+const cfg = require('../../config/config'),
+    MAX_SKIP = cfg.store.mongo.max_skip,
+    dbquery = require('./db_query');
 
 /* get last tnxs
  * Go e.g. api.GetLastTransactions(2, 10, "tx")
  */
 const GetLastTransactions = async (options = {}) => {
-  // construct query options for last tnxs
-  options = {
-    max_skip: MAX_SKIP,
-    selector: {}, // last tnx selector
-    sort: { 'block': -1 },
-    ...options  // spread other options
-  };
-  return await dbquery.getDbTransactions(options)
+    // construct query options for last tnxs
+    options = {
+        max_skip: MAX_SKIP,
+        selector: {}, // last tnx selector
+        sort: { block: -1 },
+        ...options, // spread other options
+    };
+    return await dbquery.getDbTransactions(options);
 };
 
 /* Get tnx details by tx hash
  * go e.g. api.GetTransaction("e25db473556c7ecda92ebf7226ff022ef2f49fb11f03404d04987f69894f4548")
  */
-const TxDetails = async hash => await dbquery.TxDetails(hash, { 'hash': hash });
-
+const TxDetails = async (hash) => await dbquery.TxDetails(hash, { hash: hash });
 
 module.exports = {
-  lastTransactions: GetLastTransactions, // from api.GetLastTransactions
-  details: TxDetails            // from TxDetails > api.GetTransaction(req.Hash)
+    lastTransactions: GetLastTransactions, // from api.GetLastTransactions
+    details: TxDetails, // from TxDetails > api.GetTransaction(req.Hash)
 };
