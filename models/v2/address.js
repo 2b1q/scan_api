@@ -46,8 +46,6 @@ const GetAddressDetails = async (addr) => {
         token_erc20_p,
     ])
         .then(([main_cnt, inner_cnt, eth_balance = 0, token_tx_cnt, erc_20_cnt]) => {
-            // fix NaN if string is empty
-            response.rows = [];
             response.head = {
                 addr: addr, // адрес после "нормализации" (без 0х, малый регистр)
                 mainTxCount: main_cnt, // кол-во основных транзакций эфира
