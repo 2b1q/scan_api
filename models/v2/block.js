@@ -127,7 +127,7 @@ const GetBlockDetails = async (block) => {
                         tokenTxCount: tokens.cnt, // кол-во всех транзакций по токенам
                         gasLimit: block.gaslimit, // лимит газа
                         gasUsed: block.gasused, // использовано газа
-                        isoTime: block.isotime, // время появления блока
+                        time: block.isotime, // время появления блока
                     },
                 };
             // if we haven`t block property -> it`s 404 error

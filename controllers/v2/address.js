@@ -6,6 +6,9 @@ const addr_model = require('../../models/v2/address'),
     moment = require('moment'),
     check = require('../../utils/checker').cheker(),
     cfg = require('../../config/config'),
+    eth_col = cfg.store.cols.eth,
+    token_col = cfg.store.cols.token,
+    erc_20_col = cfg.store.cols.erc20_cache,
     cluster = require('cluster'),
     c = cfg.color;
 
@@ -54,42 +57,6 @@ const get_addr_tnxs = async (options, moduleId, listId, clearAddr) => {
     }
 };
 
-/* GetAddrTransactions from tnx_model (REST API + Socket IO)
- * if we have res object its REST request, otherwise its IO request
- */
-const GetAddrTnx = async ({ listId, moduleId, page, size, entityId } = opts, res) => {
-    console.log(`${wid_ptrn}`);
-    let options = check.safePageAndSize(page, size); // build page, skip, size options
-    options.listId = listId; // tx type (listOfETH/Tokens)
-    options.entityId = entityId; // cleared address
-    options.addr = entityId; // cleared address
-    // get tnx db collection name by listId (IIFE + AF + ternary)
-    options.collection = ((listId) => (listId === 'listOfETH' ? 'ether_txn' : 'token_txn'))(listId);
-    logger.info({ addr: entityId });
-    // if we have res object -> its REST API else ITS socket IO data
-    if (res) res.json(await get_addr_tnxs(options, moduleId, listId, entityId));
-    else return await get_addr_tnxs(options, moduleId, listId, entityId);
-};
-
-// // check Address options (REST API). Set moduleId = 'address'
-// const checkOptions = (req, res, listId = '', moduleId = 'address') => {
-//     logger.api_requests(logit(req)); // log query data any way
-//     // if listId not passed then its addr details OR fail
-//     if (listId.length > 0) {
-//         // check options
-//         let { entityId = 0 } = req.body.params || {}; // if entityId not set or no params => entityId = 0 => then "error":"entityId not found"
-//         // check entityId from client
-//         return check.entityId(entityId, res)
-//             ? check.build_options(req, listId, moduleId, entityId)
-//             : false;
-//     } else {
-//         // if listId not passed then its Address details OR bad query
-//         let addr = req.body.addr || 0;
-//         console.log(addr);
-//         return check.addr(addr, res) ? addr : false;
-//     }
-// };
-
 // get Address details (REST API v.2)
 const http_GetAddr = async (address, res) => {
     try {
@@ -102,19 +69,84 @@ const http_GetAddr = async (address, res) => {
     }
 };
 
-// Get Address Tokens Transactions
-// const GetAddrTokens = (req, res) => {
-//     console.log(`${wid_ptrn}`);
-//     let options = checkOptions(req, res, cfg.list_type.token);
-//     if (options) GetAddrTnx(options, res);
-// };
-
 // Get Address ETH Transactions API v.2
-const GetAddrEth = (req, res) => {
+const GetAddrEth = async (req, res) => {
+    logger.api_requests(logit(req)); // log query data any way
     console.log(`${wid_ptrn}`);
     let options = checkAddrkParams(req, res);
-    if (options) res.json(options);
-    // if (options) GetAddrTnx(options, res);
+    if (options) {
+        // add eth collection property
+        options.collection = eth_col;
+        // get ether collection name
+        let response = await addr_model.transactions(options);
+        if (response) {
+            // preparing data (map data from model)
+            response.head.updateTime = moment(); // UTC time format
+            response.rows = response.rows.map((tx) => {
+                return {
+                    id: tx._id,
+                    hash: tx.hash,
+                    block: tx.block,
+                    addrFrom: tx.addrfrom,
+                    addrTo: tx.addrto,
+                    time: tx.isotime,
+                    type: tx.type,
+                    status: tx.status,
+                    error: tx.error,
+                    isContract: tx.iscontract,
+                    isInner: tx.isinner,
+                    value: tx.value,
+                    txFee: tx.txfee,
+                    dcm: tx.tokendcm,
+                    gasUsed: tx.gasused,
+                    gasCost: tx.gascost,
+                };
+            });
+            res.json(response);
+        } else res.json(check.get_msg().not_found);
+    }
+};
+
+// Get Address Tokens Transactions API v.2
+const GetAddrTokens = async (req, res) => {
+    logger.api_requests(logit(req)); // log query data any way
+    console.log(`${wid_ptrn}`);
+    let options = checkAddrkParams(req, res);
+    if (options) {
+        // add tokens collection property
+        options.collection = token_col;
+        // get ether collection name
+        let response = await addr_model.transactions(options);
+        if (response) {
+            // preparing data (map data from model)
+            response.head.updateTime = moment(); // UTC time format
+            response.rows = response.rows.map((tx) => {
+                return {
+                    id: tx._id,
+                    hash: tx.hash,
+                    block: tx.block,
+                    addrFrom: tx.addrfrom,
+                    addrTo: tx.addrto,
+                    time: tx.isotime,
+                    status: tx.status,
+                    error: tx.error,
+                    isContract: tx.iscontract,
+                    isInner: tx.isinner,
+                    value: tx.value,
+                    tokenAddr: tx.tokenaddr,
+                    tokenName: tx.tokenname,
+                    tokenSmbl: tx.tokensmbl,
+                    tokenDcm: tx.tokendcm,
+                    tokenType: tx.tokentype,
+                    txFee: tx.txfee,
+                    dcm: tx.tokendcm,
+                    gasUsed: tx.gasused,
+                    gasCost: tx.gascost,
+                };
+            });
+            res.json(response);
+        } else res.json(check.get_msg().not_found);
+    }
 };
 
 const checkAddrkParams = (req, res) => {
@@ -163,7 +195,7 @@ const GetAddrDetails = (req, res) => {
 };
 
 module.exports = {
-    // tokens: GetAddrTokens,              // [HTTP REST] (API v.2) Get Address Tokens Transactions endpoint
+    tokens: GetAddrTokens, // [HTTP REST] (API v.2) Get Address Tokens Transactions endpoint
     eth: GetAddrEth, // [HTTP REST] (API v.2) Get Address ETH Transactions endpoint
     details: GetAddrDetails, // [HTTP REST] (API v.2) Get Address details REST API endpoint
 };

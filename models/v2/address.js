@@ -5,44 +5,40 @@ const cfg = require('../../config/config'),
     MAX_SKIP = cfg.store.mongo.max_skip,
     dbquery = require('./db_query'),
     eth_func = require('../../ether/functions'),
-    TOKEN_LIST_SIZE = 55; // TODO move to config
+    eth_col = cfg.store.cols.eth,
+    token_col = cfg.store.cols.token,
+    erc_20_col = cfg.store.cols.erc20_cache;
+TOKEN_LIST_SIZE = 55; // TODO move to config
 
 /* eth get data timeouts. */
 const wait = (ms) => new Promise((resolve) => setTimeout(() => resolve(), ms));
 
-// Get address details:
+// Get address details API v.2:
 const GetAddressDetails = async (addr) => {
     let response = {};
     // construct query options for address details
     let main_tx_selector = { $or: [{ addrto: addr }, { addrfrom: addr }] };
     let inner_tx_selector = { $or: [{ addrto: addr }, { addrfrom: addr }], isinner: 1 };
     // let token_list_selector = { addr: addr, skip: 0, size: TOKEN_LIST_SIZE }
-    let token_list_selector = { addr: addr, skip: 0 };
     let erc20_selector = { addr: addr };
     // get DB collections
-    const eth_col = cfg.store.cols.eth,
-        token_col = cfg.store.cols.token,
-        erc_20_col = cfg.store.cols.erc20_cache;
     const eth_db_col = await dbquery.getcol(eth_col);
     const token_db_col = await dbquery.getcol(token_col);
     const erc20_db_col = await dbquery.getcol(erc_20_col);
     // eth count
-    let mainTxCount_p = eth_db_col.count(main_tx_selector);
-    let innerTxCount_p = eth_db_col.count(inner_tx_selector);
+    let mainTxCount_p = eth_db_col.count(main_tx_selector); // кол-во основных транзакций эфира
+    let innerTxCount_p = eth_db_col.count(inner_tx_selector); // кол-во внутренних транзакций эфира
     // ETH balance
     let addr_balance_p = eth_func.providerEthProxy('getbalance', { addr: addr });
     // token count
-    let tokenTxCount_p = token_db_col.count(main_tx_selector);
-    // let tokenList_p = addrTokenBalance(token_list_selector);
-    let token_erc20_p = erc20_db_col.count(erc20_selector);
-    // let addrHeader_p = dbquery.findOne(cfg.store.cols.contract, { 'addr': addr });
+    let tokenTxCount_p = token_db_col.count(main_tx_selector); // кол-во всех транзакций по токенам
+    let token_erc20_p = erc20_db_col.count(erc20_selector); // кол-во токенов которые были или есть у данного адреса
 
     return await Promise.all([
         mainTxCount_p,
         innerTxCount_p,
         addr_balance_p,
         tokenTxCount_p,
-        // tokenList_p,
         token_erc20_p,
     ])
         .then(([main_cnt, inner_cnt, eth_balance = 0, token_tx_cnt, erc_20_cnt]) => {
@@ -182,34 +178,83 @@ const addrTokenBalance = async (options) => {
     console.log(`partToken.length = ${partToken.length}`);
     return { tokens: partToken, total: totalTokens };
 };
-//
-// /*
-//  * Get address tnx:
-//  *  GO api.GetAddrTransactions("2a65aca4d5fc5b5c859090a6c34d164135398226", 1, 10, "txtype = 'tx'")
-//  */
-// const GetAddrTransactions = async options => {
-//   let { addr, collection } = options;
-//   // addr tnx selector
-//   let selector = {
-//     $or: [{ 'addrto': addr },
-//       { 'addrfrom': addr }]
-//   };
-//   // count tnx by query selector
-//   let { cnt } = await dbquery.colCount(collection, selector);
-//   if(cnt === 0) return { rows: [] }; // stop flow
-//   //if( cnt > MAX_SKIP ) cnt = MAX_SKIP;
-//   // construct query options for addr tnxs
-//   options = {
-//     max_skip: MAX_SKIP,
-//     selector: selector,
-//     sort: { 'block': -1 },
-//     ...options  // spread other options
-//   };
-//   return await dbquery.getDbTransactions(options)
-// };
+
+//  Get address tnx API v.2:
+const GetAddrTransactions = async (options) => {
+    options.selector = { $or: [{ addrto: options.addr }, { addrfrom: options.addr }] };
+    options.sort = { block: -1 };
+    console.log(options);
+    let { addr, collection, skip, pageSize, pageNumber, selector, sort } = options;
+    const db_col = await dbquery.getcol(collection);
+    let count = await db_col.count(selector);
+    if (count === 0) return 0;
+    if (count > MAX_SKIP) count = MAX_SKIP;
+    // MongoDB data optimization => use only necessary fields/columns
+    let fields =
+        collection === 'ether_txn'
+            ? {
+                  hash: 1,
+                  block: 1,
+                  addrfrom: 1,
+                  addrto: 1,
+                  isotime: 1,
+                  type: 1,
+                  status: 1,
+                  error: 1,
+                  iscontract: 1,
+                  isinner: 1,
+                  value: 1,
+                  txfee: 1,
+                  gasused: 1,
+                  gascost: 1,
+                  tokendcm: 1,
+              }
+            : {
+                  hash: 1,
+                  block: 1,
+                  addrfrom: 1,
+                  addrto: 1,
+                  isotime: 1,
+                  type: 1,
+                  status: 1,
+                  error: 1,
+                  iscontract: 1,
+                  isinner: 1,
+                  value: 1,
+                  txfee: 1,
+                  gasused: 1,
+                  gascost: 1,
+                  tokenaddr: 1,
+                  tokenname: 1,
+                  tokensmbl: 1,
+                  tokendcm: 1,
+                  tokentype: 1,
+              };
+
+    return new Promise((resolve) =>
+        db_col
+            .find(selector, { fields }, { allowDiskUse: true }) // allowDiskUse lets the server know if it can use disk to store temporary results for the aggregation (requires mongodb 2.6 >)
+            .sort(sort)
+            .skip(skip)
+            .limit(pageSize)
+            .toArray((err, docs) => {
+                if (err) resolve(false); // stop flow and return false without exeption
+                resolve({
+                    head: {
+                        addr: addr,
+                        totalEntities: count,
+                        pageNumber: pageNumber,
+                        pageSize: pageSize,
+                        skip: skip, // do we need this property at API v.2 ?
+                    },
+                    rows: docs,
+                });
+            })
+    );
+};
 
 module.exports = {
     details: GetAddressDetails,
-    // transactions: GetAddrTransactions,
+    transactions: GetAddrTransactions,
     // tokenBalance: GetAddrTokenBalance
 };

@@ -31,7 +31,7 @@ router.get(v2_ptrn('block/ether'), block_controller_v2.eth); // GetLast ETH bloc
 router.get(v2_ptrn('block/details'), block_controller_v2.details); // Block details [HTTP POST]
 
 /* address v.2 endpoints */
-// router.post(v2_ptrn('address/tokens'), addr_controller_v2.tokens);    // Get Address Tokens Transactions endpoint [HTTP POST]
+router.get(v2_ptrn('address/tokens'), addr_controller_v2.tokens); // Get Address Tokens Transactions endpoint [HTTP POST]
 router.get(v2_ptrn('address/ether'), addr_controller_v2.eth); // Get Address ETH Transactions endpoint    [HTTP POST]
 router.get(v2_ptrn('address/details'), addr_controller_v2.details); // Get Address details endpoint [HTTP POST]
 
