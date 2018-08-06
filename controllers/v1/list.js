@@ -1,20 +1,23 @@
-const check = require('../../utils/checker').cheker(),
-      cfg = require('../../config/config'),
-      tnx_controller = require('./transaction'),
-      block_controller = require('./block'),
-      logger = require('../../utils/logger')(module),
-      moment = require('moment'),
-      addr_controller = require('./address');
+const check = require("../../utils/checker").cheker(),
+  cfg = require("../../config/config"),
+  tnx_controller = require("./transaction"),
+  block_controller = require("./block"),
+  logger = require("../../utils/logger")(module),
+  moment = require("moment"),
+  addr_controller = require("./address");
 
 // simple query logger
-let logit = (req, msg = '') => {
+let logit = (req, msg = "") => {
   return {
-    msg:              msg,
-    post_params:      req.body,
-    get_params:       req.query,
-    timestamp:        (() => moment().format('DD.MM.YYYY HH:mm:ss'))(),
-    path:             module.filename.split('/').slice(-2).join('/')
-  }
+    msg: msg,
+    post_params: req.body,
+    get_params: req.query,
+    timestamp: (() => moment().format("DD.MM.YYYY HH:mm:ss"))(),
+    path: module.filename
+      .split("/")
+      .slice(-2)
+      .join("/")
+  };
 };
 
 // check block/address options (REST API).
@@ -26,32 +29,32 @@ const checkOptions = (req, res, listId, moduleId, entityId) =>
 // list API
 exports.list = (req, res) => {
   logger.api_requests(logit(req)); // log query data any way
-  let listId   = req.body.listId || req.body.listid;
+  let listId = req.body.listId || req.body.listid;
   let moduleId = req.body.moduleId || req.body.moduleid;
   let { entityId = 0 } = req.body.params || {}; // if entityId not set or no params => entityId = 0 => then "error"
   let options = {};
   // check listId AND moduleId
-  if(check.listId(listId, res) && check.moduleId(moduleId, res)) {
+  if (check.listId(listId, res) && check.moduleId(moduleId, res)) {
     switch (moduleId) {
-      case 'block':
-        entityId = Number( parseInt(entityId) ); // parse any value and convert to Number
+      case "block":
+        entityId = Number(parseInt(entityId)); // parse any value and convert to Number
         options = checkOptions(req, res, listId, moduleId, entityId);
-        if(options) block_controller.getBlockTnx(options, res);
+        if (options) block_controller.getBlockTnx(options, res);
         break;
-      case 'transactions': // listOfETH
-        options = check.build_options(req, 'listOfETH', moduleId);
+      case "transactions": // listOfETH
+        options = check.build_options(req, "listOfETH", moduleId);
         logger.info(options); // log options to console
         tnx_controller.getTnx(options, res);
         break;
-      case 'tokens': // listOfTokens
-        options = check.build_options(req, 'listOfTokens', moduleId);
+      case "tokens": // listOfTokens
+        options = check.build_options(req, "listOfTokens", moduleId);
         logger.info(options); // log options to console
         tnx_controller.getTnx(options, res);
         break;
-      case 'address':
+      case "address":
         options = checkOptions(req, res, listId, moduleId, entityId);
-        if(options) {
-          if (options.listId === cfg.list_type.token_balance){
+        if (options) {
+          if (options.listId === cfg.list_type.token_balance) {
             console.log("==>addrTokensBalance");
             addr_controller.addrTokensBalance(options, res);
           } else {
@@ -60,7 +63,8 @@ exports.list = (req, res) => {
           }
         }
         break;
-      default: res.json(check.get_msg().unknown_module_id)
+      default:
+        res.json(check.get_msg().unknown_module_id);
     }
   }
 };
