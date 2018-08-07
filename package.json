@@ -1,27 +1,29 @@
 {
-  "name": "scan-api",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "start": "nodemon ./app.js"
-  },
-  "dependencies": {
-    "body-parser": "^1.18.3",
-    "cluster": "^0.7.7",
-    "compression": "^1.7.2",
-    "connect-rest": "^3.0.16",
-    "cookie-parser": "~1.4.3",
-    "debug": "~2.6.9",
-    "express": "~4.16.0",
-    "express-session": "^1.15.6",
-    "lodash": "^4.17.10",
-    "lodash.curry": "^4.1.1",
-    "moment": "^2.22.2",
-    "mongodb": "^3.0.10",
-    "nodemon": "^1.17.5",
-    "socket.io": "^2.1.1",
-    "web3": "^1.0.0-beta.34",
-    "winston": "^3.0.0"
-  },
-  "devDependencies": {}
+    "name": "scan-api",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "start": "nodemon ./app.js"
+    },
+    "dependencies": {
+        "body-parser": "^1.18.3",
+        "cluster": "^0.7.7",
+        "compression": "^1.7.2",
+        "connect-rest": "^3.0.16",
+        "cookie-parser": "~1.4.3",
+        "debug": "~2.6.9",
+        "express": "~4.16.0",
+        "express-session": "^1.15.6",
+        "lodash": "^4.17.10",
+        "lodash.curry": "^4.1.1",
+        "moment": "^2.22.2",
+        "mongodb": "^3.0.10",
+        "nodemon": "^1.17.5",
+        "socket.io": "^2.1.1",
+        "web3": "^1.0.0-beta.34",
+        "winston": "^3.0.0"
+    },
+    "devDependencies": {
+        "prettier": "^1.14.0"
+    }
 }
