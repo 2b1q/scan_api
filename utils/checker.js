@@ -12,28 +12,36 @@ const check_module_singleton = (() => {
         const cfg = require('../config/config');
         // private constants
         const page = cfg.page,
+            pagination = cfg.pagination,
             MIN_PAGE = page.min_page,
             MAX_PAGE = page.max_page,
             MIN_SIZE = page.min_size,
             MAX_SIZE = page.max_size,
-            MAX_SKIP = cfg.store.mongo.max_skip;
+            MAX_SKIP = cfg.store.mongo.max_skip,
+            // API v.2 pagination constants
+            MAX_OFFSET = pagination.max_offset,
+            MIN_OFFSET = pagination.min_offset,
+            MIN_SZ = pagination.min_size,
+            MAX_SZ = pagination.max_size;
+
         // client msgs
         const msg = {
-            not_found: { head: {}, rows: [] },
-            // not_found: { error: 'Not found' },
+            not_found: { head: {}, rows: [] }, // API v.2 & API v.1
+            block_not_found: { errorCode: 404, errorMessage: 'Block not found' }, // API v.2
+            transaction_not_found: { errorCode: 404, errorMessage: 'Transaction not found' }, // API v.2
+            wrong_block: { errorCode: 400, errorMessage: 'Wrong block number' }, // API v.2
+            no_offset: { errorCode: 400, errorMessage: 'parameter "offset" not found or wrong' }, // API v.2
+            no_size: { errorCode: 400, errorMessage: 'parameter "size" not found or wrong' }, // API v.2
+            no_addr: { errorCode: 400, errorMessage: 'parameter "addr" not found' }, // API v.2
+            wrong_addr: { errorCode: 400, errorMessage: 'Wrong "addr" property' }, // API v.2
             unknown_listid: { error: 'Unknown listId' },
             no_api_key: { error: 'unable to set "api_key" param' },
             wrong_api_key: { error: 'bad "api_key"' },
-            wrong_block: { error: 'Wrong block number' },
-            wrong_addr: { error: 'Wrong addr property' },
             wrong_entityId: { error: 'Wrong entityId property' },
             wrong_listId: { error: 'Wrong listId property' },
             unknown_module_id: { error: 'Unknown moduleId' },
             no_entityId: { error: 'entityId not found' },
-            no_pageSize: { error: 'pageSize not found' },
-            no_pageNumber: { error: 'pageNumber not found' },
             no_blockNumber: { error: 'blockNumber not found' },
-            no_addr: { error: '"addr" parameter not found' },
             bad_hash: (hash) => Object({ error: `Bad Hash value "${hash}"` }),
             bad_addr: (addr) => Object({ error: `Bad addr value "${addr}"` }),
         };
@@ -64,27 +72,29 @@ const check_module_singleton = (() => {
             };
         };
 
-        // normalize block params (pagesize, pagenumber)
-        let block_opts = (block, pagesize, pagenumber) => {
-            let { skip, page, size } = pageandsize(pagenumber, pagesize);
+        // normalize (size, offset) params API v.2
+        const normalize_size_offset = (obj, size, offset) => {
+            if (size > MAX_SZ) size = MAX_SZ;
+            if (size <= MIN_SZ) size = MIN_SZ;
+            if (offset > MAX_OFFSET) offset = MAX_OFFSET;
+            if (offset < MIN_OFFSET) offset = MIN_OFFSET;
             return {
-                block: block,
-                pageSize: size,
-                pageNumber: page,
-                skip: skip,
+                size: size,
+                offset: offset,
+                ...obj, // destruct obj {} (addr, block, hash)
             };
         };
 
-        // normalize addr params (pagesize, pagenumber)
-        let addr_opts = (addr, pagesize, pagenumber) => {
-            let { skip, page, size } = pageandsize(pagenumber, pagesize);
-            return {
-                addr: addr,
-                pageSize: size,
-                pageNumber: page,
-                skip: skip,
-            };
-        };
+        // // normalize addr params (pagesize, pagenumber)
+        // let addr_opts = (addr, pagesize, pagenumber) => {
+        //     let { skip, page, size } = pageandsize(pagenumber, pagesize);
+        //     return {
+        //         addr: addr,
+        //         pageSize: size,
+        //         pageNumber: page,
+        //         skip: skip,
+        //     };
+        // };
 
         // build qury options
         let build_params = (req, listId, moduleId, entityId) => {
@@ -179,16 +189,17 @@ const check_module_singleton = (() => {
 
         // public interface
         return {
-            isInt: (n) => isInteger(n), // handy tools
-            isFloat: (n) => isFloat(n), // handy tools
+            normalize_pagination: (obj, size, offset) => normalize_size_offset(obj, size, offset),
+            // isInt: (n) => isInteger(n), // handy tools
+            // isFloat: (n) => isFloat(n), // handy tools
             safePageAndSize: (p, s) => pageandsize(p, s), // build page options => harcoded limits constants from (Go safePageAndSize)
-            apiToken: (token) => chek_token(token), // check API_KEY token (not used yet)
-            auth: (api_key, res) => check_auth(api_key, res), // auth using API_KEY token (not used yet)
+            // apiToken: (token) => chek_token(token), // check API_KEY token (not used yet)
+            // auth: (api_key, res) => check_auth(api_key, res), // auth using API_KEY token (not used yet)
             listId: (lid) => check_listId(lid), // check is correct ListId
             moduleId: (mid) => check_moduleId(mid), // check is correct ModuleId
             get_msg: () => msg, // get client msgs object
-            build_block_opts: (block, ps, pn) => block_opts(block, ps, pn), // API v.2 bulid block options
-            build_addr_opts: (addr, ps, pn) => addr_opts(addr, ps, pn), // API v.2 bulid block options
+            // build_block_opts: (block, size, offset) => block_opts(block, size, offset), // API v.2 bulid block options
+            // build_addr_opts: (addr, ps, pn) => addr_opts(addr, ps, pn), // API v.2 bulid block options
             build_options: (req, lid, mid, eid) => build_params(req, lid, mid, eid), // build query options
             build_io_opts: (params, listId, moduleId, entityId) =>
                 build_params_io(params, listId, moduleId, entityId),

@@ -32,10 +32,12 @@ const http_GetBlock = async (block, res) => {
     console.log(`${wid_ptrn}`);
     try {
         let response = await block_model.details(block);
-        if (response.hasOwnProperty('error')) res.status(404); // if Not Found -> change HTTP Status code
-        res.json(response); // send 200 with data OR 404 if not found
+        // if response has 'error' property fwd response 404 else return 200 and payload
+        if (response.hasOwnProperty('error')) res.status(404).json(check.get_msg().block_not_found);
+        res.json(response);
     } catch (e) {
-        res.status(400).json({ error: e }); // FWD exception to client
+        logger.error(e); // log error returned from model
+        res.status(404).json(check.get_msg().block_not_found); // dont fwd exception to client
     }
 };
 
@@ -46,24 +48,23 @@ const checkBlockParams = (req, res) => {
     logger.api_requests(logit(req));
     let params = req.query || {};
     // params destructing
-    let { blockNumber, pageNumber, pageSize, offset, count } = params; // TODO add offset & count support for iOS pagination
+    let { blockNumber, offset, size } = params;
+    size = parseInt(size); // convert to Number
+    offset = parseInt(offset); // convert to Number
     // check params existing
-    if (!pageNumber) {
-        res.status(400).json(check.get_msg().no_pageNumber);
+    if (!offset) {
+        res.status(400).json(check.get_msg().no_offset);
         return false;
-    } else if (!pageSize) {
-        res.status(400).json(check.get_msg().no_pageSize);
+    } else if (!size) {
+        res.status(400).json(check.get_msg().no_size);
         return false;
     } else if (!blockNumber) {
         res.status(400).json(check.get_msg().no_blockNumber);
         return false;
     }
     let block = parseInt(check.cut0xClean(blockNumber)); // cut 0x (avoid hex to int convertion)
-    if (check.block(block)) {
-        pageSize = parseInt(pageSize); // convert to Number
-        pageNumber = parseInt(pageNumber); // convert to Number
-        return check.build_block_opts(block, pageSize, pageNumber); // return options object
-    } else {
+    if (check.block(block)) return check.normalize_pagination({ block: block }, size, offset);
+    else {
         res.status(400).json(check.get_msg().wrong_block);
         return false;
     }
@@ -156,7 +157,7 @@ const GetBlockDetails = (req, res) => {
 };
 
 module.exports = {
-    tokens: GetBlockTokens, // [HTTP REST] (API v.2) Get block Tokens Transactions endpoint
-    eth: GetBlockEth, // [HTTP REST] (API v.2) Get block ETH Transactions endpoint
-    details: GetBlockDetails, // [HTTP REST] (API v.2) Get block details endpoint
+    tokens: GetBlockTokens, // [HTTP GET REST] (API v.2) Get block Tokens Transactions endpoint
+    eth: GetBlockEth, // [HTTP GET REST] (API v.2) Get block ETH Transactions endpoint
+    details: GetBlockDetails, // [HTTP GET REST] (API v.2) Get block details endpoint
 };
