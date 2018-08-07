@@ -184,7 +184,7 @@ const GetAddrTransactions = async (options) => {
     options.selector = { $or: [{ addrto: options.addr }, { addrfrom: options.addr }] };
     options.sort = { block: -1 };
     console.log(options);
-    let { addr, collection, skip, pageSize, pageNumber, selector, sort } = options;
+    let { addr, collection, size, offset, selector, sort } = options;
     const db_col = await dbquery.getcol(collection);
     let count = await db_col.count(selector);
     if (count === 0) return 0;
@@ -235,17 +235,16 @@ const GetAddrTransactions = async (options) => {
         db_col
             .find(selector, { fields }, { allowDiskUse: true }) // allowDiskUse lets the server know if it can use disk to store temporary results for the aggregation (requires mongodb 2.6 >)
             .sort(sort)
-            .skip(skip)
-            .limit(pageSize)
+            .skip(offset)
+            .limit(size)
             .toArray((err, docs) => {
                 if (err) resolve(false); // stop flow and return false without exeption
                 resolve({
                     head: {
                         addr: addr,
                         totalEntities: count,
-                        pageNumber: pageNumber,
-                        pageSize: pageSize,
-                        skip: skip, // do we need this property at API v.2 ?
+                        size: size,
+                        offset: offset,
                     },
                     rows: docs,
                 });

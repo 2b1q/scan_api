@@ -61,11 +61,11 @@ const get_addr_tnxs = async (options, moduleId, listId, clearAddr) => {
 const http_GetAddr = async (address, res) => {
     try {
         let response = await addr_model.details(address);
-        if (!response.hasOwnProperty('head')) response = check.get_msg().not_found;
+        if (!response.hasOwnProperty('head')) response = check.get_msg().head_not_found;
         res.json(response);
     } catch (e) {
         logger.error({ error: e, function: 'http_GetAddr' }); // log model error
-        res.json(check.get_msg().not_found); // don`t fwd errors from model to client
+        res.json(check.get_msg().head_not_found); // don`t fwd errors from model to client
     }
 };
 
@@ -103,7 +103,7 @@ const GetAddrEth = async (req, res) => {
                 };
             });
             res.json(response);
-        } else res.json(check.get_msg().not_found);
+        } else res.json(check.get_msg().rows_not_found);
     }
 };
 
@@ -145,7 +145,7 @@ const GetAddrTokens = async (req, res) => {
                 };
             });
             res.json(response);
-        } else res.json(check.get_msg().not_found);
+        } else res.json(check.get_msg().rows_not_found);
     }
 };
 
@@ -155,24 +155,23 @@ const checkAddrkParams = (req, res) => {
     logger.api_requests(logit(req));
     let params = req.query || {};
     // params destructing
-    let { addr, pageNumber, pageSize, offset, count } = params; // TODO add offset & count support for iOS pagination
+    let { addr, offset, size } = params;
+    offset = parseInt(offset); // convert to Number
+    size = parseInt(size); // convert to Number
     // check params existing
-    if (!pageNumber) {
-        res.status(400).json(check.get_msg().no_pageNumber);
+    if (!offset) {
+        res.status(400).json(check.get_msg().no_offset);
         return false;
-    } else if (!pageSize) {
-        res.status(400).json(check.get_msg().no_pageSize);
+    } else if (!size) {
+        res.status(400).json(check.get_msg().no_size);
         return false;
     } else if (!addr) {
         res.status(400).json(check.get_msg().no_addr);
         return false;
     }
     addr = check.cut0xClean(addr);
-    if (check.checkAddr(addr)) {
-        pageSize = parseInt(pageSize); // convert to Number
-        pageNumber = parseInt(pageNumber); // convert to Number
-        return check.build_addr_opts(addr, pageSize, pageNumber); // return options object
-    } else {
+    if (check.checkAddr(addr)) return check.normalize_pagination({ addr: addr }, size, offset);
+    else {
         res.status(400).json(check.get_msg().wrong_addr);
         return false;
     }
