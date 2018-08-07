@@ -241,7 +241,7 @@ const distinct = async (collection, query = {}, key) => {
 // get block details by options
 const GetBlock = async (options) => {
     console.log(options);
-    let { block_col, ether_col, block_selector, tnx_selector } = options;
+    let { block_col, ether_col, block_selector, tnx_selector, token_col, token_selector } = options;
     // assign new Object 'inner_selector' from 'tnx_selector' and change 'isinner' property
     let inner_selector = Object.assign({}, tnx_selector, { isinner: 1 }); // fix bug with one object reference modification
     // TODO: mongo aggregation query (one group count query)
@@ -249,7 +249,7 @@ const GetBlock = async (options) => {
     let blockHeader_p = findOneQuery(block_col, block_selector);
     let mainTxCount_p = countTnx(ether_col, tnx_selector);
     let innerTxCount_p = countTnx(ether_col, inner_selector);
-    let tokenTxCount_p = dbquery.colCount(token_col, token_selector);
+    let tokenTxCount_p = colCount(token_col, token_selector);
     // do in parallel, if block not found reject and drop other promises
     return await Promise.all([blockHeader_p, mainTxCount_p, innerTxCount_p, tokenTxCount_p])
         .then(([block, main, inner, tokens] = data) => {
