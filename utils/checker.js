@@ -10,9 +10,16 @@ const check_module_singleton = (() => {
     // init instance
     let initSingleton = () => {
         const cfg = require('../config/config');
+        // WA
+        const pagination = {
+            min_offset: 0,
+            max_offset: 300000,
+            min_size: 1,
+            max_size: 200,
+        };
         // private constants
         const page = cfg.page,
-            pagination = cfg.pagination,
+            // pagination = cfg.pagination,
             MIN_PAGE = page.min_page,
             MAX_PAGE = page.max_page,
             MIN_SIZE = page.min_size,
