@@ -249,7 +249,7 @@ const GetBlock = async (options) => {
     let blockHeader_p = findOneQuery(block_col, block_selector);
     let mainTxCount_p = countTnx(ether_col, tnx_selector);
     let innerTxCount_p = countTnx(ether_col, inner_selector);
-    let tokenTxCount_p = colCount(token_col, token_selector);
+    let tokenTxCount_p = countTnx(token_col, token_selector);
     // do in parallel, if block not found reject and drop other promises
     return await Promise.all([blockHeader_p, mainTxCount_p, innerTxCount_p, tokenTxCount_p])
         .then(([block, main, inner, tokens] = data) => {
