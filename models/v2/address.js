@@ -15,25 +15,23 @@ const wait = (ms) => new Promise((resolve) => setTimeout(() => resolve(), ms));
 
 // Get address details API v.2:
 const GetAddressDetails = async (addr) => {
-    let response = {};
-    // construct query options for address details
-    let main_tx_selector = { $or: [{ addrto: addr }, { addrfrom: addr }] };
-    let inner_tx_selector = { $or: [{ addrto: addr }, { addrfrom: addr }], isinner: 1 };
-    // let token_list_selector = { addr: addr, skip: 0, size: TOKEN_LIST_SIZE }
-    let erc20_selector = { addr: addr };
+    let response = {}; // response object
     // get DB collections
     const eth_db_col = await dbquery.getcol(eth_col);
     const token_db_col = await dbquery.getcol(token_col);
     const erc20_db_col = await dbquery.getcol(erc_20_col);
-    // eth count
+    /** ETH Transaction details **/
+    let main_tx_selector = { $or: [{ addrto: addr }, { addrfrom: addr }] };
+    let inner_tx_selector = { $or: [{ addrto: addr }, { addrfrom: addr }], isinner: 1 };
+    // ETH count
     let mainTxCount_p = eth_db_col.count(main_tx_selector); // кол-во основных транзакций эфира
     let innerTxCount_p = eth_db_col.count(inner_tx_selector); // кол-во внутренних транзакций эфира
-    // ETH balance
-    let addr_balance_p = eth_func.providerEthProxy('getbalance', { addr: addr });
-    // token count
+    let addr_balance_p = eth_func.providerEthProxy('getbalance', { addr: addr }); // ETH balance
+    /** Token Transaction details **/
+    let erc20_selector = { addr: addr };
+    // Token count
     let tokenTxCount_p = token_db_col.count(main_tx_selector); // кол-во всех транзакций по токенам
     let token_erc20_p = erc20_db_col.count(erc20_selector); // кол-во токенов которые были или есть у данного адреса
-
     return await Promise.all([
         mainTxCount_p,
         innerTxCount_p,
@@ -53,7 +51,7 @@ const GetAddressDetails = async (addr) => {
             };
             return response;
         })
-        .catch((e) => e);
+        .catch((e) => e); // catch and return throwed exception OR Promise.reject()
 };
 
 // const GetAddrTokenBalance = async options => {

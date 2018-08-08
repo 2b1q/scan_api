@@ -159,7 +159,7 @@ const checkAddrkParams = (req, res) => {
     offset = parseInt(offset); // convert to Number
     size = parseInt(size); // convert to Number
     // check params existing
-    if (!offset) {
+    if (!offset && offset !== 0) {
         res.status(400).json(check.get_msg().no_offset);
         return false;
     } else if (!size) {
