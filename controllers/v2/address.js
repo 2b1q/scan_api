@@ -13,8 +13,10 @@ const addr_model = require('../../models/v2/address'),
     c = cfg.color;
 
 // worker id pattern
-const wid_ptrn = (() =>
-    `${c.green}worker[${cluster.worker.id}]${c.cyan}[address controller][API v.2] ${c.white}`)();
+const wid_ptrn = (endpoint) =>
+    `${c.green}worker[${cluster.worker.id}]${c.red}[API v.2]${c.cyan}[address controller]${
+        c.red
+    } > ${c.green}[${endpoint}] ${c.white}`;
 
 // simple query logger
 let logit = (req, msg = '') => {
@@ -30,7 +32,7 @@ let logit = (req, msg = '') => {
     };
 };
 
-// common get address transaction func
+/*// common get address transaction func
 const get_addr_tnxs = async (options, moduleId, listId, clearAddr) => {
     try {
         let response = await addr_model.transactions(options);
@@ -55,9 +57,9 @@ const get_addr_tnxs = async (options, moduleId, listId, clearAddr) => {
     } catch (e) {
         return { error: e };
     }
-};
+};*/
 
-// get Address details (REST API v.2)
+/** get Address details (REST API v.2)*/
 const http_GetAddr = async (address, res) => {
     try {
         let response = await addr_model.details(address);
@@ -69,10 +71,10 @@ const http_GetAddr = async (address, res) => {
     }
 };
 
-// Get Address ETH Transactions API v.2
+/** Get Address ETH Transactions API v.2*/
 const GetAddrEth = async (req, res) => {
     logger.api_requests(logit(req)); // log query data any way
-    console.log(`${wid_ptrn}`);
+    console.log(`${wid_ptrn('GetAddrEth')}`);
     let options = checkAddrkParams(req, res);
     if (options) {
         // add eth collection property
@@ -107,10 +109,10 @@ const GetAddrEth = async (req, res) => {
     }
 };
 
-// Get Address Tokens Transactions API v.2
+/** Get Address Tokens Transactions API v.2*/
 const GetAddrTokens = async (req, res) => {
     logger.api_requests(logit(req)); // log query data any way
-    console.log(`${wid_ptrn}`);
+    console.log(`${wid_ptrn('GetAddrTokens')}`);
     let options = checkAddrkParams(req, res);
     if (options) {
         // add tokens collection property
@@ -149,8 +151,8 @@ const GetAddrTokens = async (req, res) => {
     }
 };
 
+/** Check Address parameters */
 const checkAddrkParams = (req, res) => {
-    console.log(`${wid_ptrn}`);
     // log query data any way
     logger.api_requests(logit(req));
     let params = req.query || {};
@@ -177,10 +179,10 @@ const checkAddrkParams = (req, res) => {
     }
 };
 
-// Get Address details REST API v.2
+/** Get Address details REST API v.2*/
 const GetAddrDetails = (req, res) => {
     logger.api_requests(logit(req)); // log query data any way
-    console.log(`${wid_ptrn}`);
+    console.log(`${wid_ptrn('GetAddrDetails')}`);
     let addr = req.query.addr; // addr from request
     let c_addr = check.cut0xClean(addr); // cut 0x and clean address
     // check cleared address by length
@@ -193,8 +195,36 @@ const GetAddrDetails = (req, res) => {
     }
 };
 
+/** Get token Balance REST API v.2 */
+const GetTokenBalance = async (req, res) => {
+    logger.api_requests(logit(req)); // log query data any way
+    console.log(`${wid_ptrn('GetTokenBalance')}`);
+    let options = checkAddrkParams(req, res);
+    if (options) {
+        let response = await addr_model.tokenBalance(options);
+        if (response) {
+            // preparing data (map data from model)
+            response.head.updateTime = moment(); // UTC time format
+            response.rows = response.rows.map((token) => {
+                return {
+                    addr: token.addr,
+                    name: token.name,
+                    smbl: token.smbl,
+                    dcm: token.dcm,
+                    type: token.type,
+                    balance: token.balance,
+                    icon: token.icon,
+                    dynamic: token.dynamic,
+                };
+            });
+            res.json(response);
+        } else res.json(check.get_msg().rows_not_found);
+    }
+};
+
 module.exports = {
     tokens: GetAddrTokens, // [HTTP REST] (API v.2) Get Address Tokens Transactions endpoint
     eth: GetAddrEth, // [HTTP REST] (API v.2) Get Address ETH Transactions endpoint
     details: GetAddrDetails, // [HTTP REST] (API v.2) Get Address details REST API endpoint
+    tokenBalance: GetTokenBalance, // [HTTP REST] (API v.2) Get token Balance REST API endpoint
 };

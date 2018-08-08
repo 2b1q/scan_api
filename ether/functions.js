@@ -25,8 +25,17 @@ const providerEthProxy = async (fn, options) => {
                         options.walletAddr
                     )},
                     tokenAddr: ${txt_ptrn(options.tokenAddr)}})\n`);
-                    let erc20 = new provider.eth.Contract(erc20ABI, options.tokenAddr);
-                    return await erc20.methods.balanceOf(options.walletAddr).call();
+                    let response;
+                    // safe erc20.methods.balanceOf
+                    try {
+                        let erc20 = new provider.eth.Contract(erc20ABI, options.tokenAddr);
+                        response = await erc20.methods.balanceOf(options.walletAddr).call();
+                    } catch (e) {
+                        console.log('---------TokenBalance( handled EXCEPTION )--------');
+                        console.log(e);
+                        console.log('---------EXCEPTION--------');
+                    }
+                    return response;
                     break;
                 case 'tx':
                     console.log(
