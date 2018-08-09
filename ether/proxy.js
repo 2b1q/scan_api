@@ -15,7 +15,7 @@ const check_eth_clients_singleton = (() => {
         let gethUrls = config.ethOptions.gethURLs;
         let ethClients = [];
 
-        for (let i = 0; i < gethUrls.length; i += 1) {
+        /*        for (let i = 0; i < gethUrls.length; i += 1) {
             ethClients.push({
                 url: gethUrls[i],
                 provider: null,
@@ -23,7 +23,17 @@ const check_eth_clients_singleton = (() => {
                 subscribe: null,
                 id: i,
             });
-        }
+        }*/
+
+        gethUrls.forEach((k, i) =>
+            ethClients.push({
+                url: k,
+                provider: null,
+                lastBlock: 0,
+                subscribe: null,
+                id: i,
+            })
+        );
 
         return {
             lastBlock: 0,
@@ -34,11 +44,18 @@ const check_eth_clients_singleton = (() => {
                 let tmpProviders = [];
                 let clients = self.ethClients;
                 let last = self.lastBlock;
-                for (let i = 0; i < clients.length; i += 1) {
+
+                clients.forEach((client) => {
+                    if (last <= client.lastBlock && client.lastBlock > 0) {
+                        tmpProviders.push(client.provider);
+                    }
+                });
+
+                /*for (let i = 0; i < clients.length; i += 1) {
                     if (last <= clients[i].lastBlock && clients[i].lastBlock > 0) {
                         tmpProviders.push(clients[i].provider);
                     }
-                }
+                }*/
 
                 if (tmpProviders.length > 0) {
                     return tmpProviders[Math.floor(Math.random() * tmpProviders.length)];
@@ -54,9 +71,12 @@ const check_eth_clients_singleton = (() => {
                 console.log(
                     `${wid_ptrn}getProvidersBlock, clients length = ${id_ptrn(clients.length)}`
                 );
-                for (let i = 0; i < clients.length; i += 1) {
+                /*for (let i = 0; i < clients.length; i += 1) {
                     tmpBlocks.push(clients[i].lastBlock);
-                }
+                }*/
+
+                clients.forEach((client) => tmpBlocks.push(client.lastBlock));
+
                 return tmpBlocks;
             },
 

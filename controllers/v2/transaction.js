@@ -90,11 +90,12 @@ const GetLastTnxEthRest = async (req, res) => {
 
 /** common tx details*/
 const txDetails = async (hash) => {
-    console.log(`${wid_ptrn}Get tx "0x${hash}" details`);
     try {
         let response = await tnx_model.details(hash); // get tx details by hash
+        // console.log(response);
         return response.hasOwnProperty('empty') ? check.get_msg().transaction_not_found : response;
     } catch (e) {
+        console.log(e);
         logger.error(e); // log exception
         return check.get_msg().transaction_not_found;
     }

@@ -113,7 +113,6 @@ const GetAddrTokenBalance = async (options) => {
     await Promise.all(lastTokensPromiseList)
         .then((tokens) => {
             tokens.forEach((token) => {
-                console.log(token);
                 token.balance = '*';
                 token.icon = '/api/token/icon/' + token.addr;
                 token.dynamic = 0;
