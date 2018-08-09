@@ -15,25 +15,23 @@ const wait = (ms) => new Promise((resolve) => setTimeout(() => resolve(), ms));
 
 // Get address details API v.2:
 const GetAddressDetails = async (addr) => {
-    let response = {};
-    // construct query options for address details
-    let main_tx_selector = { $or: [{ addrto: addr }, { addrfrom: addr }] };
-    let inner_tx_selector = { $or: [{ addrto: addr }, { addrfrom: addr }], isinner: 1 };
-    // let token_list_selector = { addr: addr, skip: 0, size: TOKEN_LIST_SIZE }
-    let erc20_selector = { addr: addr };
+    let response = {}; // response object
     // get DB collections
     const eth_db_col = await dbquery.getcol(eth_col);
     const token_db_col = await dbquery.getcol(token_col);
     const erc20_db_col = await dbquery.getcol(erc_20_col);
-    // eth count
+    /** ETH Transaction details **/
+    let main_tx_selector = { $or: [{ addrto: addr }, { addrfrom: addr }] };
+    let inner_tx_selector = { $or: [{ addrto: addr }, { addrfrom: addr }], isinner: 1 };
+    // ETH count
     let mainTxCount_p = eth_db_col.count(main_tx_selector); // кол-во основных транзакций эфира
     let innerTxCount_p = eth_db_col.count(inner_tx_selector); // кол-во внутренних транзакций эфира
-    // ETH balance
-    let addr_balance_p = eth_func.providerEthProxy('getbalance', { addr: addr });
-    // token count
+    let addr_balance_p = eth_func.providerEthProxy('getbalance', { addr: addr }); // ETH balance
+    /** Token Transaction details **/
+    let erc20_selector = { addr: addr };
+    // Token count
     let tokenTxCount_p = token_db_col.count(main_tx_selector); // кол-во всех транзакций по токенам
     let token_erc20_p = erc20_db_col.count(erc20_selector); // кол-во токенов которые были или есть у данного адреса
-
     return await Promise.all([
         mainTxCount_p,
         innerTxCount_p,
@@ -53,44 +51,25 @@ const GetAddressDetails = async (addr) => {
             };
             return response;
         })
-        .catch((e) => e);
+        .catch((e) => e); // catch and return throwed exception OR Promise.reject()
 };
 
-// const GetAddrTokenBalance = async options => {
-//   let response = {};
-//   // construct query options for address details
-//   let tokenList_p = addrTokenBalance(options);
-//
-//   return await Promise.all([tokenList_p]).then(([data]) => {
-//     response.rows = data.tokens;
-//     response.head = {
-//       entityId: options.addr,
-//       totalEntities: data.total,
-//       pageSize: options.size,
-//       skip: options.skip,
-//       infinityScroll: 1,
-//     };
-//     return response
-//   }).catch(e => e)
-// };
-
-const addrTokenBalance = async (options) => {
-    let { addr, skip, size } = options;
+/** Get Token balance API v.2 */
+const GetAddrTokenBalance = async (options) => {
+    console.log(options);
+    let { addr, offset, size } = options;
 
     let lastCachedBlock = 0;
-    let cache_selector = { addr: addr, lastblock: { $gt: 0 } };
     let allTokensMap = new Map();
 
-    console.log(`addr = ${addr}`);
-    console.log(`skip = ${skip}`);
-    console.log(`size = ${size}`);
+    const tokenCacheCol = await dbquery.find(erc_20_col, { addr: addr, lastblock: { $gt: 0 } });
+    const ctl = await dbquery.find(erc_20_col, { addr: addr, lastblock: 0 });
 
-    let cachedTokenBlocks = async () => {
+    const cachedTokenBlocks = async () => {
         for (let i = 0; i < 5; i++) {
-            let tokenCacheCol_p = await dbquery.find(cfg.store.cols.erc20_cache, cache_selector);
-            if (tokenCacheCol_p.rows === 0) await wait(50);
+            if (tokenCacheCol.rows === 0) await wait(50);
             else {
-                tokenCacheCol_p.forEach((c_block) => {
+                tokenCacheCol.forEach((c_block) => {
                     console.log(`c_block.lastblock = ${c_block.lastblock}`);
                     if (c_block.lastblock > lastCachedBlock) lastCachedBlock = c_block.lastblock;
                     return 0;
@@ -103,9 +82,8 @@ const addrTokenBalance = async (options) => {
 
     await cachedTokenBlocks();
 
-    let ctl_p = await dbquery.find(cfg.store.cols.erc20_cache, { addr: addr, lastblock: 0 });
-    if (Array.isArray(ctl_p)) {
-        ctl_p.forEach((tkn) => {
+    if (Array.isArray(ctl)) {
+        ctl.forEach((tkn) => {
             allTokensMap.set(tkn.tokenaddr, {
                 addr: tkn.tokenaddr,
                 name: tkn.tokenname,
@@ -124,27 +102,24 @@ const addrTokenBalance = async (options) => {
         block: { $gt: lastCachedBlock },
         tokentype: 20,
     };
-    let lastTokens = await dbquery.distinct(
-        cfg.store.cols.token,
-        last_tokens_selector,
-        'tokenaddr'
-    );
+    let lastTokens = await dbquery.distinct(token_col, last_tokens_selector, 'tokenaddr');
 
     let lastTokensPromiseList = [];
-    lastTokens.forEach((t) => {
-        lastTokensPromiseList.push(dbquery.findOne(cfg.store.cols.token_head, { addr: t }));
-    });
+    lastTokens.forEach((t) =>
+        lastTokensPromiseList.push(dbquery.findOne(cfg.store.cols.token_head, { addr: t }))
+    );
 
-    await Promise.all(lastTokensPromiseList).then((lastTokensPromiseList) => {
-        lastTokensPromiseList.forEach((tkn) => {
-            if (tkn) {
-                tkn.balance = '*';
-                tkn.icon = '/api/token/icon/' + tkn.addr;
-                tkn.dynamic = 0;
-                allTokensMap.set(tkn.addr, tkn);
-            }
-        });
-    });
+    // await parallel ETH token balance requests
+    await Promise.all(lastTokensPromiseList)
+        .then((tokens) => {
+            tokens.forEach((token) => {
+                token.balance = '*';
+                token.icon = '/api/token/icon/' + token.addr;
+                token.dynamic = 0;
+                allTokensMap.set(token.addr, token);
+            });
+        })
+        .catch((e) => logger.error(e));
 
     let allTokens = Array.from(allTokensMap);
     allTokens.sort(function(a, b) {
@@ -153,8 +128,8 @@ const addrTokenBalance = async (options) => {
     });
 
     let totalTokens = allTokens.length;
-    let fromI = skip;
-    let toI = skip + size;
+    let fromI = offset;
+    let toI = offset + size;
     if (fromI < 0) fromI = 0;
     if (fromI > totalTokens) fromI = totalTokens;
     if (toI < 0) toI = 0;
@@ -174,9 +149,21 @@ const addrTokenBalance = async (options) => {
         partToken.push(tkn);
     }
 
-    console.log(`totalTokens = ${totalTokens}`);
-    console.log(`partToken.length = ${partToken.length}`);
-    return { tokens: partToken, total: totalTokens };
+    console.log({
+        totalTokens: totalTokens,
+        ['partToken.length']: partToken.length,
+    });
+
+    return {
+        head: {
+            totalEntities: totalTokens,
+            addr: addr,
+            offset: offset,
+            size: size,
+            infinityScroll: 1,
+        },
+        rows: partToken,
+    };
 };
 
 //  Get address tnx API v.2:
@@ -255,5 +242,5 @@ const GetAddrTransactions = async (options) => {
 module.exports = {
     details: GetAddressDetails,
     transactions: GetAddrTransactions,
-    // tokenBalance: GetAddrTokenBalance
+    tokenBalance: GetAddrTokenBalance,
 };

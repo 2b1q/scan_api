@@ -10,9 +10,16 @@ const check_module_singleton = (() => {
     // init instance
     let initSingleton = () => {
         const cfg = require('../config/config');
+        // WA
+        const pagination = {
+            min_offset: 0,
+            max_offset: 300000,
+            min_size: 1,
+            max_size: 200,
+        };
         // private constants
         const page = cfg.page,
-            pagination = cfg.pagination,
+            // pagination = cfg.pagination,
             MIN_PAGE = page.min_page,
             MAX_PAGE = page.max_page,
             MIN_SIZE = page.min_size,
@@ -34,6 +41,8 @@ const check_module_singleton = (() => {
             no_size: { errorCode: 400, errorMessage: 'parameter "size" not found or wrong' }, // API v.2
             no_addr: { errorCode: 400, errorMessage: 'parameter "addr" not found' }, // API v.2
             wrong_addr: { errorCode: 400, errorMessage: 'Wrong "addr" property' }, // API v.2
+            bad_hash: (hash) =>
+                Object({ errorCode: 400, errorMessage: `Bad Hash value "${hash}"` }), // API v.2
             unknown_listid: { error: 'Unknown listId' },
             no_api_key: { error: 'unable to set "api_key" param' },
             wrong_api_key: { error: 'bad "api_key"' },
@@ -42,7 +51,6 @@ const check_module_singleton = (() => {
             unknown_module_id: { error: 'Unknown moduleId' },
             no_entityId: { error: 'entityId not found' },
             no_blockNumber: { error: 'blockNumber not found' },
-            bad_hash: (hash) => Object({ error: `Bad Hash value "${hash}"` }),
             bad_addr: (addr) => Object({ error: `Bad addr value "${addr}"` }),
         };
         // private functions
