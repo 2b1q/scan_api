@@ -105,7 +105,7 @@ const GetAddrEth = async (req, res) => {
                 };
             });
             res.json(response);
-        } else res.json(check.get_msg().rows_not_found);
+        } else res.json(check.get_msg().not_found);
     }
 };
 
