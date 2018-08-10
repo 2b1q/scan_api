@@ -17,19 +17,74 @@ const wid_ptrn = (endpoint) =>
         c.red
     } > ${c.green}[${endpoint}] ${c.white}`;
 
-/*/!* get last tnxs
- * Go e.g. api.GetLastTransactions(2, 10, "tx")
- *!/
-const GetLastTransactions = async (options = {}) => {
-    // construct query options for last tnxs
-    options = {
-        max_skip: MAX_SKIP,
-        selector: {}, // last tnx selector
-        sort: { block: -1 },
-        ...options, // spread other options
-    };
-    return await dbquery.getDbTransactions(options);
-};*/
+/** GetLastTransactions */
+const GetLastTransactions = async ({ collection, size, offset }) => {
+    console.log(wid_ptrn(`GetLastTransactions ${collection}`));
+    const selector = {}; // last tnx selector
+    const sort = { block: -1 };
+    const fields =
+        collection === eth_col
+            ? {
+                  hash: 1,
+                  block: 1,
+                  addrfrom: 1,
+                  addrto: 1,
+                  isotime: 1,
+                  type: 1,
+                  status: 1,
+                  error: 1,
+                  iscontract: 1,
+                  isinner: 1,
+                  value: 1,
+                  txfee: 1,
+                  gasused: 1,
+                  gascost: 1,
+                  tokendcm: 1,
+              }
+            : {
+                  hash: 1,
+                  block: 1,
+                  addrfrom: 1,
+                  addrto: 1,
+                  isotime: 1,
+                  type: 1,
+                  status: 1,
+                  error: 1,
+                  iscontract: 1,
+                  isinner: 1,
+                  value: 1,
+                  txfee: 1,
+                  gasused: 1,
+                  gascost: 1,
+                  tokenaddr: 1,
+                  tokenname: 1,
+                  tokensmbl: 1,
+                  tokendcm: 1,
+                  tokentype: 1,
+              };
+
+    const db_col = await dbquery.getcol(collection);
+    let count = await db_col.count(selector);
+
+    return new Promise((resolve) =>
+        db_col
+            .find(selector, { fields }, { allowDiskUse: true }) // allowDiskUse lets the server know if it can use disk to store temporary results for the aggregation (requires mongodb 2.6 >)
+            .sort(sort)
+            .skip(offset)
+            .limit(size)
+            .toArray((err, docs) => {
+                if (err) resolve(false);
+                resolve({
+                    head: {
+                        totalEntities: count,
+                        offset: offset,
+                        size: size,
+                    },
+                    rows: docs,
+                });
+            })
+    );
+};
 
 /** Get transaction details*/
 // const GetTxDetails = async (hash) => await dbquery.TxDetails(hash, { hash: hash });
@@ -59,12 +114,13 @@ const GetTxDetails = async (hash) => {
     const tokenTx_p = await dbquery.find(token_col, selector);
 
     return await Promise.all([ethTx_p, tokenTx_p])
-        .then(async (data) => {
+        .then(async ([eth_txs, token_txs]) => {
             let response = {};
-            let [[eth_tx], token_txs] = data;
+            if (!Array.isArray(eth_txs)) response.empty = true;
+            // set no data flag
+            else var [eth_tx] = eth_txs; // use var instead of let
             // if no txs in DB => ask ETH node
-            if (!eth_tx) {
-                response.empty = true; // set no data flag
+            if (response.hasOwnProperty('empty')) {
                 console.log(`======= ask ETH node for pending transaction ${hash}=======`);
                 const tx = await eth_func.providerEthProxy('tx', { hash: '0x' + hash });
                 if (tx) {
@@ -143,6 +199,6 @@ const GetTxDetails = async (hash) => {
 };
 
 module.exports = {
-    // lastTransactions: GetLastTransactions, // from api.GetLastTransactions
+    lastTransactions: GetLastTransactions, // API v.2 Get TxDetails
     details: GetTxDetails, // API v.2 Get TxDetails
 };

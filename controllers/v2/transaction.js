@@ -3,11 +3,13 @@
  transaction controller
  */
 const tnx_model = require('../../models/v2/transaction'),
+    cluster = require('cluster'),
+    cfg = require('../../config/config'),
+    eth_col = cfg.store.cols.eth,
+    token_col = cfg.store.cols.token,
     logger = require('../../utils/logger')(module),
     moment = require('moment'),
     check = require('../../utils/checker').cheker(),
-    cfg = require('../../config/config'),
-    cluster = require('cluster'),
     c = cfg.color;
 
 // worker id pattern
@@ -30,70 +32,111 @@ let logit = (req, msg = '') => {
     };
 };
 
-/*
-// GetLastTransactions from tnx_model
-const GetTnxRest = async ({ listId, moduleId, page, size } = opts, res) => {
-  console.log(`${wid_ptrn}GetLastTransactions`);
-  let options = check.safePageAndSize(page, size);
-  options.listId = listId;
-  logger.info(options);
-  try{
-    let response = await tnx_model.lastTransactions(options);
-    if(response.rows.length > 0){
-      let { count, page, size, skip } = response;
-      delete response.size;
-      delete response.page;
-      delete response.count;
-      delete response.skip;
-      response.head = {
-        totalEntities: count,
-        pageNumber: page,
-        pageSize: size,
-        skip: skip,
-        moduleId: moduleId,
-        listId: listId,
-        updateTime: moment()
-      };
-      res.json(response);
-    } else res.status(404).json(check.get_msg().not_found);
-    // handle exception from DB tnx_model
-  } catch (e) {
-    res.status(400).json({ error: e }) // FWD exception to client
-  }
-};*/
+/** Check Tx parameters */
+const checkTxParams = (req, res) => {
+    logger.api_requests(logit(req)); // log query data any way
+    let params = req.query || {};
+    // params destructing
+    let { offset, size } = params;
+    offset = parseInt(offset); // convert to Number
+    size = parseInt(size); // convert to Number
+    // check params existing
+    if (!offset && offset !== 0) {
+        res.status(400).json(check.get_msg().no_offset);
+        return false;
+    } else if (!size) {
+        res.status(400).json(check.get_msg().no_size);
+        return false;
+    }
+    return check.normalize_pagination({}, size, offset);
+};
 
 const ChekHash = (clear_hash) =>
     new Promise((resolve, reject) => (check.checkHash(clear_hash) ? resolve() : reject()));
 
-/*// GetLast Tokens Transactions endpoint [HTTP POST]
-const GetLastTnxTokensRest = (req, res) => {
-  logger.api_requests(logit(req));      // log query data any way
-  // set params from cfg constants
-  let listId = cfg.list_type.token, // listOfTokens
-    moduleId = cfg.modules.tnx,     // transactions
-    options = check.build_options(req, listId, moduleId);
-  logger.info(options);                 // log options to console
-  GetTnxRest(options, res)
-};*/
+/** [HTTP REST] (API v.2) GetLast Tokens Transactions endpoint*/
+const GetLastTnxTokensRest = async (req, res) => {
+    console.log(`${wid_ptrn('GetLastTnxEthRest')}`);
+    let options = checkTxParams(req, res);
+    if (options) {
+        // add eth collection property
+        options.collection = token_col;
+        // get tokens collection name
+        let response = await tnx_model.lastTransactions(options);
+        if (response) {
+            // preparing data (map data from model)
+            response.head.updateTime = moment(); // UTC time format
+            response.rows = response.rows.map((tx) => {
+                return {
+                    id: tx._id,
+                    hash: tx.hash,
+                    block: tx.block,
+                    addrFrom: tx.addrfrom,
+                    addrTo: tx.addrto,
+                    time: tx.isotime,
+                    status: tx.status,
+                    error: tx.error,
+                    isContract: tx.iscontract,
+                    isInner: tx.isinner,
+                    value: tx.value,
+                    tokenAddr: tx.tokenaddr,
+                    tokenName: tx.tokenname,
+                    tokenSmbl: tx.tokensmbl,
+                    tokenDcm: tx.tokendcm,
+                    tokenType: tx.tokentype,
+                    txFee: tx.txfee,
+                    dcm: tx.tokendcm,
+                    gasUsed: tx.gasused,
+                    gasCost: tx.gascost,
+                };
+            });
+            res.json(response);
+        } else res.json(check.get_msg().not_found);
+    }
+};
 
-/*
-/!** [HTTP REST] (API v.2) GetLast ETH Transactions endpoint*!/
+/** [HTTP REST] (API v.2) GetLast ETH Transactions endpoint*/
 const GetLastTnxEthRest = async (req, res) => {
-  logger.api_requests(logit(req));      // log query data any way
-  // set params from cfg constants
-  let listId = cfg.list_type.eth,   // listOfETH
-    moduleId = cfg.modules.tnx,     // transactions
-    options = check.build_options(req, listId, moduleId);
-  logger.info(options);                 // log options to console
-  GetTnxRest(options, res)
-};*/
+    console.log(`${wid_ptrn('GetLastTnxEthRest')}`);
+    let options = checkTxParams(req, res);
+    if (options) {
+        // add eth collection property
+        options.collection = eth_col;
+        // get ether collection name
+        let response = await tnx_model.lastTransactions(options);
+        if (response) {
+            // preparing data (map data from model)
+            response.head.updateTime = moment(); // UTC time format
+            response.rows = response.rows.map((tx) => {
+                return {
+                    id: tx._id,
+                    hash: tx.hash,
+                    block: tx.block,
+                    addrFrom: tx.addrfrom,
+                    addrTo: tx.addrto,
+                    time: tx.isotime,
+                    type: tx.type,
+                    status: tx.status,
+                    error: tx.error,
+                    isContract: tx.iscontract,
+                    isInner: tx.isinner,
+                    value: tx.value,
+                    txFee: tx.txfee,
+                    dcm: tx.tokendcm,
+                    gasUsed: tx.gasused,
+                    gasCost: tx.gascost,
+                };
+            });
+            res.json(response);
+        } else res.json(check.get_msg().not_found);
+    }
+};
 
 /** common tx details*/
 const txDetails = async (hash) => {
     try {
         let response = await tnx_model.details(hash); // get tx details by hash
-        // console.log(response);
-        return response.hasOwnProperty('empty') ? check.get_msg().transaction_not_found : response;
+        return response.hasOwnProperty('empty') ? check.get_msg().transaction_not_found : response; // setup response 404 if no data ('empty') or pass data
     } catch (e) {
         console.log(e);
         logger.error(e); // log exception
@@ -124,8 +167,8 @@ const CountTnxRest = async (req, res) =>
 */
 
 module.exports = {
-    // tokens: GetLastTnxTokensRest,  // [HTTP REST] (API v.2) GetLast Tokens Transactions endpoint
-    // eth: GetLastTnxEthRest,        // [HTTP REST] (API v.2) GetLast ETH Transactions endpoint
+    tokens: GetLastTnxTokensRest, // [HTTP REST] (API v.2) GetLast Tokens Transactions endpoint
+    eth: GetLastTnxEthRest, // [HTTP REST] (API v.2) GetLast ETH Transactions endpoint
     details: GetTnxDetailsRest, // [HTTP REST] (API v.2) Get Transaction details endpoint
     // count: CountTnxRest,           // [HTTP REST] (API v.2) count TNXS
 };
