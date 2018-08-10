@@ -159,16 +159,8 @@ const GetTnxDetailsRest = async (req, res) => {
         .catch(() => res.status(400).json(check.get_msg().bad_hash(hash)));
 };
 
-/*
-// count TNXS
-const CountTnxRest = async (req, res) =>
-    logger.api_requests(logit(req)) && // log query any way
-    res.json(await dbquery.countTnx(Object.values(cfg.store.cols))); // fwd data to model => count all
-*/
-
 module.exports = {
     tokens: GetLastTnxTokensRest, // [HTTP REST] (API v.2) GetLast Tokens Transactions endpoint
     eth: GetLastTnxEthRest, // [HTTP REST] (API v.2) GetLast ETH Transactions endpoint
     details: GetTnxDetailsRest, // [HTTP REST] (API v.2) Get Transaction details endpoint
-    // count: CountTnxRest,           // [HTTP REST] (API v.2) count TNXS
 };

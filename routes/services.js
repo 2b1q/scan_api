@@ -21,7 +21,6 @@ router.get('/nodes', eth_api.getLastBlocks); // nodes last blocks
 router.get(v2_ptrn('transactions/ether'), tnx_controller_v2.eth); // GetLast ETH Transactions endpoint [HTTP GET]
 router.get(v2_ptrn('transactions/tokens'), tnx_controller_v2.tokens); // GetLast Tokens Transactions endpoint [HTTP GET]
 router.get(v2_ptrn('transactions/details'), tnx_controller_v2.details); // Get Transaction details endpoint [HTTP GET]
-// router.get(v2_ptrn('transactions/count'), tnx_controller_v2.count);       // count all tnxs endpoint [HTTP GET]
 
 /** block v.2 endpoints */
 router.get(v2_ptrn('block/tokens'), block_controller_v2.tokens); // GetLast block tokens Transactions tendpoint [HTTP GET]
