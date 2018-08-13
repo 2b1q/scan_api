@@ -5,7 +5,8 @@ const express = require('express'),
     bodyParser = require('body-parser'),
     debug = require('debug')('scan-api:server'),
     config = require('./config/config'),
-    sockIO = require('./routes/sock-io'),
+    sockIOv1 = require('./routes/socket.io.v1'),
+    sockIOv2 = require('./routes/socket.io.v2'),
     rest = require('./routes/services'),
     ethProxy = require('./ether/proxy').getInstance(),
     ethSubs = require('./ether/subscribe');
@@ -54,7 +55,8 @@ server.listen(port); // Listen Node server on provided port
  * Setup Node WS server
  */
 
-sockIO(server);
+sockIOv1(server); // API v.1 socket.io
+sockIOv2(server); // API v.2 socket.io
 server.on('error', onError); // server event hanlers 'on.error'
 server.on('listening', onListening); // server event hanlers 'on.listening'
 

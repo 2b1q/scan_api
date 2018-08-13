@@ -14,6 +14,7 @@ const config = require('../config/config'),
 // log Event
 const log_event = (event, data, con_obj) =>
     logger.socket_requests({
+        api: 'v.1',
         event: event,
         data: JSON.parse(data),
         timestamp: moment().format('DD.MM.YYYY HH:mm:ss'),
@@ -169,17 +170,35 @@ const init_io_handler = (io) => {
             query: socket.handshake.query,
             sid: socket.client.id,
         };
-        socket.join(randstr()); // it works without join
 
-        socket.on(e.list, (data, err) => emit(e.list, socket, data, con_obj, err));
-        socket.on(e.tx_d, (data, err) => emit(e.tx_d, socket, data, con_obj, err));
-        socket.on(e.block_d, (data, err) => emit(e.block_d, socket, data, con_obj, err));
-        socket.on(e.addr_d, (data, err) => emit(e.addr_d, socket, data, con_obj, err));
+        let err_log;
+
+        socket.on(e.list, (data, err) => {
+            if (typeof err === 'function') emit(e.list, socket, data, con_obj, err);
+            else err_log = { error: '2nd argument is not a function', con_object: con_obj };
+        });
+        socket.on(e.tx_d, (data, err) => {
+            if (typeof err === 'function') emit(e.tx_d, socket, data, con_obj, err);
+            else err_log = { error: '2nd argument is not a function', con_object: con_obj };
+        });
+        socket.on(e.block_d, (data, err) => {
+            if (typeof err === 'function') emit(e.block_d, socket, data, con_obj, err);
+            else err_log = { error: '2nd argument is not a function', con_object: con_obj };
+        });
+        socket.on(e.addr_d, (data, err) => {
+            if (typeof err === 'function') emit(e.addr_d, socket, data, con_obj, err);
+            else err_log = { error: '2nd argument is not a function', con_object: con_obj };
+        });
 
         socket.on('disconnection', (data) => log_event('disconnection', data, con_obj));
         socket.on('error', (error) => {
             console.log(error);
         });
+
+        if (err_log) {
+            logger.error(err_log);
+            console.log(err_log);
+        }
     });
 };
 
