@@ -1,5 +1,6 @@
 // socket.io controller
-const config = require('../config/config'),
+const cluster = require('cluster'),
+    config = require('../config/config'),
     c = config.color,
     e = config.events.client, // socket IO client events
     logger = require('../utils/logger')(module),
@@ -9,9 +10,15 @@ const config = require('../config/config'),
     block_controller = require('../controllers/v2/block'),
     addr_controller = require('../controllers/v2/address');
 
+const wid = cluster.worker.id; // access to cluster.worker.id
+// worker id pattern
+const wid_ptrn = (endpoint) =>
+    `${c.green}worker[${wid}]${c.red}[API v.2]${c.cyan}[socket IO controller]${c.red} > ${
+        c.green
+    }[${endpoint}] ${c.white}`;
+
 // io options API v.2
 const io_opts = {
-    path: '/test', // path
     serveClient: false, // (Boolean): whether to serve the client files
     // below are engine.IO options
     pingInterval: 10000, // (Number): how many ms without a pong packet to consider the connection closed
@@ -38,6 +45,15 @@ const init_io_handler = (io) => {
             query: socket.handshake.query,
             sid: socket.client.id,
         };
+        console.log(
+            wid_ptrn(
+                `client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${
+                    c.magenta
+                }${socket.handshake.url}${c.green}`
+            )
+        );
+
+        socket.on('test', (data) => console.log(`API v.2 incoming event 'test'. Data:\n${data}`));
 
         socket.on('disconnection', (data) => log_event('disconnection', data, con_obj));
         socket.on('error', (error) => {

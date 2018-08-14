@@ -1,5 +1,6 @@
 // socket.io controller
-const config = require('../config/config'),
+const cluster = require('cluster'),
+    config = require('../config/config'),
     c = config.color,
     e = config.events.client, // socket IO client events
     m = config.modules, // modules
@@ -10,6 +11,13 @@ const config = require('../config/config'),
     tnx_controller = require('../controllers/v1/transaction'),
     block_controller = require('../controllers/v1/block'),
     addr_controller = require('../controllers/v1/address');
+
+const wid = cluster.worker.id; // access to cluster.worker.id
+// worker id pattern
+const wid_ptrn = (endpoint) =>
+    `${c.green}worker[${wid}]${c.red}[API v.1]${c.cyan}[socket IO controller]${c.red} > ${
+        c.green
+    }[${endpoint}] ${c.white}`;
 
 // log Event
 const log_event = (event, data, con_obj) =>
@@ -171,7 +179,14 @@ const init_io_handler = (io) => {
             sid: socket.client.id,
         };
 
-        let err_log;
+        console.log(
+            wid_ptrn(
+                `client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${
+                    c.magenta
+                }${socket.handshake.url}${c.green}`
+            )
+        );
+        let err_log; // errors
 
         socket.on(e.list, (data, err) => {
             if (typeof err === 'function') emit(e.list, socket, data, con_obj, err);
