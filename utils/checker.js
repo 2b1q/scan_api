@@ -43,6 +43,8 @@ const check_module_singleton = (() => {
             wrong_addr: { errorCode: 400, errorMessage: 'Wrong "addr" property' }, // API v.2
             bad_hash: (hash) =>
                 Object({ errorCode: 400, errorMessage: `Bad Hash value "${hash}"` }), // API v.2
+            wrong_io_params: { errorCode: 400, errorMessage: 'Wrong "parameters" ' }, // API v.2
+            unknown_listid_io: { errorCode: 404, errorMessage: 'Unknown listId' }, // API v.2
             unknown_listid: { error: 'Unknown listId' },
             no_api_key: { error: 'unable to set "api_key" param' },
             wrong_api_key: { error: 'bad "api_key"' },

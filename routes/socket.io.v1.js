@@ -19,6 +19,15 @@ const wid_ptrn = (endpoint) =>
         c.green
     }[${endpoint}] ${c.white}`;
 
+// print event
+const print_event = (action) => {
+    console.log(
+        `${c.green}worker[${wid}]${c.red}[API v.1]${c.cyan}[Event: ${c.yellow}${action}${c.cyan}]${
+            c.white
+        }`
+    );
+};
+
 // log Event
 const log_event = (event, data, con_obj) =>
     logger.socket_requests({
@@ -124,7 +133,7 @@ const emit = async (event, socket, data, con_obj, err) => {
                         break;
                     }
             }
-            console.log(`${c.green}=socket.io > ${event} > ${moduleId} > ${listId} =`);
+            print_event(`${event} > ${moduleId} > ${listId}`);
             if (options) console.log(`${c.yellow}${JSON.stringify(options, null, 2)}`);
             console.log(`${c.green}====================================${c.white}`);
             break;
