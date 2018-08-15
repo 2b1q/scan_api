@@ -15,17 +15,11 @@ const cluster = require('cluster'),
 const wid = cluster.worker.id; // access to cluster.worker.id
 // worker id pattern
 const wid_ptrn = (endpoint) =>
-    `${c.green}worker[${wid}]${c.red}[API v.1]${c.cyan}[socket IO controller]${c.red} > ${
-        c.green
-    }[${endpoint}] ${c.white}`;
+    `${c.green}worker[${wid}]${c.red}[API v.1]${c.cyan}[socket IO controller]${c.red} > ${c.green}[${endpoint}] ${c.white}`;
 
 // print event
 const print_event = (action) => {
-    console.log(
-        `${c.green}worker[${wid}]${c.red}[API v.1]${c.cyan}[Event: ${c.yellow}${action}${c.cyan}]${
-            c.white
-        }`
-    );
+    console.log(`${c.green}worker[${wid}]${c.red}[API v.1]${c.cyan}[Event: ${c.yellow}${action}${c.cyan}]${c.white}`);
 };
 
 // log Event
@@ -45,8 +39,7 @@ const randstr = () =>
         .substring(2, 12);
 
 // check block/address options.
-const checkOptions = (listId, moduleId, entityId, params) =>
-    entityId !== 0 ? check.build_io_opts(params, listId, moduleId, entityId) : false;
+const checkOptions = (listId, moduleId, entityId, params) => (entityId !== 0 ? check.build_io_opts(params, listId, moduleId, entityId) : false);
 
 // check addr is set, clear addr then check length
 const checkAddr = (addr) => {
@@ -189,11 +182,7 @@ const init_io_handler = (io) => {
         };
 
         console.log(
-            wid_ptrn(
-                `client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${
-                    c.magenta
-                }${socket.handshake.url}${c.green}`
-            )
+            wid_ptrn(`client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${c.magenta}${socket.handshake.url}${c.green}`)
         );
         let err_log; // errors
 

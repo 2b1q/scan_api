@@ -17,17 +17,11 @@ const wid = cluster.worker.id;
 
 // worker id pattern
 const wid_ptrn = (endpoint) =>
-    `${c.green}worker[${wid}]${c.red}[API v.2]${c.cyan}[socket IO controller]${c.red} > ${
-        c.green
-    }[${endpoint}] ${c.white}`;
+    `${c.green}worker[${wid}]${c.red}[API v.2]${c.cyan}[socket IO controller]${c.red} > ${c.green}[${endpoint}] ${c.white}`;
 
 // print event
 const print_event = (action) => {
-    console.log(
-        `${c.green}worker[${wid}]${c.red}[API v.2]${c.cyan}[Event: ${c.yellow}${action}${c.cyan}]${
-            c.white
-        }`
-    );
+    console.log(`${c.green}worker[${wid}]${c.red}[API v.2]${c.cyan}[Event: ${c.yellow}${action}${c.cyan}]${c.white}`);
 };
 
 // io options API v.2
@@ -39,12 +33,16 @@ const io_opts = {
     cookie: false,
 };
 
-//check listId
+/** check listId*/
 const checkListId = (lid) => Object.values(config.list_type).includes(lid);
 
-// check block options.
-const checkBlockOptions = (block, size, offset) =>
-    block !== 0 ? check.normalize_pagination({ block: block }, size, offset) : false;
+/** check block options.*/
+const checkBlockOptions = (block, size, offset) => (block !== 0 ? check.normalize_pagination({ block: block }, size, offset) : false);
+
+/** check size is undefined */
+const checkNoSize = (size) => (!size ? true : false);
+/** check offset is undefined or 0 */
+const checkNoOffset = (offset) => (!offset && offset !== 0 ? true : false);
 
 /*
 // check addr is set, clear addr then check length
@@ -101,11 +99,12 @@ const emit = async (event, socket, data, con_obj, err) => {
                             response = { error: 404, msg: 'Unknown listId' };
                     }
                     break;*/
-                case 'block': // moduleId => block
+                case m.block: // moduleId => block
                     options = checkBlockOptions(entityId, size, offset);
-                    if (options === false || checkListId(listId) === false) {
-                        response = check.get_msg().wrong_io_params;
-                    } else {
+                    if (options === false || checkListId(listId) === false) response = check.get_msg().wrong_io_params;
+                    else if (checkNoSize(size)) response = check.get_msg().no_size;
+                    else if (checkNoOffset(offset)) response = check.get_msg().no_offset;
+                    else {
                         switch (listId) {
                             case l.token:
                                 response = await block_controller.io_tokens(options);
@@ -118,46 +117,48 @@ const emit = async (event, socket, data, con_obj, err) => {
                         }
                     }
                     break;
-                /*case m.addr: // moduleId => address
-                    options.entityId = checkAddr(entityId);
-                    if (options.entityId === false) {
-                        response = { error: 404, msg: 'Bad params' };
-                    } else {
-                        switch (listId) {
-                            case l.token:
-                            case l.eth:
-                                response = await addr_controller.getAddrTnx(options);
-                                break;
-                            case l.token_balance:
-                                response = await addr_controller.addrTokensBalance(options);
-                                break;
-                            default:
-                                response = { error: 404, msg: 'Unknown listId' };
+                case m.addr: // moduleId => address
+                    // clear address
+                    let caddr = check.cut0xClean(entityId);
+                    // check bad address
+                    if (!check.checkAddr(caddr)) response = check.get_msg().wrong_addr;
+                    else {
+                        // construct normalized pagination object
+                        options = check.normalize_pagination({ addr: caddr }, size, offset);
+                        if (checkNoSize(size)) response = check.get_msg().no_size;
+                        else if (checkNoOffset(offset)) response = check.get_msg().no_offset;
+                        else if (checkListId(listId) === false) response = check.get_msg().wrong_io_params;
+                        else {
+                            switch (listId) {
+                                case l.token:
+                                    response = await addr_controller.io_tokens(options);
+                                    break;
+                                case l.eth:
+                                    response = await addr_controller.io_eth(options);
+                                    break;
+                                case l.token_balance:
+                                    response = await addr_controller.io_tokenBalance(options);
+                                    break;
+                                default:
+                                    response = { error: 404, msg: 'Unknown listId' };
+                            }
+                            break;
                         }
-                        break;
-                    }*/
+                    }
+                    break;
             }
             print_event(`${event} > ${moduleId} > ${listId}`);
             break;
-        /*        case e.addr_d: // get addr details event = 'addressDetails'
-            let caddr = checkAddr(addr);
-            console.log(`${c.green}===== socket.io > addressDetails ===${c.yellow}`);
-            console.log({ addr: addr, cleared_addr: caddr });
-            console.log(`${c.green}====================================${c.white}`);
-            if (caddr === false) {
-                response = { error: 404, msg: 'Bad params' };
-            } else {
-                response = await addr_controller.getAddrIo(caddr);
-            }
-            break;*/
+        case e.addr_d: // get addr details event = 'addressDetails'
+            print_event('socket.io > addressDetails');
+            let caddr = check.cut0xClean(addr);
+            response = check.checkAddr(caddr) ? await addr_controller.io_details(caddr) : check.get_msg().wrong_addr;
+            break;
         case e.block_d: // get block details event = 'blockDetails'
             block = Number(block);
             print_event('socket.io > blockDetails');
             console.log({ block: block });
-            response =
-                isNaN(block) || block === 0
-                    ? check.get_msg().wrong_block
-                    : await block_controller.io_details(block);
+            response = isNaN(block) || block === 0 ? check.get_msg().wrong_block : await block_controller.io_details(block);
             break;
         // case e.tx_d: // get tnx details event = 'txDetails'
         //     let chash = checkHash(hash);
@@ -191,44 +192,39 @@ const log_event = (event, data, con_obj) =>
 // init io handler API v.2
 const init_io_handler = (io) => {
     io.on('connection', (socket) => {
+        let err_log; // errors
         let con_obj = {
             client_ip: socket.handshake.address,
             url: socket.handshake.url,
             query: socket.handshake.query,
             sid: socket.client.id,
         };
+        const e_wrapper = (event, data, error) => {
+            if (typeof error === 'function') emit(event, socket, data, con_obj, error);
+            else err_log = { error: '2nd argument is not a function', con_object: con_obj };
+        };
         console.log(
-            wid_ptrn(
-                `client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${
-                    c.magenta
-                }${socket.handshake.url}${c.green}`
-            )
+            wid_ptrn(`client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${c.magenta}${socket.handshake.url}${c.green}`)
         );
-        let err_log; // errors
 
-        // test events
-        socket.on('test', (data) => console.log(`API v.2 incoming event 'test'. Data:\n${data}`));
-        /** block events*/
-        socket.on(e.block_d, (data, err) => {
-            if (typeof err === 'function') emit(e.block_d, socket, data, con_obj, err);
-            else err_log = { error: '2nd argument is not a function', con_object: con_obj };
-        });
-        /** list events*/
-        socket.on(e.list, (data, err) => {
-            if (typeof err === 'function') emit(e.list, socket, data, con_obj, err);
-            else err_log = { error: '2nd argument is not a function', con_object: con_obj };
-        });
-
+        /** socket.on(eventName, cb(arg1, arg2))
+         *  arg1 = payload, arg2 = cb function(err){}
+         * */
+        /** 'blockDetails' event handler */
+        socket.on(e.block_d, (data, err) => e_wrapper(e.block_d, data, err));
+        /** 'addressDetails' event handler */
+        socket.on(e.addr_d, (data, err) => e_wrapper(e.addr_d, data, err));
+        /** 'txDetails' event handler */
+        socket.on(e.tx_d, (data, err) => e_wrapper(e.tx_d, data, err));
+        /** 'list' event handler */
+        socket.on(e.list, (data, err) => e_wrapper(e.list, data, err));
+        /** 'disconnection' event handler */
         socket.on('disconnection', (data) => log_event('disconnection', data, con_obj));
-        socket.on('error', (error) => {
-            console.log(error);
-        });
+        /** 'error' event handler */
+        socket.on('error', (error) => logger.error(error));
 
         // log error
-        if (err_log) {
-            logger.error(err_log);
-            console.log(err_log);
-        }
+        if (err_log) logger.error(err_log);
     });
 };
 
