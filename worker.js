@@ -54,7 +54,7 @@ function normalizePort(val) {
 
 // Normalize a port into a number, string, or false
 const port1 = normalizePort(process.env.PORT || config.server.port); // Get port from environment
-const port2 = 3001;
+const port2 = 3001; // socket.io API v2
 
 /**
  * Setup Node WS server
