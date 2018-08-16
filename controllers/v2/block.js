@@ -32,10 +32,25 @@ const http_GetBlock = async (block, res) => {
     console.log(`${wid_ptrn}`);
     try {
         let response = await block_model.details(block);
-        if (response.hasOwnProperty('error')) res.status(404); // if Not Found -> change HTTP Status code
-        res.json(response); // send 200 with data OR 404 if not found
+        // if response has 'error' property fwd response 404 else return 200 and payload
+        if (response.hasOwnProperty('error')) res.status(404).json(check.get_msg().block_not_found);
+        res.json(response);
     } catch (e) {
-        res.status(400).json({ error: e }); // FWD exception to client
+        logger.error(e); // log error returned from model
+        res.status(404).json(check.get_msg().block_not_found); // dont fwd exception to client
+    }
+};
+
+// get block details IO API v.2
+const io_GetBlock = async (block) => {
+    console.log(`${wid_ptrn}`);
+    try {
+        let response = await block_model.details(block);
+        // if response has 'error' property fwd response 404 else return 200 and payload
+        return response.hasOwnProperty('error') ? check.get_msg().block_not_found : response;
+    } catch (e) {
+        logger.error(e); // log error returned from model
+        return check.get_msg().block_not_found; // dont fwd exception to client
     }
 };
 
@@ -46,26 +61,106 @@ const checkBlockParams = (req, res) => {
     logger.api_requests(logit(req));
     let params = req.query || {};
     // params destructing
-    let { blockNumber, pageNumber, pageSize, offset, count } = params; // TODO add offset & count support for iOS pagination
+    let { blockNumber, offset, size } = params;
+    size = parseInt(size); // convert to Number
+    offset = parseInt(offset); // convert to Number
     // check params existing
-    if (!pageNumber) {
-        res.status(400).json(check.get_msg().no_pageNumber);
+    if (!offset && offset !== 0) {
+        res.status(400).json(check.get_msg().no_offset);
         return false;
-    } else if (!pageSize) {
-        res.status(400).json(check.get_msg().no_pageSize);
+    } else if (!size) {
+        res.status(400).json(check.get_msg().no_size);
         return false;
     } else if (!blockNumber) {
         res.status(400).json(check.get_msg().no_blockNumber);
         return false;
     }
     let block = parseInt(check.cut0xClean(blockNumber)); // cut 0x (avoid hex to int convertion)
-    if (check.block(block)) {
-        pageSize = parseInt(pageSize); // convert to Number
-        pageNumber = parseInt(pageNumber); // convert to Number
-        return check.build_block_opts(block, pageSize, pageNumber); // return options object
-    } else {
+    if (check.block(block)) return check.normalize_pagination({ block: block }, size, offset);
+    else {
         res.status(400).json(check.get_msg().wrong_block);
         return false;
+    }
+};
+
+// io get ETH block tnxs API v.2
+const io_GetBlockEth = async (options) => {
+    console.log(`${wid_ptrn}`);
+    if (options) {
+        // add eth collection property
+        options.collection = cfg.store.cols.eth;
+        // get ether collection name
+        let response = await block_model.transactions(options);
+        if (response) {
+            // preparing data (map data from model)
+            response.head.updateTime = moment(); // UTC time format
+            response.head.listId = 'listOfETH';
+            response.head.moduleId = 'block';
+            response.rows = response.rows.map((tx) => {
+                return {
+                    id: tx._id,
+                    hash: tx.hash,
+                    block: tx.block,
+                    addrFrom: tx.addrfrom,
+                    addrTo: tx.addrto,
+                    time: tx.isotime,
+                    type: tx.type,
+                    status: tx.status,
+                    error: tx.error,
+                    isContract: tx.iscontract,
+                    isInner: tx.isinner,
+                    value: tx.value,
+                    txFee: tx.txfee,
+                    dcm: tx.tokendcm,
+                    gasUsed: tx.gasused,
+                    gasCost: tx.gascost,
+                };
+            });
+            return response;
+        } else return check.get_msg().not_found;
+    }
+};
+
+// io get Tokens block tnxs API v.2
+const io_GetBlockTokens = async (options) => {
+    console.log(`${wid_ptrn}`);
+    if (options) {
+        // add tokens collection property
+        options.collection = cfg.store.cols.token;
+        // get tokens collection name
+        let response = await block_model.transactions(options);
+        if (response) {
+            // preparing data (map data from model)
+            response.head.updateTime = moment(); // UTC time format
+            response.head.listId = 'listOfTokens';
+            response.head.moduleId = 'block';
+            response.rows = response.rows.map((tx) => {
+                return {
+                    id: tx._id,
+                    hash: tx.hash,
+                    block: tx.block,
+                    addrFrom: tx.addrfrom,
+                    addrTo: tx.addrto,
+                    time: tx.isotime,
+                    type: tx.type,
+                    status: tx.status,
+                    error: tx.error,
+                    isContract: tx.iscontract,
+                    isInner: tx.isinner,
+                    value: tx.value,
+                    tokenAddr: tx.tokenaddr,
+                    tokenName: tx.tokenname,
+                    tokenSmbl: tx.tokensmbl,
+                    tokenDcm: tx.tokendcm,
+                    tokenType: tx.tokentype,
+                    txFee: tx.txfee,
+                    dcm: tx.tokendcm,
+                    gasUsed: tx.gasused,
+                    gasCost: tx.gascost,
+                };
+            });
+            return response;
+        } else return check.get_msg().not_found;
     }
 };
 
@@ -156,7 +251,10 @@ const GetBlockDetails = (req, res) => {
 };
 
 module.exports = {
-    tokens: GetBlockTokens, // [HTTP REST] (API v.2) Get block Tokens Transactions endpoint
-    eth: GetBlockEth, // [HTTP REST] (API v.2) Get block ETH Transactions endpoint
-    details: GetBlockDetails, // [HTTP REST] (API v.2) Get block details endpoint
+    tokens: GetBlockTokens, // [HTTP GET REST] (API v.2) Get block Tokens Transactions endpoint
+    eth: GetBlockEth, // [HTTP GET REST] (API v.2) Get block ETH Transactions endpoint
+    details: GetBlockDetails, // [HTTP GET REST] (API v.2) Get block details endpoint
+    io_details: io_GetBlock, // socket io controller
+    io_eth: io_GetBlockEth, // socket io controller
+    io_tokens: io_GetBlockTokens, // socket io controller
 };

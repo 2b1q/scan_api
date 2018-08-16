@@ -15,7 +15,7 @@ const GetBlockTransactions = async (options) => {
         sort: { hash: 1 },
         ...options, // spread other options
     };
-    let { selector, collection, sort, skip, pageSize, pageNumber, block } = options;
+    let { selector, collection, sort, offset, size, block } = options;
     // MongoDB data optimization => use only necessary fields/columns
     let fields =
         collection === 'ether_txn'
@@ -62,22 +62,20 @@ const GetBlockTransactions = async (options) => {
     let count = await db_col.count(selector);
     if (count === 0) return 0;
     if (count > MAX_SKIP) count = MAX_SKIP;
-    // TODO datamapping
     return new Promise((resolve) =>
         db_col
             .find(selector, { fields }, { allowDiskUse: true }) // allowDiskUse lets the server know if it can use disk to store temporary results for the aggregation (requires mongodb 2.6 >)
             .sort(sort)
-            .skip(skip)
-            .limit(pageSize)
+            .skip(offset)
+            .limit(size)
             .toArray((err, docs) => {
                 if (err) resolve(false); // stop flow and return false without exeption
                 resolve({
                     head: {
                         totalEntities: count,
-                        pageNumber: pageNumber,
-                        pageSize: pageSize,
+                        offset: offset,
+                        size: size,
                         blockNumber: block,
-                        skip: skip, // do we need this property at API v.2 ?
                     },
                     rows: docs,
                 });
@@ -130,8 +128,7 @@ const GetBlockDetails = async (block) => {
                         time: block.isotime, // время появления блока
                     },
                 };
-            // if we haven`t block property -> it`s 404 error
-            else return { error: 404, msg: 'Not found' };
+            else return { error: 'not found' };
         })
         // exception handler
         .catch((e) => e);
