@@ -1,5 +1,6 @@
 // socket.io controller
-const config = require('../config/config'),
+const cluster = require('cluster'),
+    config = require('../config/config'),
     c = config.color,
     e = config.events.client, // socket IO client events
     m = config.modules, // modules
@@ -11,9 +12,20 @@ const config = require('../config/config'),
     block_controller = require('../controllers/v1/block'),
     addr_controller = require('../controllers/v1/address');
 
+const wid = cluster.worker.id; // access to cluster.worker.id
+// worker id pattern
+const wid_ptrn = (endpoint) =>
+    `${c.green}worker[${wid}]${c.red}[API v.1]${c.cyan}[socket IO controller]${c.red} > ${c.green}[${endpoint}] ${c.white}`;
+
+// print event
+const print_event = (action) => {
+    console.log(`${c.green}worker[${wid}]${c.red}[API v.1]${c.cyan}[Event: ${c.yellow}${action}${c.cyan}]${c.white}`);
+};
+
 // log Event
 const log_event = (event, data, con_obj) =>
     logger.socket_requests({
+        api: 'v.1',
         event: event,
         data: JSON.parse(data),
         timestamp: moment().format('DD.MM.YYYY HH:mm:ss'),
@@ -27,8 +39,7 @@ const randstr = () =>
         .substring(2, 12);
 
 // check block/address options.
-const checkOptions = (listId, moduleId, entityId, params) =>
-    entityId !== 0 ? check.build_io_opts(params, listId, moduleId, entityId) : false;
+const checkOptions = (listId, moduleId, entityId, params) => (entityId !== 0 ? check.build_io_opts(params, listId, moduleId, entityId) : false);
 
 // check addr is set, clear addr then check length
 const checkAddr = (addr) => {
@@ -115,7 +126,7 @@ const emit = async (event, socket, data, con_obj, err) => {
                         break;
                     }
             }
-            console.log(`${c.green}=socket.io > ${event} > ${moduleId} > ${listId} =`);
+            print_event(`${event} > ${moduleId} > ${listId}`);
             if (options) console.log(`${c.yellow}${JSON.stringify(options, null, 2)}`);
             console.log(`${c.green}====================================${c.white}`);
             break;
@@ -169,17 +180,38 @@ const init_io_handler = (io) => {
             query: socket.handshake.query,
             sid: socket.client.id,
         };
-        socket.join(randstr()); // it works without join
 
-        socket.on(e.list, (data, err) => emit(e.list, socket, data, con_obj, err));
-        socket.on(e.tx_d, (data, err) => emit(e.tx_d, socket, data, con_obj, err));
-        socket.on(e.block_d, (data, err) => emit(e.block_d, socket, data, con_obj, err));
-        socket.on(e.addr_d, (data, err) => emit(e.addr_d, socket, data, con_obj, err));
+        console.log(
+            wid_ptrn(`client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${c.magenta}${socket.handshake.url}${c.green}`)
+        );
+        let err_log; // errors
+
+        socket.on(e.list, (data, err) => {
+            if (typeof err === 'function') emit(e.list, socket, data, con_obj, err);
+            else err_log = { error: '2nd argument is not a function', con_object: con_obj };
+        });
+        socket.on(e.tx_d, (data, err) => {
+            if (typeof err === 'function') emit(e.tx_d, socket, data, con_obj, err);
+            else err_log = { error: '2nd argument is not a function', con_object: con_obj };
+        });
+        socket.on(e.block_d, (data, err) => {
+            if (typeof err === 'function') emit(e.block_d, socket, data, con_obj, err);
+            else err_log = { error: '2nd argument is not a function', con_object: con_obj };
+        });
+        socket.on(e.addr_d, (data, err) => {
+            if (typeof err === 'function') emit(e.addr_d, socket, data, con_obj, err);
+            else err_log = { error: '2nd argument is not a function', con_object: con_obj };
+        });
 
         socket.on('disconnection', (data) => log_event('disconnection', data, con_obj));
         socket.on('error', (error) => {
             console.log(error);
         });
+
+        if (err_log) {
+            logger.error(err_log);
+            console.log(err_log);
+        }
     });
 };
 

@@ -10,8 +10,7 @@ const db = require('../../libs/db'),
     check = require('../../utils/checker').cheker();
 
 // get collection by name
-const col = (name) =>
-    new Promise((resolve) => db.get.then((db_con) => resolve(db_con.collection(name))));
+const col = (name) => new Promise((resolve) => db.get.then((db_con) => resolve(db_con.collection(name))));
 
 // get tnx db collection name by listId
 const get_tnx_col_by = (listId) => {
@@ -58,9 +57,9 @@ const GetDbTransactions = async (options) => {
                         // construct token object
                         token: {
                             addr: tx.tokenaddr,
-                            name: tx.tokenname,
-                            smbl: tx.tokensmbl,
-                            dcm: tx.tokendcm,
+                            name: tx.tokenname || 'Ether', // fix NaN in addr ETH transactions list for new DB fix
+                            smbl: tx.tokensmbl || 'ETH', // fix NaN in addr ETH transactions list for new DB fix
+                            dcm: tx.tokendcm || 18, // fix NaN in addr ETH transactions list for new DB fix
                             type: tx.tokentype,
                         },
                         ...tx, // spread => return all data AS IS
@@ -163,9 +162,9 @@ const TxDetails = async (hash, query) => {
                     response.head = {
                         token: {
                             addr: tx.tokenaddr,
-                            name: tx.tokenname,
-                            smbl: tx.tokensmbl,
-                            dcm: tx.tokendcm,
+                            name: tx.tokenname || 'Ether', // fix NaN in transaction details
+                            smbl: tx.tokensmbl || 'ETH', // fix NaN in transaction details
+                            dcm: tx.tokendcm || 18, // fix NaN in transaction details
                             type: tx.tokentype,
                             balance: '',
                             icon: '',
