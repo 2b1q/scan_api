@@ -54,8 +54,8 @@ function normalizePort(val) {
 }
 
 // Normalize a port into a number, string, or false
-const port1 = normalizePort(process.env.PORT || config.server.port); // Get port from environment
-const port2 = 3001; // socket.io API v2
+const port1 = normalizePort(process.env.PORT1 || config.server.port1 || 3000); // HTTP SRV1 port
+const port2 = normalizePort(process.env.PORT2 || config.server.port2 || 3001); // HTTP SRV2 port
 
 /**
  * Setup Node servers

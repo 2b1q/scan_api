@@ -26,6 +26,7 @@ const print_event = (action) => {
 
 // io options API v.2
 const io_opts = {
+    // path: 'ws', // API v2 PATH
     serveClient: false, // (Boolean): whether to serve the client files
     // below are engine.IO options
     pingInterval: 10000, // (Number): how many ms without a pong packet to consider the connection closed
@@ -35,14 +36,32 @@ const io_opts = {
 
 /** check listId*/
 const checkListId = (lid) => Object.values(config.list_type).includes(lid);
-
 /** check block options.*/
 const checkBlockOptions = (block, size, offset) => (block !== 0 ? check.normalize_pagination({ block: block }, size, offset) : false);
-
 /** check size is undefined */
 const checkNoSize = (size) => (!size ? true : false);
 /** check offset is undefined or 0 */
 const checkNoOffset = (offset) => (!offset && offset !== 0 ? true : false);
+/** check tx options */
+const checkTxOptions = (listId, size, offset) => {
+    let obj = {};
+    if (!checkListId(listId))
+        obj = {
+            bad: true,
+            msg: check.get_msg().unknown_listid_io,
+        };
+    if (checkNoSize(size))
+        obj = {
+            bad: true,
+            msg: check.get_msg().no_size,
+        };
+    if (checkNoOffset(offset))
+        obj = {
+            bad: true,
+            msg: check.get_msg().no_offset,
+        };
+    return obj;
+};
 
 /*
 // check addr is set, clear addr then check length
@@ -80,25 +99,35 @@ const emit = async (event, socket, data, con_obj, err) => {
     // tx_opts = check.build_io_opts(params, listId, mod`uleId, entityId); // built tx options for GetlastTx
     switch (event) {
         case e.list: // event = 'list'
+            let check_opts = checkTxOptions(listId, size, offset);
+            let paginator = check.normalize_pagination({}, size, offset);
             switch (moduleId) {
-                /* case m.tnx: // moduleId => transactions
+                case m.tnx: // moduleId => transactions
+                    if (check_opts.bad) {
+                        response = check_opts.msg;
+                        break;
+                    }
                     switch (listId) {
                         case l.eth:
-                            response = await tnx_controller.getTnx(tx_opts);
+                            response = await tnx_controller.io_eth(paginator);
                             break;
                         default:
-                            response = { error: 404, msg: 'Unknown listId' };
+                            response = check.get_msg().unknown_listid_io;
                     }
                     break;
                 case m.token: // moduleId => tokens
+                    if (check_opts.bad) {
+                        response = check_opts.msg;
+                        break;
+                    }
                     switch (listId) {
                         case l.token:
-                            response = await tnx_controller.getTnx(tx_opts);
+                            response = await tnx_controller.io_tokens(paginator);
                             break;
                         default:
-                            response = { error: 404, msg: 'Unknown listId' };
+                            response = check.get_msg().unknown_listid_io;
                     }
-                    break;*/
+                    break;
                 case m.block: // moduleId => block
                     options = checkBlockOptions(entityId, size, offset);
                     if (options === false || checkListId(listId) === false) response = check.get_msg().wrong_io_params;
@@ -155,22 +184,16 @@ const emit = async (event, socket, data, con_obj, err) => {
             response = check.checkAddr(caddr) ? await addr_controller.io_details(caddr) : check.get_msg().wrong_addr;
             break;
         case e.block_d: // get block details event = 'blockDetails'
-            block = Number(block);
             print_event('socket.io > blockDetails');
+            block = Number(block);
             console.log({ block: block });
             response = isNaN(block) || block === 0 ? check.get_msg().wrong_block : await block_controller.io_details(block);
             break;
-        // case e.tx_d: // get tnx details event = 'txDetails'
-        //     let chash = checkHash(hash);
-        //     console.log(`${c.green}===== socket.io > txDetails ========${c.yellow}`);
-        //     console.log({ hash: hash, cleared_hash: chash });
-        //     console.log(`${c.green}====================================${c.white}`);
-        //     if (chash) {
-        //         response = await tnx_controller.getTxIo(chash);
-        //     } else {
-        //         response = { error: 404, msg: 'Bad params' };
-        //     }
-        //     break;
+        case e.tx_d: // get tnx details event = 'txDetails'
+            print_event('socket.io > txDetails');
+            let chash = check.cut0xClean(hash);
+            response = check.checkHash(chash) ? await tnx_controller.io_details(chash) : check.get_msg().bad_hash(hash);
+            break;
         default:
             response = { errorCode: 404, errorMessage: 'Unknown moduleId' };
     }
