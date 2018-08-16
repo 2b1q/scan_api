@@ -59,18 +59,16 @@ const port2 = normalizePort(process.env.PORT2 || config.server.port2 || 3001); /
 
 /**
  * Setup Node servers
- * HTTP server1 listen on port 3000, use express middleware and serve HTTP REST API v.1/v.2 and Socket.io v.1 requests
- * HTTP server2 listen on port 3001 and serve Socket.io API v.2 requests
+ * HTTP server1 listen on port 3000/2020, use express middleware and serve HTTP REST API v.1/v.2 requests
+ * HTTP server2 listen on port 3001/2021 and serve Socket.io API v1./v.2 requests
  */
 let wid = cluster.worker.id;
 if (wid % 2 === 0) {
     /** HTTP server1 */
     app.set('port', config.server.ip + ':' + port1); // set HTTP server port
-    const server1 = http.createServer(app); // create HTTP server
+    const server1 = http.createServer(app); // create HTTP server for REST API requests
     server1.listen(port1); // Listen Node server on provided port
-    sockIOv1(server1); // API v.1 socket.io
     console.log(`${c.cyan}HTTP ${c.green}server1${c.cyan} listen port ${c.green}${port1}${c.cyan} on Worker ${c.yellow}${wid}${c.cyan} and serv:
-    ${c.magenta}> Socket.io ${c.red}API v.1${c.magenta}
     ${c.magenta}> HTTP REST ${c.red}API v.1${c.magenta}
     ${c.magenta}> HTTP REST ${c.red}API v.2${c.white}`);
     server1.on('error', onError1); // server event hanlers 'on.error'
@@ -83,10 +81,12 @@ if (wid % 2 === 0) {
     }
 } else {
     /** HTTP server2 */
-    const server2 = http.createServer(); // create HTTP server for IO API2
-    server2.listen(port2); // Listen API2 port
+    const server2 = http.createServer(); // create HTTP server for Socket.io workers
+    server2.listen(port2);
+    sockIOv1(server2); // API v.1 socket.io
     sockIOv2(server2); // API v.2 socket.io
     console.log(`${c.cyan}HTTP ${c.green}server2${c.cyan} listen port ${c.green}${port2}${c.cyan} on Worker ${c.yellow}${wid}${c.cyan} and serv:
+    ${c.magenta}> Socket.io ${c.red}API v.1${c.white}\`
     ${c.magenta}> Socket.io ${c.red}API v.2${c.white}`);
     server2.on('error', onError2); // server event hanlers 'on.error'
     server2.on('listening', onListening); // server event hanlers 'on.listening'

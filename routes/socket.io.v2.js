@@ -26,7 +26,7 @@ const print_event = (action) => {
 
 // io options API v.2
 const io_opts = {
-    // path: 'ws', // API v2 PATH
+    path: '/ws', // API v2 PATH
     serveClient: false, // (Boolean): whether to serve the client files
     // below are engine.IO options
     pingInterval: 10000, // (Number): how many ms without a pong packet to consider the connection closed
@@ -62,25 +62,6 @@ const checkTxOptions = (listId, size, offset) => {
         };
     return obj;
 };
-
-/*
-// check addr is set, clear addr then check length
-const checkAddr = (addr) => {
-    if (addr === 0) return false;
-    let clearAddr = check.cut0xClean(addr); // clear address
-    return clearAddr.length === 40 // check cleared address length
-        ? clearAddr
-        : false;
-};
-
-// check hash
-const checkHash = (hash) => {
-    if (hash === 0) return false;
-    let cHash = check.cut0xClean(hash); // clear hash
-    return cHash.length === 64 // check cleared hash length
-        ? cHash
-        : false;
-};*/
 
 /** send msg to client*/
 const emitMsg = (socket, event, msg) => socket.emit(event, JSON.stringify(msg));
