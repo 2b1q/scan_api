@@ -7,8 +7,9 @@ const cfg = require('../../config/config'),
     eth_func = require('../../ether/functions'),
     eth_col = cfg.store.cols.eth,
     token_col = cfg.store.cols.token,
-    erc_20_col = cfg.store.cols.erc20_cache;
-TOKEN_LIST_SIZE = 55; // TODO move to config
+    erc_20_col = cfg.store.cols.erc20_cache,
+    addr_header_col = 'address_header',
+    TOKEN_LIST_SIZE = 55; // TODO move to config
 
 /* eth get data timeouts. */
 const wait = (ms) => new Promise((resolve) => setTimeout(() => resolve(), ms));
@@ -20,6 +21,8 @@ const GetAddressDetails = async (addr) => {
     const eth_db_col = await dbquery.getcol(eth_col);
     const token_db_col = await dbquery.getcol(token_col);
     const erc20_db_col = await dbquery.getcol(erc_20_col);
+    /** count from aggregation addr_header_db_col */
+    const addrAggr = await dbquery.findOne(addr_header_col, { addr: addr });
     /** ETH Transaction details **/
     let main_tx_selector = { $or: [{ addrto: addr }, { addrfrom: addr }] };
     let inner_tx_selector = { $or: [{ addrto: addr }, { addrfrom: addr }], isinner: 1 };
@@ -32,11 +35,12 @@ const GetAddressDetails = async (addr) => {
     // Token count
     let tokenTxCount_p = token_db_col.count(main_tx_selector); // кол-во всех транзакций по токенам
     let token_erc20_p = erc20_db_col.count(erc20_selector); // кол-во токенов которые были или есть у данного адреса
+    // WA addrAggr.maintx || mainTxCount_p
     return await Promise.all([
-        mainTxCount_p,
-        innerTxCount_p,
+        addrAggr.maintx || mainTxCount_p,
+        addrAggr.innertx || innerTxCount_p,
         addr_balance_p,
-        tokenTxCount_p,
+        addrAggr.tokentx || tokenTxCount_p,
         token_erc20_p,
     ])
         .then(([main_cnt, inner_cnt, eth_balance = 0, token_tx_cnt, erc_20_cnt]) => {
@@ -105,9 +109,7 @@ const GetAddrTokenBalance = async (options) => {
     let lastTokens = await dbquery.distinct(token_col, last_tokens_selector, 'tokenaddr');
 
     let lastTokensPromiseList = [];
-    lastTokens.forEach((t) =>
-        lastTokensPromiseList.push(dbquery.findOne(cfg.store.cols.token_head, { addr: t }))
-    );
+    lastTokens.forEach((t) => lastTokensPromiseList.push(dbquery.findOne(cfg.store.cols.token_head, { addr: t })));
 
     // await parallel ETH token balance requests
     await Promise.all(lastTokensPromiseList)

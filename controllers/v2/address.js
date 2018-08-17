@@ -44,6 +44,7 @@ const http_GetAddr = async (address, res) => {
 
 /** get Address details (socket.io API v.2)*/
 const io_GetAddr = async (address) => {
+    console.log(`${wid_ptrn('io_GetAddr')}`);
     try {
         let response = await addr_model.details(address);
         return response.hasOwnProperty('head') ? response : check.get_msg().not_found;
@@ -56,7 +57,7 @@ const io_GetAddr = async (address) => {
 /** Get Address ETH Transactions API v.2*/
 const GetAddrEth = async (req, res) => {
     logger.api_requests(logit(req)); // log query data any way
-    console.log(`${wid_ptrn('GetAddrEth')}`);
+    console.log(`${wid_ptrn('REST GetAddrEth')}`);
     let options = checkAddrkParams(req, res);
     if (options) {
         // add eth collection property
@@ -130,7 +131,7 @@ const ioGetAddrEth = async (options) => {
 /** Get Address Tokens Transactions API v.2*/
 const GetAddrTokens = async (req, res) => {
     logger.api_requests(logit(req)); // log query data any way
-    console.log(`${wid_ptrn('GetAddrTokens')}`);
+    console.log(`${wid_ptrn('REST GetAddrTokens')}`);
     let options = checkAddrkParams(req, res);
     if (options) {
         // add tokens collection property
@@ -240,7 +241,7 @@ const checkAddrkParams = (req, res) => {
 /** Get Address details REST API v.2*/
 const GetAddrDetails = (req, res) => {
     logger.api_requests(logit(req)); // log query data any way
-    console.log(`${wid_ptrn('GetAddrDetails')}`);
+    console.log(`${wid_ptrn('REST GetAddrDetails')}`);
     let addr = req.query.addr; // addr from request
     let c_addr = check.cut0xClean(addr); // cut 0x and clean address
     // check cleared address by length
@@ -256,7 +257,7 @@ const GetAddrDetails = (req, res) => {
 /** Get token Balance REST API v.2 */
 const GetTokenBalance = async (req, res) => {
     logger.api_requests(logit(req)); // log query data any way
-    console.log(`${wid_ptrn('GetTokenBalance')}`);
+    console.log(`${wid_ptrn('REST GetTokenBalance')}`);
     let options = checkAddrkParams(req, res);
     if (options) {
         let response = await addr_model.tokenBalance(options);

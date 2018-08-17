@@ -69,7 +69,7 @@ if (wid % 2 === 0) {
     const server1 = http.createServer(app); // create HTTP server for REST API requests
     server1.listen(port1); // Listen Node server on provided port
     console.log(`${c.cyan}HTTP ${c.green}server1${c.cyan} listen port ${c.green}${port1}${c.cyan} on Worker ${c.yellow}${wid}${c.cyan} and serv:
-    ${c.magenta}> HTTP REST ${c.red}API v.1${c.magenta}
+    ${c.magenta}> HTTP REST ${c.red}API v.1
     ${c.magenta}> HTTP REST ${c.red}API v.2${c.white}`);
     server1.on('error', onError1); // server event hanlers 'on.error'
     server1.on('listening', onListening); // server event hanlers 'on.listening'
@@ -86,7 +86,7 @@ if (wid % 2 === 0) {
     sockIOv1(server2); // API v.1 socket.io
     sockIOv2(server2); // API v.2 socket.io
     console.log(`${c.cyan}HTTP ${c.green}server2${c.cyan} listen port ${c.green}${port2}${c.cyan} on Worker ${c.yellow}${wid}${c.cyan} and serv:
-    ${c.magenta}> Socket.io ${c.red}API v.1${c.white}\`
+    ${c.magenta}> Socket.io ${c.red}API v.1
     ${c.magenta}> Socket.io ${c.red}API v.2${c.white}`);
     server2.on('error', onError2); // server event hanlers 'on.error'
     server2.on('listening', onListening); // server event hanlers 'on.listening'
@@ -97,6 +97,16 @@ if (wid % 2 === 0) {
         list_addr(bind);
     }
 }
+
+/** workerId memUsage */
+setInterval(() => {
+    let mem = process.memoryUsage();
+    console.log(`${c.magenta}Worker ${wid} Memory usage:
+     ${c.green}rss: ${c.yellow}${Math.floor(mem.rss / 1024 / 1024)} MB
+     ${c.green}heapTotal: ${c.yellow}${Math.floor(mem.heapTotal / 1024 / 1024)} MB
+     ${c.green}heapUsed: ${c.yellow}${Math.floor(mem.heapUsed / 1024 / 1024)} MB
+     ${c.green}external: ${c.yellow}${Math.floor(mem.external / 1024 / 1024)} MB${c.white}`);
+}, 5000);
 
 // Event listener for HTTP server "error" event.
 function onError1(error) {
