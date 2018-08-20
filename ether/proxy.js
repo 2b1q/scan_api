@@ -40,7 +40,8 @@ const check_eth_clients_singleton = (() => {
             ethClients: ethClients,
 
             getBestProvider: () => {
-                let self = this.getInstance();
+                // let self = this.getInstance();
+                let self = ethProxy;
                 let tmpProviders = [];
                 let clients = self.ethClients;
                 let last = self.lastBlock;
@@ -65,12 +66,11 @@ const check_eth_clients_singleton = (() => {
             },
 
             getProvidersBlock: () => {
-                let self = this.getInstance();
+                // let self = this.getInstance();
+                let self = ethProxy;
                 let tmpBlocks = [];
                 let clients = self.ethClients;
-                console.log(
-                    `${wid_ptrn}getProvidersBlock, clients length = ${id_ptrn(clients.length)}`
-                );
+                console.log(`${wid_ptrn}getProvidersBlock, clients length = ${id_ptrn(clients.length)}`);
                 /*for (let i = 0; i < clients.length; i += 1) {
                     tmpBlocks.push(clients[i].lastBlock);
                 }*/
@@ -81,7 +81,8 @@ const check_eth_clients_singleton = (() => {
             },
 
             getLastBlock: () => {
-                let self = this.getInstance();
+                let self = ethProxy;
+                // let self = this.getInstance();
                 console.log(`${wid_ptrn}getLastBlock, this = ${this}`);
                 console.log(`${wid_ptrn}getLastBlock, self.lastBlock = ${id_ptrn(self.lastBlock)}`);
                 return self.lastBlock;
@@ -91,6 +92,10 @@ const check_eth_clients_singleton = (() => {
 
     return {
         getInstance: () => {
+            console.log('===== ETH PROXY Object========');
+            console.log(ethProxy);
+            console.log('===== ETH PROXY Object========');
+
             if (!ethProxy) {
                 ethProxy = initSingleton();
             }
