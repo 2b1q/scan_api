@@ -13,9 +13,7 @@ const cfg = require('../../config/config'),
 
 // worker id pattern
 const wid_ptrn = (endpoint) =>
-    `${c.green}worker[${cluster.worker.id}]${c.red}[API v.2]${c.yellow}[transaction model]${
-        c.red
-    } > ${c.green}[${endpoint}] ${c.white}`;
+    `${c.green}worker[${cluster.worker.id}]${c.red}[API v.2]${c.yellow}[transaction model]${c.red} > ${c.green}[${endpoint}] ${c.white}`;
 
 /** GetLastTransactions */
 const GetLastTransactions = async ({ collection, size, offset }) => {
@@ -104,7 +102,6 @@ const GetTxDetails = async (hash) => {
         isContract: 1,
         value: 1,
         txFee: 1,
-        dcm: 1,
         gasUsed: 1,
         gasCost: 1,
         data: 1,
@@ -160,7 +157,7 @@ const GetTxDetails = async (hash) => {
                     isContract: eth_tx.iscontract,
                     value: eth_tx.value,
                     txFee: eth_tx.txfee,
-                    dcm: eth_tx.tokendcm,
+                    dcm: 18,
                     gasUsed: eth_tx.gasused,
                     gasCost: eth_tx.gascost,
                     data: eth_tx.data,
