@@ -25,7 +25,7 @@ const wid_ptrn = (endpoint) =>
 
 // io getAddressBalance  emitter
 exports.getAddressBalance = (msg) =>
-    new Promise((resolve) => {
+    new Promise((resolve, reject) => {
         if (ioconnected()) ethproxy.emit('getAddressBalance', msg, (resp) => resolve(resp));
-        else resolve(false);
+        else reject('no connection to ETH proxy');
     });
