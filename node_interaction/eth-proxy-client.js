@@ -13,6 +13,9 @@ const ethproxy = io.connect(
 // on connect event
 ethproxy.on('connect', () => console.log(wid_ptrn(ethproxy.io.uri)));
 
+// is IO connected
+const ioconnected = () => ethproxy.io.connecting[0].connected;
+
 // cluster.worker.id
 const wid = cluster.worker.id;
 
@@ -21,4 +24,8 @@ const wid_ptrn = (endpoint) =>
     `${c.green}worker[${wid}]${c.red}[interaction]${c.cyan}[eth proxy client connected]${c.red} URI: ${c.green}[${endpoint}] ${c.white}`;
 
 // io getAddressBalance  emitter
-exports.getAddressBalance = (msg) => new Promise((resolve) => ethproxy.emit('getAddressBalance', msg, (resp) => resolve(resp)));
+exports.getAddressBalance = (msg) =>
+    new Promise((resolve) => {
+        if (ioconnected()) ethproxy.emit('getAddressBalance', msg, (resp) => resolve(resp));
+        else resolve('');
+    });
