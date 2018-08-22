@@ -24,13 +24,14 @@ const GetAddressDetails = async (addr) => {
     const erc20_db_col = await dbquery.getcol(erc_20_col);
     /** count from aggregation addr_header_db_col */
     const addrAggr = await dbquery.findOne(addr_header_col, { addr: addr });
+
     /** ETH Transaction details **/
     let main_tx_selector = { $or: [{ addrto: addr }, { addrfrom: addr }] };
     let inner_tx_selector = { $or: [{ addrto: addr }, { addrfrom: addr }], isinner: 1 };
     // ETH count
     let mainTxCount_p = eth_db_col.count(main_tx_selector); // кол-во основных транзакций эфира
     let innerTxCount_p = eth_db_col.count(inner_tx_selector); // кол-во внутренних транзакций эфира
-    // get address balance
+    /** get address balance */
     let addr_balance = await ethproxy.getAddressBalance(addr).catch(() => eth_func.providerEthProxy('getbalance', { addr: addr }));
 
     /** Token Transaction details **/
@@ -40,7 +41,7 @@ const GetAddressDetails = async (addr) => {
     let token_erc20_p = erc20_db_col.count(erc20_selector); // кол-во токенов которые были или есть у данного адреса
     // WA addrAggr.maintx || mainTxCount_p
     return await Promise.all([
-        addrAggr.maintx || mainTxCount_p,
+        addrAggr.maintx || mainTxCount_p, // if addrAggr.maintx is undefined => use mainTxCount_p promise
         addrAggr.innertx || innerTxCount_p,
         addr_balance,
         addrAggr.tokentx || tokenTxCount_p,
