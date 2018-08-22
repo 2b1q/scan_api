@@ -9,6 +9,7 @@ const cfg = require('../../config/config'),
     token_col = cfg.store.cols.token,
     erc_20_col = cfg.store.cols.erc20_cache,
     addr_header_col = 'address_header',
+    ethproxy = require('../../node_interaction/eth-proxy-client'),
     TOKEN_LIST_SIZE = 55; // TODO move to config
 
 /* eth get data timeouts. */
@@ -29,7 +30,9 @@ const GetAddressDetails = async (addr) => {
     // ETH count
     let mainTxCount_p = eth_db_col.count(main_tx_selector); // кол-во основных транзакций эфира
     let innerTxCount_p = eth_db_col.count(inner_tx_selector); // кол-во внутренних транзакций эфира
-    let addr_balance_p = eth_func.providerEthProxy('getbalance', { addr: addr }); // ETH balance
+    // let addr_balance_p = eth_func.providerEthProxy('getbalance', { addr: addr }); // ETH balance
+    let addr_balance_p = ethproxy.getAddressBalance(addr); // send msg to eth proxy api
+
     /** Token Transaction details **/
     let erc20_selector = { addr: addr };
     // Token count

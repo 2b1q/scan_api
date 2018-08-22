@@ -8,6 +8,7 @@ const express = require('express'),
     c = config.color,
     sockIOv1 = require('./routes/socket.io.v1'),
     sockIOv2 = require('./routes/socket.io.v2'),
+    // TODO socketClient for eth_proxy
     rest = require('./routes/services'),
     ethProxy = require('./ether/proxy').getInstance(),
     ethSubs = require('./ether/subscribe');
