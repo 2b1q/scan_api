@@ -7,6 +7,7 @@ const cfg = require('../../config/config'),
     moment = require('moment'),
     dbquery = require('./db_query'),
     eth_func = require('../../ether/functions'),
+    ethproxy = require('../../node_interaction/eth-proxy-client'),
     eth_col = cfg.store.cols.eth,
     token_col = cfg.store.cols.token,
     c = cfg.color;
@@ -119,7 +120,9 @@ const GetTxDetails = async (hash) => {
             // if no txs in DB => ask ETH node
             if (response.hasOwnProperty('empty')) {
                 console.log(`======= ask ETH node for pending transaction ${hash}=======`);
-                const tx = await eth_func.providerEthProxy('tx', { hash: '0x' + hash });
+                // ethproxy.getTransaction(hash)
+                const tx = await ethproxy.getTransaction(hash).catch(() => eth_func.providerEthProxy('tx', { hash: '0x' + hash }));
+                // const tx = await eth_func.providerEthProxy('tx', { hash: '0x' + hash });
                 if (tx) {
                     console.log(`Pending tx: \n${tx}`);
                     delete response.empty; // unset no data flag

@@ -29,3 +29,10 @@ exports.getAddressBalance = (msg) =>
         if (ioconnected()) ethproxy.emit('getAddressBalance', msg, (resp) => resolve(resp));
         else reject('no connection to ETH proxy');
     });
+
+// io getTransaction  emitter
+exports.getTransaction = (msg) =>
+    new Promise((resolve, reject) => {
+        if (ioconnected()) ethproxy.emit('getTransaction', msg, (resp) => resolve(resp));
+        else reject('no connection to ETH proxy');
+    });
