@@ -30,8 +30,8 @@ const GetAddressDetails = async (addr) => {
     // ETH count
     let mainTxCount_p = eth_db_col.count(main_tx_selector); // кол-во основных транзакций эфира
     let innerTxCount_p = eth_db_col.count(inner_tx_selector); // кол-во внутренних транзакций эфира
-    // let addr_balance_p = eth_func.providerEthProxy('getbalance', { addr: addr }); // ETH balance
-    let addr_balance_p = ethproxy.getAddressBalance(addr); // send msg to eth proxy api
+    let addr_balance_p_old = eth_func.providerEthProxy('getbalance', { addr: addr }); // ETH balance
+    let addr_balance = await ethproxy.getAddressBalance(addr); // send msg to eth proxy api
 
     /** Token Transaction details **/
     let erc20_selector = { addr: addr };
@@ -42,11 +42,11 @@ const GetAddressDetails = async (addr) => {
     return await Promise.all([
         addrAggr.maintx || mainTxCount_p,
         addrAggr.innertx || innerTxCount_p,
-        addr_balance_p,
+        addr_balance || addr_balance_p_old,
         addrAggr.tokentx || tokenTxCount_p,
         token_erc20_p,
     ])
-        .then(([main_cnt, inner_cnt, eth_balance = 0, token_tx_cnt, erc_20_cnt]) => {
+        .then(([main_cnt, inner_cnt, eth_balance, token_tx_cnt, erc_20_cnt]) => {
             response.head = {
                 addr: addr, // адрес после "нормализации" (без 0х, малый регистр)
                 mainTxCount: main_cnt, // кол-во основных транзакций эфира
