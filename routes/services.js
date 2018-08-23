@@ -5,14 +5,13 @@ const tnx_controller_v1 = require('../controllers/v1/transaction'),
     tnx_controller_v2 = require('../controllers/v2/transaction'),
     block_controller_v2 = require('../controllers/v2/block'),
     addr_controller_v2 = require('../controllers/v2/address'),
-    eth_api = require('../ether/api'),
     router = require('express').Router();
 
 const v1_ptrn = (path) => new RegExp(`(^\/v1\/${path}$)|(^\/${path}$)`); // v1 route RegExp pattern
 const v2_ptrn = (path) => new RegExp(`(^\/v2\/${path}$)`); // v2 route RegExp pattern
 
 /* ETH test endpoinds */
-router.get('/nodes', eth_api.getLastBlocks); // nodes last blocks
+// router.get('/nodes', eth_api.getLastBlocks); // nodes last blocks
 
 /** REST API v.2 endpoints
  * - routing by path (new routing)

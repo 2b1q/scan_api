@@ -6,7 +6,6 @@ const cfg = require('../../config/config'),
     MAX_SKIP = cfg.store.mongo.max_skip,
     moment = require('moment'),
     dbquery = require('./db_query'),
-    eth_func = require('../../ether/functions'),
     ethproxy = require('../../node_interaction/eth-proxy-client'),
     eth_col = cfg.store.cols.eth,
     token_col = cfg.store.cols.token,
@@ -119,12 +118,9 @@ const GetTxDetails = async (hash) => {
             else var [eth_tx] = eth_txs; // use var instead of let
             // if no txs in DB => ask ETH node
             if (response.hasOwnProperty('empty')) {
-                console.log(`======= ask ETH node for pending transaction ${hash}=======`);
-                // ethproxy.getTransaction(hash)
-                const tx = await ethproxy.getTransaction(hash).catch(() => eth_func.providerEthProxy('tx', { hash: '0x' + hash }));
-                // const tx = await eth_func.providerEthProxy('tx', { hash: '0x' + hash });
+                console.log(wid_ptrn(`ask ETH proxy for a pending transaction 0x${hash}`));
+                const tx = await ethproxy.getTransaction(hash).catch(() => null);
                 if (tx) {
-                    console.log(`Pending tx: \n${tx}`);
                     delete response.empty; // unset no data flag
                     response.head = {
                         id: '',
@@ -136,7 +132,7 @@ const GetTxDetails = async (hash) => {
                         type: 'tx', // тип транзакции. Возможны варианты: [tx]
                         status: -1, // Статус = -1. Результат транзакции не определен.
                         isContract: 0, // 0 - обычная транзакция, 1 - создание транзакции
-                        value: parseInt(tx.value, 10).toString(16),
+                        value: tx.value === null || tx.value === undefined ? null : parseInt(tx.value, 10).toString(16),
                         txFee: '0', // Всегда 0. Не известно сколько газа потрачено.
                         dcm: 18,
                         gasUsed: 0, // Всегда 0. Не известно сколько газа потрачено.

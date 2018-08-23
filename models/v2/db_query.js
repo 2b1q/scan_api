@@ -4,14 +4,10 @@
  * return DB data
  */
 const db = require('../../libs/db'),
-    cfg = require('../../config/config'),
-    // eth_func = require('../../ether/functions'),
-    moment = require('moment'),
-    check = require('../../utils/checker').cheker();
+    cfg = require('../../config/config');
 
 // get collection by name
-const col = (name) =>
-    new Promise((resolve) => db.get.then((db_con) => resolve(db_con.collection(name))));
+const col = (name) => new Promise((resolve) => db.get.then((db_con) => resolve(db_con.collection(name))));
 
 // get tnx db collection name by listId
 const get_tnx_col_by = (listId) => {

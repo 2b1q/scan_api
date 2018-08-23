@@ -7,7 +7,7 @@
 const cfg = require('../../config/config'),
     MAX_SKIP = cfg.store.mongo.max_skip,
     dbquery = require('./db_query'),
-    eth_func = require('../../ether/functions');
+    ethproxy = require('../../node_interaction/eth-proxy-client');
 
 /* eth get data timeouts. */
 const wait = (ms) => new Promise((resolve) => setTimeout(() => resolve(), ms));
@@ -18,16 +18,16 @@ const wait = (ms) => new Promise((resolve) => setTimeout(() => resolve(), ms));
 const GetAddress = async (addr) => {
     let response = {};
     // construct query options for address details
-
-    let addr_balance_p = eth_func.providerEthProxy('getbalance', { addr: addr });
+    /** get address balance */
+    let addr_balance = await ethproxy.getAddressBalance(addr).catch(() => null);
     let addrHeader_p = dbquery.findOne(cfg.store.cols.contract, { addr: addr });
     let mainTxCount_p = dbquery.countTnx(cfg.store.cols.eth, {
         $or: [{ addrto: addr }, { addrfrom: addr }],
     });
     let tokenList_p = addrTokenBalance({ addr: addr, skip: 0, size: 5 });
 
-    return await Promise.all([addrHeader_p, mainTxCount_p, addr_balance_p, tokenList_p])
-        .then(([addrHeader, { cnt }, eth_balance = 0, tokenList]) => {
+    return await Promise.all([addrHeader_p, mainTxCount_p, addr_balance, tokenList_p])
+        .then(([addrHeader, { cnt }, eth_balance, tokenList]) => {
             // fix NaN if string is empty
             response.rows = [];
             response.head = {
@@ -38,10 +38,7 @@ const GetAddress = async (addr) => {
                 coin: 'ETH',
                 data: null,
                 decimals: 18,
-                balance: parseInt(eth_balance, 10).toString(16),
-                // TODO: fix data convert in balance and tables
-                // TODO: remove actions like parseInt(balance_in_hex) / 10^decimals on front-end and apps
-                // TODO: balance recalc via web3 utils
+                balance: eth_balance === null || eth_balance === undefined ? null : parseInt(eth_balance, 10).toString(16), // баланс ETH
                 contract: 0, // dummy
                 innertxcount: 0, // dummy
                 tokentxcount: 0, // dummy
@@ -123,11 +120,7 @@ const addrTokenBalance = async (options) => {
         block: { $gt: lastCachedBlock },
         tokentype: 20,
     };
-    let lastTokens = await dbquery.distinct(
-        cfg.store.cols.token,
-        last_tokens_selector,
-        'tokenaddr'
-    );
+    let lastTokens = await dbquery.distinct(cfg.store.cols.token, last_tokens_selector, 'tokenaddr');
 
     let lastTokensPromiseList = [];
     lastTokens.forEach((t) => {
@@ -164,11 +157,13 @@ const addrTokenBalance = async (options) => {
     for (let i = fromI; i < toI; i += 1) {
         let tkn = allTokens[i][1];
         if (tkn.balance === '*') {
-            tkn.balance = await eth_func.providerEthProxy('tokenbalance', {
-                walletAddr: addr,
-                tokenAddr: tkn.addr,
-            });
-            tkn.balance = parseInt(tkn.balance, 10).toString(16);
+            tkn.balance = await ethproxy
+                .tokenBalance({
+                    walletAddr: addr,
+                    tokenAddr: tkn.addr,
+                })
+                .catch(() => null);
+            tkn.balance = tkn.balance === null || tkn.balance === undefined ? null : parseInt(tkn.balance, 10).toString(16);
         }
         partToken.push(tkn);
     }

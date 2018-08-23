@@ -4,7 +4,6 @@
 const cfg = require('../../config/config'),
     MAX_SKIP = cfg.store.mongo.max_skip,
     dbquery = require('./db_query'),
-    eth_func = require('../../ether/functions'),
     eth_col = cfg.store.cols.eth,
     token_col = cfg.store.cols.token,
     erc_20_col = cfg.store.cols.erc20_cache,
@@ -32,7 +31,7 @@ const GetAddressDetails = async (addr) => {
     let mainTxCount_p = eth_db_col.count(main_tx_selector); // кол-во основных транзакций эфира
     let innerTxCount_p = eth_db_col.count(inner_tx_selector); // кол-во внутренних транзакций эфира
     /** get address balance */
-    let addr_balance = await ethproxy.getAddressBalance(addr).catch(() => eth_func.providerEthProxy('getbalance', { addr: addr }));
+    let addr_balance = await ethproxy.getAddressBalance(addr).catch(() => null);
 
     /** Token Transaction details **/
     let erc20_selector = { addr: addr };
@@ -54,7 +53,7 @@ const GetAddressDetails = async (addr) => {
                 innerTxCount: inner_cnt, // кол-во внутренних транзакций эфира
                 tokenTxCount: token_tx_cnt, // кол-во всех транзакций по токенам
                 totalTokens: erc_20_cnt, // кол-во токенов которые были или есть у данного адреса
-                balance: parseInt(eth_balance, 10).toString(16), // баланс ETH
+                balance: eth_balance === null || eth_balance === undefined ? null : parseInt(eth_balance, 10).toString(16), // баланс ETH
                 decimals: 18, // знаков после "."
             };
             return response;
@@ -151,13 +150,8 @@ const GetAddrTokenBalance = async (options) => {
                     walletAddr: addr,
                     tokenAddr: tkn.addr,
                 })
-                .catch(() =>
-                    eth_func.providerEthProxy('tokenbalance', {
-                        walletAddr: addr,
-                        tokenAddr: tkn.addr,
-                    })
-                );
-            tkn.balance = parseInt(tkn.balance, 10).toString(16);
+                .catch(() => null);
+            tkn.balance = tkn.balance === null || tkn.balance === undefined ? null : parseInt(tkn.balance, 10).toString(16);
         }
         partToken.push(tkn);
     }
