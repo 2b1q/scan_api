@@ -36,3 +36,10 @@ exports.getTransaction = (msg) =>
         if (ioconnected()) ethproxy.emit('getTransaction', msg, (resp) => resolve(resp));
         else reject('no connection to ETH proxy');
     });
+
+// io tokenBalance  emitter
+exports.tokenBalance = (msg) =>
+    new Promise((resolve, reject) => {
+        if (ioconnected()) ethproxy.emit('tokenBalance', msg, (resp) => resolve(resp));
+        else reject('no connection to ETH proxy');
+    });
