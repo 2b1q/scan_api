@@ -2,12 +2,15 @@
  * Address model v.2
  */
 const cfg = require('../../config/config'),
+    c = cfg.color,
     MAX_SKIP = cfg.store.mongo.max_skip,
     dbquery = require('./db_query'),
     eth_col = cfg.store.cols.eth,
     token_col = cfg.store.cols.token,
     erc_20_col = cfg.store.cols.erc20_cache,
     addr_header_col = 'address_header',
+    address_eth_txn_col = 'address_eth_txn',
+    address_token_txn_col = 'address_token_txn',
     ethproxy = require('../../node_interaction/eth-proxy-client'),
     TOKEN_LIST_SIZE = 55; // TODO move to config
 
@@ -173,59 +176,9 @@ const GetAddrTokenBalance = async (options) => {
     };
 };
 
-//  Get address tnx API v.2:
-const GetAddrTransactions = async (options) => {
-    options.selector = { $or: [{ addrto: options.addr }, { addrfrom: options.addr }] };
-    options.sort = { block: -1 };
-    console.log(options);
-    let { addr, collection, size, offset, selector, sort } = options;
-    const db_col = await dbquery.getcol(collection);
-    let count = await db_col.count(selector);
-    if (count === 0) return 0;
-    if (count > MAX_SKIP) count = MAX_SKIP;
-    // MongoDB data optimization => use only necessary fields/columns
-    let fields =
-        collection === 'ether_txn'
-            ? {
-                  hash: 1,
-                  block: 1,
-                  addrfrom: 1,
-                  addrto: 1,
-                  isotime: 1,
-                  type: 1,
-                  status: 1,
-                  error: 1,
-                  iscontract: 1,
-                  isinner: 1,
-                  value: 1,
-                  txfee: 1,
-                  gasused: 1,
-                  gascost: 1,
-                  tokendcm: 1,
-              }
-            : {
-                  hash: 1,
-                  block: 1,
-                  addrfrom: 1,
-                  addrto: 1,
-                  isotime: 1,
-                  type: 1,
-                  status: 1,
-                  error: 1,
-                  iscontract: 1,
-                  isinner: 1,
-                  value: 1,
-                  txfee: 1,
-                  gasused: 1,
-                  gascost: 1,
-                  tokenaddr: 1,
-                  tokenname: 1,
-                  tokensmbl: 1,
-                  tokendcm: 1,
-                  tokentype: 1,
-              };
-
-    return new Promise((resolve) =>
+// < 10k tx getter
+const slowTxGetter = (db_col, selector, fields, sort, offset, size, count, addr) =>
+    new Promise((resolve) =>
         db_col
             .find(selector, { fields }, { allowDiskUse: true }) // allowDiskUse lets the server know if it can use disk to store temporary results for the aggregation (requires mongodb 2.6 >)
             .sort(sort)
@@ -244,6 +197,154 @@ const GetAddrTransactions = async (options) => {
                 });
             })
     );
+
+/** get address Token tx list*/
+const getTokenTx = async (addr, size, offset, selector, sort, count) => {
+    const fields = {
+        hash: 1,
+        block: 1,
+        addrfrom: 1,
+        addrto: 1,
+        isotime: 1,
+        type: 1,
+        status: 1,
+        error: 1,
+        iscontract: 1,
+        isinner: 1,
+        value: 1,
+        txfee: 1,
+        gasused: 1,
+        gascost: 1,
+        tokenaddr: 1,
+        tokenname: 1,
+        tokensmbl: 1,
+        tokendcm: 1,
+        tokentype: 1,
+    };
+    if (count === 0) return 0;
+    if (count > MAX_SKIP) count = MAX_SKIP;
+    if (count < 10000) {
+        // slow query
+        const token_col = await dbquery.getcol('token_txn');
+        return await slowTxGetter(token_col, selector, fields, sort, offset, size, count, addr);
+    } else {
+        const cache_size = await dbquery.getcol(address_token_txn_col).then((db) => db.count({ addr: addr }));
+        console.log(`${c.yellow}Token cache_size for addr ${c.magenta}${addr}${c.yellow} is: ${c.red}${cache_size}${c.white}`);
+        // deep search
+        if (offset + size > cache_size) {
+            console.log(`${c.red}offset + size > cache_size. Deep Search. Use old search method${c.white}`);
+            const token_col = await dbquery.getcol('token_txn');
+            return await slowTxGetter(token_col, selector, fields, sort, offset, size, count, addr);
+        } else {
+            console.log(`${c.red}using tokenBooster${c.white}`);
+            return await tokenBooster(addr, offset, size, fields, count, sort);
+        }
+    }
+};
+
+/** get address ETH tx list*/
+const getEthTx = async (addr, size, offset, selector, sort, count) => {
+    // set MongoDB fields
+    const fields = {
+        hash: 1,
+        block: 1,
+        addrfrom: 1,
+        addrto: 1,
+        isotime: 1,
+        type: 1,
+        status: 1,
+        error: 1,
+        iscontract: 1,
+        isinner: 1,
+        value: 1,
+        txfee: 1,
+        gasused: 1,
+        gascost: 1,
+        tokendcm: 1,
+    };
+    if (count === 0) return 0;
+    if (count > MAX_SKIP) count = MAX_SKIP;
+    if (count < 10000) {
+        // slow query
+        const eth_col = await dbquery.getcol('ether_txn');
+        return await slowTxGetter(eth_col, selector, fields, sort, offset, size, count, addr);
+    } else {
+        const cache_size = await dbquery.getcol(address_eth_txn_col).then((db) => db.count({ addr: addr }));
+        console.log(`${c.yellow}ETH cache_size for addr ${c.magenta}${addr}${c.yellow} is: ${c.red}${cache_size}${c.white}`);
+        // deep search
+        if (offset + size > cache_size) {
+            console.log(`${c.red}offset + size > cache_size. Deep Search. Use old search method${c.white}`);
+            const eth_col = await dbquery.getcol('ether_txn');
+            return await slowTxGetter(eth_col, selector, fields, sort, offset, size, count, addr);
+        } else {
+            console.log(`${c.red}using ethBooster${c.white}`);
+            return await ethBooster(addr, offset, size, fields, count, sort);
+        }
+    }
+};
+
+/** address_token_txn booster
+ * heavy address booster if Token txs count > 10k*/
+const tokenBooster = async (addr, offset, size, fields, count, sort) =>
+    new Promise((resolve) =>
+        dbquery.getcol(address_token_txn_col).then((db_col) =>
+            db_col
+                .find({ addr: addr }, { fields })
+                .sort(sort)
+                .skip(offset)
+                .limit(size)
+                .toArray((err, docs) => {
+                    if (err) resolve(false); // stop flow and return false without exeption
+                    resolve({
+                        head: {
+                            addr: addr,
+                            totalEntities: count,
+                            size: size,
+                            offset: offset,
+                        },
+                        rows: docs,
+                    });
+                })
+        )
+    );
+
+/** address_eth_txn booster
+ * heavy address booster if ETH txs count > 10k*/
+const ethBooster = (addr, offset, size, fields, count, sort) =>
+    new Promise((resolve) =>
+        dbquery.getcol(address_eth_txn_col).then((db_col) =>
+            db_col
+                .find({ addr: addr }, { fields })
+                .sort(sort)
+                .skip(offset)
+                .limit(size)
+                .toArray((err, docs) => {
+                    if (err) resolve(false); // stop flow and return false without exeption
+                    resolve({
+                        head: {
+                            addr: addr,
+                            totalEntities: count,
+                            size: size,
+                            offset: offset,
+                        },
+                        rows: docs,
+                    });
+                })
+        )
+    );
+
+/**  Get address tnx API v.2:*/
+const GetAddrTransactions = async (options) => {
+    options.selector = { $or: [{ addrto: options.addr }, { addrfrom: options.addr }] };
+    options.sort = { block: -1 };
+    let { addr, collection, size, offset, selector, sort } = options;
+    // lookup tx counters in 'address_header' collection
+    const addrAggr = await dbquery.findOne(addr_header_col, { addr: addr });
+    const totalEthTxCnt = addrAggr.maintx + addrAggr.innertx;
+    const totalTokenTxCnt = addrAggr.tokentx;
+    return collection === 'ether_txn'
+        ? await getEthTx(addr, size, offset, selector, sort, totalEthTxCnt)
+        : await getTokenTx(addr, size, offset, selector, sort, totalTokenTxCnt);
 };
 
 module.exports = {
