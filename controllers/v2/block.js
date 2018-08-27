@@ -10,8 +10,7 @@ const block_model = require('../../models/v2/block'),
     c = cfg.color;
 
 // worker id pattern
-const wid_ptrn = (() =>
-    `${c.green}worker[${cluster.worker.id}]${c.cyan}[block controller][API v.2] ${c.white}`)();
+const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[block controller][API v.2] ${c.white}`)();
 
 // simple query logger
 let logit = (req, msg = '') => {
@@ -34,7 +33,7 @@ const http_GetBlock = async (block, res) => {
         let response = await block_model.details(block);
         // if response has 'error' property fwd response 404 else return 200 and payload
         if (response.hasOwnProperty('error')) res.status(404).json(check.get_msg().block_not_found);
-        res.json(response);
+        else res.json(response);
     } catch (e) {
         logger.error(e); // log error returned from model
         res.status(404).json(check.get_msg().block_not_found); // dont fwd exception to client
