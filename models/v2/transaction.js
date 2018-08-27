@@ -9,6 +9,7 @@ const cfg = require('../../config/config'),
     ethproxy = require('../../node_interaction/eth-proxy-client'),
     eth_col = cfg.store.cols.eth,
     token_col = cfg.store.cols.token,
+    data_col = 'data_txn',
     c = cfg.color;
 
 // worker id pattern
@@ -104,14 +105,18 @@ const GetTxDetails = async (hash) => {
         txFee: 1,
         gasUsed: 1,
         gasCost: 1,
+    };
+    const data_fields = {
         data: 1,
+        // rcplogs: 1, // not necessary yet
     };
     // DB queries
-    const ethTx_p = await dbquery.find(eth_col, selector, tx_fields);
-    const tokenTx_p = await dbquery.find(token_col, selector);
+    const data_p = dbquery.findOne(data_col, selector, data_fields);
+    const ethTx_p = dbquery.find(eth_col, selector, tx_fields);
+    const tokenTx_p = dbquery.find(token_col, selector);
 
-    return await Promise.all([ethTx_p, tokenTx_p])
-        .then(async ([eth_txs, token_txs]) => {
+    return await Promise.all([ethTx_p, tokenTx_p, data_p])
+        .then(async ([eth_txs, token_txs, data]) => {
             let response = {};
             if (!Array.isArray(eth_txs)) response.empty = true;
             // set no data flag
@@ -159,7 +164,7 @@ const GetTxDetails = async (hash) => {
                     dcm: 18,
                     gasUsed: eth_tx.gasused,
                     gasCost: eth_tx.gascost,
-                    data: eth_tx.data,
+                    data: eth_tx.hash === data.hash ? data.data : undefined,
                 };
                 // token txs
                 if (Array.isArray(token_txs)) {
