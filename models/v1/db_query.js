@@ -114,7 +114,6 @@ const TxDetails = async (hash, query) => {
             if (ether_tnxs.length === 0) {
                 // if no ether tnxs ASK pending TNXS from eth_proxy node
                 response.empty = true; // no data flag
-                console.log(wid_ptrn(`ask ETH proxy for a pending transaction 0x${hash}`));
                 const tx = await ethproxy.getTransaction(hash).catch(() => null);
                 // construct response data if tx -> Not null and Not undefined
                 if (tx) {
