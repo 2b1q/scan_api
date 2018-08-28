@@ -6,16 +6,15 @@ const cfg = require('../../config/config'),
     MAX_SKIP = cfg.store.mongo.max_skip,
     moment = require('moment'),
     dbquery = require('./db_query'),
-    eth_func = require('../../ether/functions'),
+    ethproxy = require('../../node_interaction/eth-proxy-client'),
     eth_col = cfg.store.cols.eth,
     token_col = cfg.store.cols.token,
+    data_col = 'data_txn',
     c = cfg.color;
 
 // worker id pattern
 const wid_ptrn = (endpoint) =>
-    `${c.green}worker[${cluster.worker.id}]${c.red}[API v.2]${c.yellow}[transaction model]${
-        c.red
-    } > ${c.green}[${endpoint}] ${c.white}`;
+    `${c.green}worker[${cluster.worker.id}]${c.red}[API v.2]${c.yellow}[transaction model]${c.red} > ${c.green}[${endpoint}] ${c.white}`;
 
 /** GetLastTransactions */
 const GetLastTransactions = async ({ collection, size, offset }) => {
@@ -104,44 +103,46 @@ const GetTxDetails = async (hash) => {
         isContract: 1,
         value: 1,
         txFee: 1,
-        dcm: 1,
         gasUsed: 1,
         gasCost: 1,
+    };
+    const data_fields = {
         data: 1,
+        // rcplogs: 1, // not necessary yet
     };
     // DB queries
-    const ethTx_p = await dbquery.find(eth_col, selector, tx_fields);
-    const tokenTx_p = await dbquery.find(token_col, selector);
+    const data_p = dbquery.findOne(data_col, selector, data_fields);
+    const ethTx_p = dbquery.find(eth_col, selector, tx_fields);
+    const tokenTx_p = dbquery.find(token_col, selector);
 
-    return await Promise.all([ethTx_p, tokenTx_p])
-        .then(async ([eth_txs, token_txs]) => {
+    return await Promise.all([ethTx_p, tokenTx_p, data_p])
+        .then(async ([eth_txs, token_txs, data]) => {
             let response = {};
             if (!Array.isArray(eth_txs)) response.empty = true;
             // set no data flag
             else var [eth_tx] = eth_txs; // use var instead of let
             // if no txs in DB => ask ETH node
             if (response.hasOwnProperty('empty')) {
-                console.log(`======= ask ETH node for pending transaction ${hash}=======`);
-                const tx = await eth_func.providerEthProxy('tx', { hash: '0x' + hash });
+                console.log(wid_ptrn(`ask ETH proxy for a pending transaction 0x${hash}`));
+                const tx = await ethproxy.getTransaction(hash).catch(() => null);
                 if (tx) {
-                    console.log(`Pending tx: \n${tx}`);
                     delete response.empty; // unset no data flag
                     response.head = {
                         id: '',
                         hash: tx.hash,
-                        block: 0,
-                        addrFrom: tx.from,
-                        addrTo: tx.to,
+                        block: tx.block || 0,
+                        addrFrom: tx.addrfrom,
+                        addrTo: tx.addrto,
                         time: moment(), // время транзакции = текущее время. Номер блока не определен.
                         type: 'tx', // тип транзакции. Возможны варианты: [tx]
                         status: -1, // Статус = -1. Результат транзакции не определен.
                         isContract: 0, // 0 - обычная транзакция, 1 - создание транзакции
-                        value: parseInt(tx.value, 10).toString(16),
+                        value: tx.value === null || tx.value === undefined ? null : tx.value,
                         txFee: '0', // Всегда 0. Не известно сколько газа потрачено.
                         dcm: 18,
                         gasUsed: 0, // Всегда 0. Не известно сколько газа потрачено.
-                        gasCost: parseInt(tx.gasPrice), // стоимость газа в ETH
-                        data: tx.input, // данные, которые были отправлены в транзакцию. В бинарном виде
+                        gasCost: tx.gascost, // стоимость газа в ETH
+                        data: tx.data, // данные, которые были отправлены в транзакцию. В бинарном виде
                     };
                     response.rows = [];
                 }
@@ -160,10 +161,10 @@ const GetTxDetails = async (hash) => {
                     isContract: eth_tx.iscontract,
                     value: eth_tx.value,
                     txFee: eth_tx.txfee,
-                    dcm: eth_tx.tokendcm,
+                    dcm: 18,
                     gasUsed: eth_tx.gasused,
                     gasCost: eth_tx.gascost,
-                    data: eth_tx.data,
+                    data: eth_tx.hash === data.hash ? data.data : undefined,
                 };
                 // token txs
                 if (Array.isArray(token_txs)) {

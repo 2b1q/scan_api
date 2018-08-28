@@ -8,16 +8,9 @@ const express = require('express'),
     c = config.color,
     sockIOv1 = require('./routes/socket.io.v1'),
     sockIOv2 = require('./routes/socket.io.v2'),
-    rest = require('./routes/services'),
-    ethProxy = require('./ether/proxy').getInstance(),
-    ethSubs = require('./ether/subscribe');
+    rest = require('./routes/services');
 
 debug('booting %s', 'scan-api');
-
-ethSubs.subscribe(ethProxy);
-setInterval(function() {
-    ethSubs.subscribe(ethProxy);
-}, config.ethOptions.upNodeFrequency);
 
 // init express framework
 const app = express();

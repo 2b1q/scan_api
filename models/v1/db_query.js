@@ -5,7 +5,7 @@
  */
 const db = require('../../libs/db'),
     cfg = require('../../config/config'),
-    eth_func = require('../../ether/functions'),
+    ethproxy = require('../../node_interaction/eth-proxy-client'),
     moment = require('moment'),
     check = require('../../utils/checker').cheker();
 
@@ -114,14 +114,7 @@ const TxDetails = async (hash, query) => {
             if (ether_tnxs.length === 0) {
                 // if no ether tnxs ASK pending TNXS from eth_proxy node
                 response.empty = true; // no data flag
-
-                /*
-                 On start before we havnt any block or provider - return undefined
-                 after we have a block - Web3 object return null OR data object
-                 provider.eth.getTransaction(hash) return Promise with data or null
-                 */
-                let tx = await eth_func.providerEthProxy('tx', { hash: '0x' + hash });
-                console.log('Pending TX = ', tx);
+                const tx = await ethproxy.getTransaction(hash).catch(() => null);
                 // construct response data if tx -> Not null and Not undefined
                 if (tx) {
                     console.log('=============================== TX ======================');
@@ -140,19 +133,16 @@ const TxDetails = async (hash, query) => {
                         },
                         hash: check.cut0x(tx.hash), // SCAN-720 BUG FIX
                         // hash: tx.hash, // hash 32 Bytes - String: Hash of the transaction.
-                        block: 0,
+                        block: tx.block || 0,
                         txfee: '0',
                         isotime: moment(),
-                        addrfrom: check.cut0x(tx.from), // from - String: Address of the sender
-                        addrto: check.cut0x(tx.to), // to - String: Address of the receiver. null when its a contract creation transaction.
-                        value: parseInt(tx.value, 10).toString(16), // value - String: Value transferred in wei
+                        addrfrom: check.cut0x(tx.addrfrom), // from - String: Address of the sender
+                        addrto: check.cut0x(tx.addrto), // to - String: Address of the receiver. null when its a contract creation transaction.
+                        value: tx.value === null || tx.value === undefined ? null : tx.value,
                         status: -1,
-                        gascost: parseInt(tx.gasPrice), // gasPrice - String: Gas price provided by the sender in wei.
+                        gascost: tx.gascost, // gasPrice - String: Gas price provided by the sender in wei.
                         type: 'tx',
-                        data: tx.input, //input - String: The data sent along with the transaction.
-                        web3Payload: {
-                            ...tx,
-                        },
+                        data: tx.data, //input - String: The data sent along with the transaction.
                     };
                     response.rows = [];
                 }
