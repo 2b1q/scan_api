@@ -38,7 +38,7 @@ const GetAddress = async (addr) => {
                 coin: 'ETH',
                 data: null,
                 decimals: 18,
-                balance: eth_balance === null || eth_balance === undefined ? null : parseInt(eth_balance, 10).toString(16), // баланс ETH
+                balance: eth_balance === null || eth_balance === undefined ? null : eth_balance, // баланс ETH
                 contract: 0, // dummy
                 innertxcount: 0, // dummy
                 tokentxcount: 0, // dummy
@@ -157,13 +157,8 @@ const addrTokenBalance = async (options) => {
     for (let i = fromI; i < toI; i += 1) {
         let tkn = allTokens[i][1];
         if (tkn.balance === '*') {
-            tkn.balance = await ethproxy
-                .tokenBalance({
-                    walletAddr: addr,
-                    tokenAddr: tkn.addr,
-                })
-                .catch(() => null);
-            tkn.balance = tkn.balance === null || tkn.balance === undefined ? null : parseInt(tkn.balance, 10).toString(16);
+            tkn.balance = await ethproxy.tokenBalance([addr, tkn.addr]).catch(() => null);
+            tkn.balance = tkn.balance === null || tkn.balance === undefined ? null : tkn.balance;
         }
         partToken.push(tkn);
     }

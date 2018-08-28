@@ -130,19 +130,19 @@ const GetTxDetails = async (hash) => {
                     response.head = {
                         id: '',
                         hash: tx.hash,
-                        block: 0,
-                        addrFrom: tx.from,
-                        addrTo: tx.to,
+                        block: tx.block || 0,
+                        addrFrom: tx.addrfrom,
+                        addrTo: tx.addrto,
                         time: moment(), // время транзакции = текущее время. Номер блока не определен.
                         type: 'tx', // тип транзакции. Возможны варианты: [tx]
                         status: -1, // Статус = -1. Результат транзакции не определен.
                         isContract: 0, // 0 - обычная транзакция, 1 - создание транзакции
-                        value: tx.value === null || tx.value === undefined ? null : parseInt(tx.value, 10).toString(16),
+                        value: tx.value === null || tx.value === undefined ? null : tx.value,
                         txFee: '0', // Всегда 0. Не известно сколько газа потрачено.
                         dcm: 18,
                         gasUsed: 0, // Всегда 0. Не известно сколько газа потрачено.
-                        gasCost: parseInt(tx.gasPrice), // стоимость газа в ETH
-                        data: tx.input, // данные, которые были отправлены в транзакцию. В бинарном виде
+                        gasCost: tx.gascost, // стоимость газа в ETH
+                        data: tx.data, // данные, которые были отправлены в транзакцию. В бинарном виде
                     };
                     response.rows = [];
                 }

@@ -56,7 +56,7 @@ const GetAddressDetails = async (addr) => {
                 innerTxCount: inner_cnt, // кол-во внутренних транзакций эфира
                 tokenTxCount: token_tx_cnt, // кол-во всех транзакций по токенам
                 totalTokens: erc_20_cnt, // кол-во токенов которые были или есть у данного адреса
-                balance: eth_balance === null || eth_balance === undefined ? null : parseInt(eth_balance, 10).toString(16), // баланс ETH
+                balance: eth_balance === null || eth_balance === undefined ? null : eth_balance, // баланс ETH
                 decimals: 18, // знаков после "."
             };
             return response;
@@ -148,13 +148,8 @@ const GetAddrTokenBalance = async (options) => {
     for (let i = fromI; i < toI; i += 1) {
         let tkn = allTokens[i][1];
         if (tkn.balance === '*') {
-            tkn.balance = await ethproxy
-                .tokenBalance({
-                    walletAddr: addr,
-                    tokenAddr: tkn.addr,
-                })
-                .catch(() => null);
-            tkn.balance = tkn.balance === null || tkn.balance === undefined ? null : parseInt(tkn.balance, 10).toString(16);
+            tkn.balance = await ethproxy.tokenBalance([addr, tkn.addr]).catch(() => null);
+            tkn.balance = tkn.balance === null || tkn.balance === undefined ? null : tkn.balance;
         }
         partToken.push(tkn);
     }

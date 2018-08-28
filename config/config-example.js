@@ -32,7 +32,8 @@ config.store = {
 
 // interaction with other SCAN API nodes
 config.interaction = {
-    ethURL: 'http://localhost:4000',
+    ethURL: 'http://localhost:4000', // stand alone ETH proxy requests
+    scanEngine: 'http://localhost:7009', // Scan Engine events and ETH proxy requests
 };
 
 // pager API v.1

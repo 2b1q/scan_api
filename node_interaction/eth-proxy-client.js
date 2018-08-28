@@ -4,42 +4,66 @@ const io = require('socket.io-client'),
     config = require('../config/config'),
     c = config.color;
 
-// eth proxy io connector
-const ethproxy = io.connect(
-    config.interaction.ethURL,
-    { reconnect: true }
-);
-
-// on connect event
-ethproxy.on('connect', () => console.log(wid_ptrn(ethproxy.io.uri)));
-
-// is IO connected
-const ioconnected = () => ethproxy.io.connecting[0].connected;
-
 // cluster.worker.id
 const wid = cluster.worker.id;
 
-// worker id pattern
-const wid_ptrn = (endpoint) =>
-    `${c.green}worker[${wid}]${c.red}[interaction]${c.cyan}[eth proxy client connected]${c.red} URI: ${c.green}[${endpoint}] ${c.white}`;
+// eth_proxy_ptrn pattern
+const engine_proxy_ptrn = (endpoint) =>
+    `${c.green}worker[${wid}]${c.red}[io client interaction]${c.cyan}[ScanEngine-proxy]${c.red} URI: ${c.green}${endpoint}${c.white}`;
+
+// Scan Engine events and ETH proxy requests
+const scanEngineProxy = io.connect(
+    config.interaction.scanEngine,
+    {
+        reconnect: true,
+        transports: ['websocket'],
+    }
+);
+
+// on connect event
+scanEngineProxy.on('connect', () => console.log(engine_proxy_ptrn(scanEngineProxy.io.uri + ' => [connected]')));
+// on disconnect event
+scanEngineProxy.on('disconnect', () => console.log(engine_proxy_ptrn(scanEngineProxy.io.uri + ' => [disconnected]')));
+
+// scan engine ETH proxy emitter
+const scanemit = (io, cmd, msg, resolve) => {
+    io.emit(
+        'requestsChannel',
+        JSON.stringify({
+            cmd: cmd,
+            version: 1,
+            params: msg,
+        }),
+        (rsp) => {
+            let response = JSON.parse(rsp);
+            console.log(response);
+            // if (!response.error) console.log(`ETH Engine BALANCE IS: ${response.data}`);
+            if (!response.error) resolve(response.data);
+        }
+    );
+};
+
+// scan proxy node is IO connected
+const scanproxyconnected = () => scanEngineProxy.io.connecting[0].connected;
 
 // io getAddressBalance  emitter
 exports.getAddressBalance = (msg) =>
     new Promise((resolve, reject) => {
-        if (ioconnected()) ethproxy.emit('getAddressBalance', msg, (resp) => resolve(resp));
-        else reject('no connection to ETH proxy');
+        if (scanproxyconnected()) scanemit(scanEngineProxy, 'getEthereumBalance', msg, resolve);
+        else reject('no connection to ScanEngine ETH proxy');
     });
 
 // io getTransaction  emitter
 exports.getTransaction = (msg) =>
     new Promise((resolve, reject) => {
-        if (ioconnected()) ethproxy.emit('getTransaction', msg, (resp) => resolve(resp));
-        else reject('no connection to ETH proxy');
+        if (scanproxyconnected()) scanemit(scanEngineProxy, 'getTransaction', msg, resolve);
+        else reject('no connection to ScanEngine ETH proxy');
     });
 
 // io tokenBalance  emitter
 exports.tokenBalance = (msg) =>
     new Promise((resolve, reject) => {
-        if (ioconnected()) ethproxy.emit('tokenBalance', msg, (resp) => resolve(resp));
-        else reject('no connection to ETH proxy');
+        console.log(`io tokenBalance: ${msg}`);
+        if (scanproxyconnected()) scanemit(scanEngineProxy, 'getTokenBalance', msg, resolve);
+        else reject('no connection to ScanEngine ETH proxy');
     });
