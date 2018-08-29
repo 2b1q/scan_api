@@ -90,12 +90,16 @@ const io_GetBlockEth = async (options) => {
         options.collection = cfg.store.cols.eth;
         // get ether collection name
         let response = await block_model.transactions(options);
+        console.log('____________');
+        console.log('response');
+        console.log(response);
+        console.log('____________');
         if (response) {
             // preparing data (map data from model)
             response.head.updateTime = moment(); // UTC time format
             response.head.listId = 'listOfETH';
             response.head.moduleId = 'block';
-            // response.head.entityId = response.head.blockNumber;
+            response.head.entityId = response.head.blockNumber;
             response.rows = response.rows.map((tx) => {
                 return {
                     id: tx._id,
