@@ -111,6 +111,7 @@ const io_GetBlockEth = async (options) => {
                     isInner: tx.isinner,
                     value: tx.value,
                     txFee: tx.txfee,
+
                     dcm: tx.tokendcm || 18,
                     gasUsed: tx.gasused,
                     gasCost: tx.gascost,
@@ -155,7 +156,7 @@ const io_GetBlockTokens = async (options) => {
                     tokenDcm: tx.tokendcm,
                     tokenType: tx.tokentype,
                     txFee: tx.txfee,
-                    dcm: tx.tokendcm,
+                    dcm: tx.tokendcm || 0,
                     gasUsed: tx.gasused,
                     gasCost: tx.gascost,
                 };

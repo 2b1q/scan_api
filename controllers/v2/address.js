@@ -161,7 +161,7 @@ const GetAddrTokens = async (req, res) => {
                     tokenDcm: tx.tokendcm,
                     tokenType: tx.tokentype,
                     txFee: tx.txfee,
-                    dcm: tx.tokendcm,
+                    dcm: tx.tokendcm || 0,
                     gasUsed: tx.gasused,
                     gasCost: tx.gascost,
                 };
