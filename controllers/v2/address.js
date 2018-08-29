@@ -120,7 +120,7 @@ const ioGetAddrEth = async (options) => {
                 isInner: tx.isinner,
                 value: tx.value,
                 txFee: tx.txfee,
-                dcm: tx.tokendcm,
+                dcm: tx.tokendcm || 18,
                 gasUsed: tx.gasused,
                 gasCost: tx.gascost,
             };
