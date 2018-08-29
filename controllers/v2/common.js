@@ -12,7 +12,7 @@ const NodeStatus = async () => {
     try {
         let data = await ethproxy.getStatus().catch(() => null);
         console.log(data);
-        return data
+        return {data: data}
     } catch (e) {
         console.log(e);
         logger.error(e);
