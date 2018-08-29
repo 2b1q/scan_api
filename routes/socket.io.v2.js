@@ -37,7 +37,7 @@ const io_opts = {
 /** check listId*/
 const checkListId = (lid) => Object.values(config.list_type).includes(lid);
 /** check block options.*/
-const checkBlockOptions = (block, size, offset) => (block !== 0 ? check.normalize_pagination({ block: block }, size, offset) : false);
+const checkBlockOptions = (block, size, offset) => (block !== 0 ? check.normalize_pagination({ block: parseInt(block) }, size, offset) : false);
 /** check size is undefined */
 const checkNoSize = (size) => (!size ? true : false);
 /** check offset is undefined or 0 */
