@@ -8,11 +8,11 @@ const
 
 
 /** common tx details*/
-const NodeStatus = async () => {
+const NodeStatus = async (req, res) => {
     try {
         let data = await ethproxy.getStatus().catch(() => null);
         console.log(data);
-        return {data: data}
+        res.json({data: data});
     } catch (e) {
         console.log(e);
         logger.error(e);
