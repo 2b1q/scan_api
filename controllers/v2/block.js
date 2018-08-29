@@ -95,7 +95,7 @@ const io_GetBlockEth = async (options) => {
             response.head.updateTime = moment(); // UTC time format
             response.head.listId = 'listOfETH';
             response.head.moduleId = 'block';
-            response.head.entityId = options.block;
+            response.head.entityId = response.head.blockNumber;
             response.rows = response.rows.map((tx) => {
                 return {
                     id: tx._id,
@@ -111,7 +111,6 @@ const io_GetBlockEth = async (options) => {
                     isInner: tx.isinner,
                     value: tx.value,
                     txFee: tx.txfee,
-
                     dcm: tx.tokendcm || 18,
                     gasUsed: tx.gasused,
                     gasCost: tx.gascost,
@@ -135,7 +134,7 @@ const io_GetBlockTokens = async (options) => {
             response.head.updateTime = moment(); // UTC time format
             response.head.listId = 'listOfTokens';
             response.head.moduleId = 'block';
-            response.head.entityId = options.block;
+            response.head.entityId = response.head.blockNumber;
             response.rows = response.rows.map((tx) => {
                 return {
                     id: tx._id,
