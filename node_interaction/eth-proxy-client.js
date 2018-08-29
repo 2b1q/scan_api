@@ -26,7 +26,7 @@ scanEngineProxy.on('connect', () => console.log(engine_proxy_ptrn(scanEngineProx
 scanEngineProxy.on('disconnect', () => console.log(engine_proxy_ptrn(scanEngineProxy.io.uri + ' => [disconnected]')));
 
 // scan engine ETH proxy emitter
-const scanemit = (io, cmd, msg, resolve) => {
+const scanemit = (io, cmd, msg, resolve, reject) => {
     io.emit(
         'requestsChannel',
         JSON.stringify({
@@ -39,6 +39,7 @@ const scanemit = (io, cmd, msg, resolve) => {
             console.log(response);
             // if (!response.error) console.log(`ETH Engine BALANCE IS: ${response.data}`);
             if (!response.error) resolve(response.data);
+            reject(response.error); // if error not empty => reject
         }
     );
 };
@@ -49,14 +50,14 @@ const scanproxyconnected = () => scanEngineProxy.io.connecting[0].connected;
 // io getAddressBalance  emitter
 exports.getAddressBalance = (msg) =>
     new Promise((resolve, reject) => {
-        if (scanproxyconnected()) scanemit(scanEngineProxy, 'getEthereumBalance', msg, resolve);
+        if (scanproxyconnected()) scanemit(scanEngineProxy, 'getEthereumBalance', msg, resolve, reject);
         else reject('no connection to ScanEngine ETH proxy');
     });
 
 // io getTransaction  emitter
 exports.getTransaction = (msg) =>
     new Promise((resolve, reject) => {
-        if (scanproxyconnected()) scanemit(scanEngineProxy, 'getTransaction', msg, resolve);
+        if (scanproxyconnected()) scanemit(scanEngineProxy, 'getTransaction', msg, resolve, reject);
         else reject('no connection to ScanEngine ETH proxy');
     });
 
@@ -64,6 +65,6 @@ exports.getTransaction = (msg) =>
 exports.tokenBalance = (msg) =>
     new Promise((resolve, reject) => {
         console.log(`io tokenBalance: ${msg}`);
-        if (scanproxyconnected()) scanemit(scanEngineProxy, 'getTokenBalance', msg, resolve);
+        if (scanproxyconnected()) scanemit(scanEngineProxy, 'getTokenBalance', msg, resolve, reject);
         else reject('no connection to ScanEngine ETH proxy');
     });
