@@ -292,6 +292,7 @@ const ioGetTokenBalance = async (options) => {
         response.head.updateTime = moment(); // UTC time format
         response.head.listId = 'listOfTokenBalance';
         response.head.moduleId = 'address';
+        response.head.entityId = options.addr;
         response.rows = response.rows.map((token) => {
             return {
                 addr: token.addr,
