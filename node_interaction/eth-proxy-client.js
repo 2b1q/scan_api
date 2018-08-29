@@ -72,6 +72,6 @@ exports.tokenBalance = (msg) =>
 // io getStatus  emitter
 exports.getStatus = () =>
     new Promise((resolve, reject) => {
-        if (scanproxyconnected()) scanemit(scanEngineProxy, 'getStatus', "", resolve);
+        if (scanproxyconnected()) scanemit(scanEngineProxy, 'getStatus', "", resolve, reject);
         else reject('no connection to ScanEngine ETH proxy');
     });
