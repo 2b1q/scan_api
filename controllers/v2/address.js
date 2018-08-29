@@ -104,6 +104,7 @@ const ioGetAddrEth = async (options) => {
         response.head.updateTime = moment(); // UTC time format
         response.head.moduleId = 'address';
         response.head.listId = 'listOfETH';
+        response.head.entityId = options.addr;
         response.rows = response.rows.map((tx) => {
             return {
                 id: tx._id,
@@ -182,6 +183,7 @@ const ioGetAddrTokens = async (options) => {
         response.head.updateTime = moment(); // UTC time format
         response.head.moduleId = 'address';
         response.head.listId = 'listOfTokens';
+        response.head.entityId = options.addr;
         response.rows = response.rows.map((tx) => {
             return {
                 id: tx._id,
