@@ -10,7 +10,9 @@ const
 /** common tx details*/
 const NodeStatus = async () => {
     try {
-        return await ethproxy.getStatus().catch(() => null);
+        let data = await ethproxy.getStatus().catch(() => null);
+        console.log(data);
+        return data
     } catch (e) {
         console.log(e);
         logger.error(e);
