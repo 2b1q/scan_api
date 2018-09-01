@@ -104,6 +104,7 @@ const ioGetAddrEth = async (options) => {
         response.head.updateTime = moment(); // UTC time format
         response.head.moduleId = 'address';
         response.head.listId = 'listOfETH';
+        response.head.entityId = options.addr;
         response.rows = response.rows.map((tx) => {
             return {
                 id: tx._id,
@@ -119,7 +120,7 @@ const ioGetAddrEth = async (options) => {
                 isInner: tx.isinner,
                 value: tx.value,
                 txFee: tx.txfee,
-                dcm: tx.tokendcm,
+                dcm: tx.tokendcm || 18,
                 gasUsed: tx.gasused,
                 gasCost: tx.gascost,
             };
@@ -160,7 +161,7 @@ const GetAddrTokens = async (req, res) => {
                     tokenDcm: tx.tokendcm,
                     tokenType: tx.tokentype,
                     txFee: tx.txfee,
-                    dcm: tx.tokendcm,
+                    dcm: tx.tokendcm || 0,
                     gasUsed: tx.gasused,
                     gasCost: tx.gascost,
                 };
@@ -182,6 +183,7 @@ const ioGetAddrTokens = async (options) => {
         response.head.updateTime = moment(); // UTC time format
         response.head.moduleId = 'address';
         response.head.listId = 'listOfTokens';
+        response.head.entityId = options.addr;
         response.rows = response.rows.map((tx) => {
             return {
                 id: tx._id,
@@ -290,6 +292,7 @@ const ioGetTokenBalance = async (options) => {
         response.head.updateTime = moment(); // UTC time format
         response.head.listId = 'listOfTokenBalance';
         response.head.moduleId = 'address';
+        response.head.entityId = options.addr;
         response.rows = response.rows.map((token) => {
             return {
                 addr: token.addr,
