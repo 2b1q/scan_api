@@ -75,7 +75,7 @@ const GetLastTransactions = async ({ collection, size, offset }) => {
                 if (err) resolve(false);
                 resolve({
                     head: {
-                        totalEntities: count,
+                        totalEntities: count > MAX_SKIP ? MAX_SKIP : count,
                         offset: offset,
                         size: size,
                     },
