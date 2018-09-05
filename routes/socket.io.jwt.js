@@ -54,6 +54,7 @@ const init_io_handler = (io) => {
         );
 
         socket.use((packet, next) => {
+            if (packet) console.log(packet);
             if (client_token) return next(client_token);
             next(new Error('bad token'));
         });
