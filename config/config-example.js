@@ -30,6 +30,12 @@ config.store = {
     },
 };
 
+// cookie config for SSO JWT
+config.cookie = {
+    maxAge: 9000000,
+    httpOnly: true,
+};
+
 // interaction with other SCAN API nodes
 config.interaction = {
     ethURL: 'http://localhost:4000', // stand alone ETH proxy requests

@@ -8,6 +8,7 @@ const express = require('express'),
     c = config.color,
     sockIOv1 = require('./routes/socket.io.v1'),
     sockIOv2 = require('./routes/socket.io.v2'),
+    sockIOwss = require('./routes/socket.io.jwt'),
     rest = require('./routes/services');
 
 debug('booting %s', 'scan-api');
@@ -78,9 +79,11 @@ if (wid % 2 === 0) {
     server2.listen(port2);
     sockIOv1(server2); // API v.1 socket.io
     sockIOv2(server2); // API v.2 socket.io
+    sockIOwss(server2); // AUTH JWT WSS socket.io API
     console.log(`${c.cyan}HTTP ${c.green}server2${c.cyan} listen port ${c.green}${port2}${c.cyan} on Worker ${c.yellow}${wid}${c.cyan} and serv:
     ${c.magenta}> Socket.io ${c.red}API v.1
-    ${c.magenta}> Socket.io ${c.red}API v.2${c.white}`);
+    ${c.magenta}> Socket.io ${c.red}API v.2${c.white}
+    ${c.magenta}> Socket.io ${c.red}AUTH WSS API${c.white}`);
     server2.on('error', onError2); // server event hanlers 'on.error'
     server2.on('listening', onListening); // server event hanlers 'on.listening'
     //  Event listener for HTTP server "listening" event.

@@ -14,10 +14,11 @@ function getLogger(module) {
         };
 
     logger.info = winston.createLogger({
-        transports: [
-            new winston.transports.Console(console),
-            new winston.transports.File({ filename: './logs/info.log', label: path }),
-        ],
+        transports: [new winston.transports.Console(console), new winston.transports.File({ filename: './logs/info.log', label: path })],
+    }).info;
+
+    logger.auth = winston.createLogger({
+        transports: [new winston.transports.Console(console), new winston.transports.File({ filename: './logs/auth.log', label: path })],
     }).info;
 
     logger.error = winston.createLogger({
