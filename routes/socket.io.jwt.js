@@ -46,7 +46,7 @@ const log_event = (event, data, con_obj) =>
 
 // init io AUTH JWT handler
 const init_io_handler = (io) => {
-    io.on('connection', (socket, response) => {
+    io.on('connection', (socket) => {
         let err_log; // errors
         let con_obj = {
             client_ip: socket.handshake.address,
@@ -56,7 +56,9 @@ const init_io_handler = (io) => {
         };
 
         let client_token = socket.handshake.query.token;
-        jwt.verify(client_token)
+        console.log(`jwt_from_client: ${client_token}`);
+
+        /*jwt.verify(client_token)
             .then((data) => {
                 console.log(`client_token ${client_token} verified. ${{ data: data }}`);
                 socket(`client_token ${client_token} verified. ${{ data: data }}`);
@@ -64,7 +66,7 @@ const init_io_handler = (io) => {
             .catch((e) => {
                 console.log(`client_token ${client_token} Not verified`);
                 socket(`client_token ${client_token} Not verified`);
-            });
+            });*/
 
         // const e_wrapper = (event, data) => {
         //     if (typeof data !== 'function') err_log = { error: '2nd argument is not a function', con_object: con_obj };
