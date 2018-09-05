@@ -56,7 +56,7 @@ const init_io_handler = (io) => {
         let client_token = socket.handshake.query.token;
         console.log(`jwt_from_client: ${client_token}`);
         if (!client_token) return response('bad token');
-        response();
+        response(client_token);
     });
 
     io.on('connection', (socket) => {
