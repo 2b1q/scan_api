@@ -59,11 +59,11 @@ const init_io_handler = (io) => {
         jwt.verify(client_token)
             .then((data) => {
                 console.log(`client_token ${client_token} verified. ${{ data: data }}`);
-                response(`client_token ${client_token} verified. ${{ data: data }}`);
+                socket(`client_token ${client_token} verified. ${{ data: data }}`);
             })
             .catch((e) => {
                 console.log(`client_token ${client_token} Not verified`);
-                response(`client_token ${client_token} Not verified`);
+                socket(`client_token ${client_token} Not verified`);
             });
 
         // const e_wrapper = (event, data) => {
