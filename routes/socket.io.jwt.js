@@ -46,18 +46,21 @@ const log_event = (event, data, con_obj) =>
 
 // init io AUTH JWT handler
 const init_io_handler = (io) => {
-    io.on('connection', (socket, response) => {
-        let err_log; // errors
-        let con_obj = {
-            client_ip: socket.handshake.address,
-            url: socket.handshake.url,
-            query: socket.handshake.query,
-            sid: socket.client.id,
-        };
-
+    io.use((socket, response) => {
+        // let con_obj = {
+        //     client_ip: socket.handshake.address,
+        //     url: socket.handshake.url,
+        //     query: socket.handshake.query,
+        //     sid: socket.client.id,
+        // };
         let client_token = socket.handshake.query.token;
         console.log(`jwt_from_client: ${client_token}`);
         if (client_token) response(client_token);
+    }).on('connection', (socket) => {
+        let err_log; // errors
+        console.log(
+            wid_ptrn(`client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${c.magenta}${socket.handshake.url}${c.green}`)
+        );
 
         /*jwt.verify(client_token)
             .then((data) => {
