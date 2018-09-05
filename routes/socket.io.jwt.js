@@ -46,7 +46,7 @@ const log_event = (event, data, con_obj) =>
 
 // init io AUTH JWT handler
 const init_io_handler = (io) => {
-    io.on('connection', (socket) => {
+    io.on('connection', (socket, response) => {
         let err_log; // errors
         let con_obj = {
             client_ip: socket.handshake.address,
@@ -57,6 +57,7 @@ const init_io_handler = (io) => {
 
         let client_token = socket.handshake.query.token;
         console.log(`jwt_from_client: ${client_token}`);
+        if (client_token) response(client_token);
 
         /*jwt.verify(client_token)
             .then((data) => {
