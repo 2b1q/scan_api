@@ -32,8 +32,12 @@ config.store = {
 
 // cookie config for SSO JWT
 config.cookie = {
-    maxAge: 9000000,
+    maxAge: 86400000, // 24h 86400 sec
     httpOnly: true,
+};
+
+config.sso = {
+    refreshJwtURL: '',
 };
 
 // interaction with other SCAN API nodes
