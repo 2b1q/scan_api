@@ -55,8 +55,11 @@ const init_io_handler = (io) => {
         // };
         let client_token = socket.handshake.query.token;
         console.log(`jwt_from_client: ${client_token}`);
-        if (client_token) response(client_token);
-    }).on('connection', (socket) => {
+        if (!client_token) return response('bad token');
+        response();
+    });
+
+    io.on('connection', (socket) => {
         let err_log; // errors
         console.log(
             wid_ptrn(`client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${c.magenta}${socket.handshake.url}${c.green}`)
