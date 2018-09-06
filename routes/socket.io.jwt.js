@@ -41,12 +41,20 @@ const log_event = (event, data, con_obj) =>
 
 // init io AUTH JWT handler
 const init_io_handler = (io) => {
-    const badTempToken = { errorCode: 401, errorMessage: 'authentication error. Bad TempToken' },
-        badAccessToken = { errorCode: 401, errorMessage: 'authentication error. Bad AccessToken' },
+    const badAccessToken = { errorCode: 401, errorMessage: 'authentication error. Bad AccessToken' },
         noToken = { errorCode: 401, errorMessage: 'authentication error. Token isset' };
     let access_token; // Access token container
 
-    // middleware
+    /** middleware checks before event 'connection'
+     * check/verify tempToken is empty or bad
+     *  if OK => ask SSO new JWT
+     *  else => Send Error
+     * check/verify accessToken is empty or bad
+     * if OK => connect
+     * if EXP => refresh
+     * if EXP refresh is bad => Send Error
+     * else => Send Error
+     * */
     io.use((socket, next) => {
         let con_obj = {
             client_ip: socket.handshake.address,
@@ -57,9 +65,13 @@ const init_io_handler = (io) => {
         };
         logger.auth(con_obj);
         let client_token = JSONParse(socket.handshake.query.token).value;
-
-        if (!client_token) return next(new Error(JSON.stringify(noToken)));
-
+        // check if no token property in query
+        if (!client_token) {
+            con_obj.action = noToken;
+            logger.auth(con_obj);
+            return next(new Error(JSON.stringify(noToken)));
+        }
+        // check tempToken
         if (client_token.hasOwnProperty('tempToken')) {
             return jwt
                 .verifyTempToken(client_token.tempToken)
@@ -72,10 +84,12 @@ const init_io_handler = (io) => {
                 })
                 .catch((e) => {
                     con_obj.action = 'SSO temp token verify => FAILED';
+                    con_obj.error = e;
                     logger.auth(con_obj);
-                    next(new Error(JSON.stringify(badTempToken)));
+                    next(new Error(JSON.stringify(e)));
                 });
         }
+        // check accessToken
         if (client_token.hasOwnProperty('accessToken')) {
             return jwt
                 .verifyAccessToken(client_token.accessToken)
@@ -93,7 +107,8 @@ const init_io_handler = (io) => {
                 });
         }
     });
-
+    /** event 'connection' occurred after io.use middleware checks
+     * */
     io.on('connection', (socket) => {
         console.log(
             wid_ptrn(`client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${c.magenta}${socket.handshake.url}${c.green}`)
