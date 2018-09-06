@@ -2,7 +2,7 @@ const cfg = require('../../config/config'),
     JSONParse = require('json-parse-safe'),
     c = cfg.color,
     sso_service_url = cfg.sso.refreshJwtURL,
-    jwt = require('jsonwebtoken'),
+    _jwt = require('jsonwebtoken'),
     request = require('request'),
     secret = require('../../config/secret');
 
@@ -46,8 +46,8 @@ const verifyTemp = (tmp_tkn) =>
     new Promise((resolve, reject) => {
         ssoGetJWT(tmp_tkn)
             .then((jwt) => {
-                console.log(`${c.cyan}=============== GOT NEW JWT FROM SSO By tmpToken ${c.red}${tmp_tkn}${c.cyan}===============${c.white}`);
-                let access_dec = jwt.decode(jwt.access_token);
+                console.log(`${c.cyan}=============== GOT NEW JWT FROM SSO By tmpToken ${c.red}${tmp_tkn}${c.cyan} ===============${c.white}`);
+                let access_dec = _jwt.decode(jwt.access_token);
                 console.log(access_dec);
                 let uid = access_dec.authData.accountId;
                 console.log(`userID: ${uid}`);
