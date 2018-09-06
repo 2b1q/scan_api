@@ -41,14 +41,21 @@ const log_event = (event, data, con_obj) =>
 
 // init io AUTH JWT handler
 const init_io_handler = (io) => {
-    let badTempToken = { errorCode: 401, errorMessage: 'authentication error. Bad TempToken' };
-    let badAccessToken = { errorCode: 401, errorMessage: 'authentication error. Bad AccessToken' };
-    let noToken = { errorCode: 401, errorMessage: 'authentication error. Token isset' };
-
-    let access_token;
+    const badTempToken = { errorCode: 401, errorMessage: 'authentication error. Bad TempToken' },
+        badAccessToken = { errorCode: 401, errorMessage: 'authentication error. Bad AccessToken' },
+        noToken = { errorCode: 401, errorMessage: 'authentication error. Token isset' };
+    let access_token; // Access token container
 
     // middleware
     io.use((socket, next) => {
+        let con_obj = {
+            client_ip: socket.handshake.address,
+            url: socket.handshake.url,
+            query: socket.handshake.query,
+            sid: socket.client.id,
+            action: 'sso login',
+        };
+        logger.auth(con_obj);
         let client_token = JSONParse(socket.handshake.query.token).value;
 
         console.log(client_token);
@@ -58,61 +65,48 @@ const init_io_handler = (io) => {
                 .verifyTempToken(client_token.tempToken)
                 .then((at) => {
                     access_token = at;
+                    con_obj.action = 'SSO temp token verify => OK';
+                    con_obj.new_access_token = access_token;
+                    logger.auth(con_obj);
                     next();
                 })
-                .catch((e) => next(new Error(JSON.stringify(badTempToken))));
+                .catch((e) => {
+                    con_obj.action = 'SSO temp token verify => FAILED';
+                    logger.auth(con_obj);
+                    next(new Error(JSON.stringify(badTempToken)));
+                });
         }
         if (client_token.hasOwnProperty('accessToken')) {
             return jwt
                 .verifyAccessToken(client_token.accessToken)
                 .then((at) => {
                     access_token = at;
+                    con_obj.access_token = access_token;
+                    con_obj.action = 'SSO verify access token => OK';
+                    logger.auth(con_obj);
                     next();
                 })
-                .catch((e) => next(new Error(JSON.stringify(badAccessToken))));
+                .catch((e) => {
+                    con_obj.action = 'SSO verify access token => FAIL';
+                    logger.auth(con_obj);
+                    next(new Error(JSON.stringify(badAccessToken)));
+                });
         }
         return next(new Error(JSON.stringify(noToken)));
     });
 
     io.on('connection', (socket) => {
-        let client_token = socket.handshake.query.token;
-        console.log(`jwt_from_client: ${client_token}`);
         console.log(
             wid_ptrn(`client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${c.magenta}${socket.handshake.url}${c.green}`)
         );
 
+        // set new JWT AccessToken to client app
         socket.emit('newToken', access_token);
-
-        // jwt.verify(client_token)
-        //     .then((data) => {
-        //         console.log(`client_token ${client_token} verified. ${{ data: data }}`);
-        //         socket(`client_token ${client_token} verified. ${{ data: data }}`);
-        //     })
-        //     .catch((e) => {
-        //         console.log(`client_token ${client_token} Not verified`);
-        //         socket(`client_token ${client_token} Not verified`);
-        //     });
-
-        // const e_wrapper = (event, data) => {
-        //     if (typeof data !== 'function') err_log = { error: '2nd argument is not a function', con_object: con_obj };
-        // };
-        // console.log(
-        //     wid_ptrn(`client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${c.magenta}${socket.handshake.url}${c.green}`)
-        // );
-        //
-        // /** socket.on(eventName, cb(arg1, arg2))
-        //  *  arg1 = payload, arg2 = cb function(err){}
-        //  * */
-        // /** event handler */
-        // socket.on('private_event', (data, err) => e_wrapper('private_event', data));
 
         /** 'disconnection' event handler */
         socket.on('disconnection', (data) => log_event('disconnection', data, con_obj));
         /** 'error' event handler */
         socket.on('error', (error) => logger.error(error));
-
-        // log error
-        // if (err_log) logger.error(err_log);
     });
 };
 

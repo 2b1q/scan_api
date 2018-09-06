@@ -22,7 +22,7 @@ const newJWT = async (req, res) => {
     let tmp_tkn = req.query.tkn;
     let redirectUrl = req.query.redirectUrl;
     if (tmp_tkn) {
-        let _jwt = await jwt.new(tmp_tkn);
+        let _jwt = await jwt.verifyTempToken(tmp_tkn);
         res.cookie('jwt', _jwt, cfg.cookie);
     }
     if (redirectUrl) res.redirect(redirectUrl);
