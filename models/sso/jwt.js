@@ -46,8 +46,13 @@ const verifyTemp = (tmp_tkn) =>
     new Promise((resolve, reject) => {
         ssoGetJWT(tmp_tkn)
             .then((jwt) => {
-                console.log('=============== GOT NEW JWT ===============');
-                console.log(`${c.cyan}${jwt}${c.white}`);
+                console.log(`${c.cyan}=============== GOT NEW JWT FROM SSO By tmpToken ${c.red}${tmp_tkn}${c.cyan}===============${c.white}`);
+                let access_dec = jwt.decode(jwt.access_token);
+                console.log(access_dec);
+                let uid = access_dec.authData.accountId;
+                console.log(`userID: ${uid}`);
+                //todo save erfresh using uid
+
                 resolve(jwt.access_token);
             })
             .catch((e) => {
