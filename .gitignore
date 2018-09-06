@@ -8,6 +8,7 @@ nohup.out
 node.log
 .idea
 config.js
+config/secret
 
 # test results
 tests/test_result/

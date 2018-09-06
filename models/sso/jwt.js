@@ -46,8 +46,9 @@ const verifyTemp = (tmp_tkn) =>
     new Promise((resolve, reject) => {
         ssoGetJWT(tmp_tkn)
             .then((jwt) => {
-                console.log(jwt);
-                resolve(jwt);
+                console.log('=============== GOT NEW JWT ===============');
+                console.log(`${c.cyan}${jwt}${c.white}`);
+                resolve(jwt.access_token);
             })
             .catch((e) => {
                 console.log(e);
