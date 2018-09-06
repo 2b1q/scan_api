@@ -58,7 +58,7 @@ const init_io_handler = (io) => {
         logger.auth(con_obj);
         let client_token = JSONParse(socket.handshake.query.token).value;
 
-        console.log(client_token);
+        if (!client_token) return next(new Error(JSON.stringify(noToken)));
 
         if (client_token.hasOwnProperty('tempToken')) {
             return jwt
@@ -92,7 +92,6 @@ const init_io_handler = (io) => {
                     next(new Error(JSON.stringify(badAccessToken)));
                 });
         }
-        return next(new Error(JSON.stringify(noToken)));
     });
 
     io.on('connection', (socket) => {

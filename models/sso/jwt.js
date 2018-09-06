@@ -10,7 +10,7 @@ const token = {
 
 const get_jwt_payload = {
     token: (tmp_tkn) => tmp_tkn,
-    serviceId: 'BANKEX Scan',
+    serviceId: 'simple',
 };
 
 const verifyTemp = (tmp_tkn) =>
