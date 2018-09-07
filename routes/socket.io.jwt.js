@@ -1,5 +1,6 @@
 // socket.io controller
 const cluster = require('cluster'),
+    _jwt = require('jsonwebtoken'),
     jwt = require('../models/sso/jwt'),
     JSONParse = require('json-parse-safe'),
     config = require('../config/config'),
@@ -28,16 +29,6 @@ const io_opts = {
     pingTimeout: 5000, //(Number): how many ms before sending a new ping packet
     cookie: false,
 };
-
-// log Event
-const log_event = (event, data, con_obj) =>
-    logger.socket_requests({
-        api: 'Auth JWT',
-        event: event,
-        data: JSON.parse(data),
-        timestamp: moment().format('DD.MM.YYYY HH:mm:ss'),
-        connected_obj: con_obj,
-    });
 
 // init io AUTH JWT handler
 const init_io_handler = (io) => {
@@ -110,15 +101,30 @@ const init_io_handler = (io) => {
     /** event 'connection' occurred after io.use middleware checks
      * */
     io.on('connection', (socket) => {
+        let con_obj = {
+            client_ip: socket.handshake.address,
+            url: socket.handshake.url,
+            query: socket.handshake.query,
+            sid: socket.client.id,
+            action: 'sso connected',
+        };
         console.log(
             wid_ptrn(`client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${c.magenta}${socket.handshake.url}${c.green}`)
         );
+        // store access_token in socket.io handshake
+        socket.handshake.accessToken = access_token;
 
         // set new JWT AccessToken to client app
         socket.emit('newToken', access_token);
 
         /** 'disconnection' event handler */
-        socket.on('disconnection', (data) => log_event('disconnection', data, con_obj));
+        socket.on('disconnect', () => {
+            con_obj.action = 'sso user disconnect';
+            jwt.ssoLogout(socket.handshake.accessToken).then((sso_msg) => {
+                con_obj.sso_msg = sso_msg;
+                logger.auth(con_obj);
+            });
+        });
         /** 'error' event handler */
         socket.on('error', (error) => logger.error(error));
     });

@@ -38,6 +38,7 @@ config.cookie = {
 
 config.sso = {
     refreshJwtURL: 'https://sso-uat.bankexlab.com/api/v1/token', // SSO POST refresh JWT endpoint
+    logoutJwtURL: 'https://sso-uat.bankexlab.com/api/v1/logout', // SSO POST Logout Backend endpoint
 };
 
 // interaction with other SCAN API nodes

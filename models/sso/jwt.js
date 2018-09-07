@@ -3,6 +3,7 @@ const fs = require('fs'),
     JSONParse = require('json-parse-safe'),
     c = cfg.color,
     sso_service_url = cfg.sso.refreshJwtURL,
+    sso_logout_url = cfg.sso.logoutJwtURL,
     _jwt = require('jsonwebtoken'),
     request = require('request'),
     pub_key = fs.readFileSync('config/sso_secret.pub', 'utf8');
@@ -61,11 +62,32 @@ const verifyTemp = (tmp_tkn) =>
             });
     });
 
-const newJWT = () =>
+/** Logout user from SSO service
+ * */
+const ssoLogout = (access_tkn) =>
     new Promise((resolve, reject) => {
-        resolve(token.access_token);
+        request(
+            {
+                method: 'post',
+                body: { token: access_tkn },
+                json: true,
+                url: sso_logout_url,
+            },
+            (err, res, body) => {
+                if (err) reject(err);
+                let statusCode = res.statusCode;
+                if (statusCode === 401) reject(error['401']);
+                console.log(`${c.green}============= Client loged out from SSO by access_token =============${c.yellow}`);
+                console.log(body);
+                console.log(`${c.green}=====================================================================${c.white}`);
+                resolve(body);
+            }
+        );
     });
 
+/** verify accesToken from client
+ * if token expired -> refresh
+ * */
 const verifyJWT = (access_tkn) =>
     new Promise((resolve, reject) => {
         _jwt.verify(access_tkn, pub_key, (err, decoded) => {
@@ -83,4 +105,5 @@ module.exports = {
     verifyTempToken: verifyTemp, //   Verify  temp return JWT
     verifyAccessToken: verifyJWT, // Verify JWT from client return JWT
     refresh: refreshJWT, // refresh JWT pair
+    ssoLogout: ssoLogout,
 };
