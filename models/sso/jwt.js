@@ -1,8 +1,9 @@
 const fs = require('fs'),
     cfg = require('../../config/config'),
-    JSONParse = require('json-parse-safe'),
+    // JSONParse = require('json-parse-safe'),
+    db = require('../../libs/db'),
     c = cfg.color,
-    sso_service_url = cfg.sso.refreshJwtURL,
+    sso_service_url = cfg.sso.refreshJwtURL, // new token SSO endpoint
     sso_logout_url = cfg.sso.logoutJwtURL,
     _jwt = require('jsonwebtoken'),
     request = require('request'),
@@ -13,13 +14,13 @@ const error = {
 };
 
 // set SSO payload
-const get_jwt_payload = (tmp_tkn) =>
+const get_jwt_payload = (token) =>
     Object({
-        token: tmp_tkn,
+        token: token,
         serviceId: 'simple',
     });
 
-// ask SSO for a new JWT pair
+/** ask SSO for a new JWT pair */
 const ssoGetJWT = (tmp_tkn) =>
     new Promise((resolve, reject) => {
         request(
@@ -51,9 +52,25 @@ const verifyTemp = (tmp_tkn) =>
                 let access_dec = _jwt.decode(jwt.access_token);
                 console.log(access_dec);
                 console.log(`${c.cyan}================================================================${c.white}`);
-                let uid = access_dec.authData.accountId;
-                //todo save erfresh using uid
-
+                let accountId = access_dec.authData.accountId;
+                //todo save JWT in mongo  using uid
+                db.get.then((db_instance) => {
+                    db_instance
+                        .collection('users')
+                        .update(
+                            { accountId: accountId },
+                            {
+                                accountId: accountId,
+                                accessToken: jwt.access_token,
+                                refreshToken: jwt.refresh_token,
+                            },
+                            { upsert: true } // update or insert
+                        )
+                        .then((result) => {
+                            console.log(`Insert accountId "${accountId}" OK`);
+                        })
+                        .catch((e) => console.log(e));
+                });
                 resolve(jwt.access_token);
             })
             .catch((e) => {
@@ -91,7 +108,16 @@ const ssoLogout = (access_tkn) =>
 const verifyJWT = (access_tkn) =>
     new Promise((resolve, reject) => {
         _jwt.verify(access_tkn, pub_key, (err, decoded) => {
-            if (err) reject(err);
+            if (err) {
+                refreshJWT('refreshToken');
+                refreshJWT('refreshToken')
+                    .then((new_token) => {
+                        // todo SAVE/UPDATE mongo JWT pair for USERID
+                        resolve(new_token);
+                    })
+                    .catch((e) => reject(e)); // reject with error from SSO
+                reject(err); // reject with error from verify (never)
+            }
             console.log(`${c.green}============= Client JWT access_token is verified =============${c.yellow}`);
             console.log(decoded);
             console.log(`${c.green}===============================================================${c.white}`);
@@ -99,7 +125,24 @@ const verifyJWT = (access_tkn) =>
         });
     });
 
-const refreshJWT = () => new Promise((resolve, reject) => {});
+/** get new JWT by refresh token */
+const refreshJWT = (refreshToken) =>
+    new Promise((resolve, reject) => {
+        request(
+            {
+                method: 'post',
+                body: get_jwt_payload(refreshToken),
+                json: true,
+                url: sso_service_url,
+            },
+            (err, res, new_token) => {
+                if (err) reject(err);
+                let statusCode = res.statusCode;
+                if (statusCode === 401) reject(error['401']);
+                resolve(new_token);
+            }
+        );
+    });
 
 module.exports = {
     verifyTempToken: verifyTemp, //   Verify  temp return JWT
