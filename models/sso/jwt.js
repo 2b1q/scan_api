@@ -4,13 +4,7 @@ const cfg = require('../../config/config'),
     sso_service_url = cfg.sso.refreshJwtURL,
     _jwt = require('jsonwebtoken'),
     request = require('request'),
-    secret = require('../../config/secret');
-
-// fake JWT
-const token = {
-    access_token:
-        'eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdXRoRGF0YSI6eyJhY3RpdmUiOmZhbHNlLCJyb2xlcyI6WyJDVV91c2VyIl0sImFjY291bnRJZCI6IjViOGQzNmIxZDRhZGMyMDAwMTM2YTgyMSJ9LCJzZXJ2aWNlSWQiOiJnZW5lcmFsIiwidG9rZW5UeXBlIjoiYWNjZXNzX3Rva2VuIiwiZXhwIjoxNTM2NTAwNTczLCJpc3MiOiJiYW5rZXgtdG9rZW5pemF0aW9uLXByb2ZpbGUtc3NvLXNlcnZlciJ9.ipsJgmp6Ka4wWD8y5QF_F1Caz1U0IQfSZskUgXw7aQl_ovk-6BXcaIpa2Nin7TJgWR-b3SNO9Gx-ZFvA-etNQnOoR_5ZQRbIhAtLDYrTbLtzVWkEsoDdnGu5YDqU9YqKNLch26cdqYRBfiIUDpT8NtDt_PqKdWbkHdiywyfg5Pk',
-};
+    pub_key = require('../../config/sso_secret.pub');
 
 const error = {
     401: { errorCode: 401, errorMessage: 'SSO Authentication error. Bad Temp Token' },
@@ -46,7 +40,9 @@ const verifyTemp = (tmp_tkn) =>
     new Promise((resolve, reject) => {
         ssoGetJWT(tmp_tkn)
             .then((jwt) => {
-                console.log(`${c.cyan}=============== GOT NEW JWT FROM SSO By tmpToken ${c.red}${tmp_tkn}${c.cyan} ===============${c.white}`);
+                console.log(
+                    `${c.cyan}=============== GOT NEW JWT FROM SSO By tmpToken ${c.red}${_jwt.decode(tmp_tkn)}${c.cyan} ===============${c.white}`
+                );
                 let access_dec = _jwt.decode(jwt.access_token);
                 console.log(access_dec);
                 let uid = access_dec.authData.accountId;
@@ -68,8 +64,12 @@ const newJWT = () =>
 
 const verifyJWT = (access_tkn) =>
     new Promise((resolve, reject) => {
-        if (access_tkn) resolve(token.access_token);
-        reject('token not passed');
+        _jwt.verify(access_tkn, pub_key, (err, decoded) => {
+            if (err) reject(err);
+            console.log(`${c.green}============= Client JWT access_token is verified =============${c.yellow}
+            ${decoded}${c.white}`);
+            resolve(access_tkn);
+        });
     });
 
 const refreshJWT = () => new Promise((resolve, reject) => {});
