@@ -37,17 +37,20 @@ const ssoGetJWT = (tmp_tkn) =>
         );
     });
 
+/** Verify tempToken
+ * send tempToken to SSO service and get JWT
+ * */
 const verifyTemp = (tmp_tkn) =>
     new Promise((resolve, reject) => {
         ssoGetJWT(tmp_tkn)
             .then((jwt) => {
-                console.log(
-                    `${c.cyan}=============== GOT NEW JWT FROM SSO By tmpToken ${c.red}${_jwt.decode(tmp_tkn)}${c.cyan} ===============${c.white}`
-                );
+                console.log(`${c.cyan}=============== GOT NEW JWT FROM SSO By tmpToken ===============${c.red}`);
+                console.log(_jwt.decode(tmp_tkn));
+                console.log(`${c.cyan}=============== NEW JWT accessToken ============================${c.green}`);
                 let access_dec = _jwt.decode(jwt.access_token);
                 console.log(access_dec);
+                console.log(`${c.white}`);
                 let uid = access_dec.authData.accountId;
-                console.log(`userID: ${uid}`);
                 //todo save erfresh using uid
 
                 resolve(jwt.access_token);
