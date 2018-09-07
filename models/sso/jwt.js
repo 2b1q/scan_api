@@ -54,9 +54,8 @@ const upsert = (accountId, jwt) =>
                     },
                     { upsert: true } // update or insert
                 )
-                .then((result) => {
+                .then(() => {
                     console.log(`Upsert accountId "${accountId}" OK`);
-                    console.log(result);
                     resolve();
                 })
                 .catch((e) => {
