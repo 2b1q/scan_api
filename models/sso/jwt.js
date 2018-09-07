@@ -39,6 +39,33 @@ const ssoGetJWT = (tmp_tkn) =>
         );
     });
 
+/** Update or Insert user/client JWT using accountId */
+const upsert = (accountId, jwt) =>
+    new Promise((resolve, reject) => {
+        db.get.then((db_instance) => {
+            db_instance
+                .collection('users')
+                .update(
+                    { accountId: accountId },
+                    {
+                        accountId: accountId,
+                        accessToken: jwt.access_token,
+                        refreshToken: jwt.refresh_token,
+                    },
+                    { upsert: true } // update or insert
+                )
+                .then((result) => {
+                    console.log(`Upsert accountId "${accountId}" OK`);
+                    console.log(result);
+                    resolve();
+                })
+                .catch((e) => {
+                    console.log(e);
+                    reject();
+                });
+        });
+    });
+
 /** Verify tempToken
  * send tempToken to SSO service and get JWT
  * */
@@ -53,24 +80,8 @@ const verifyTemp = (tmp_tkn) =>
                 console.log(access_dec);
                 console.log(`${c.cyan}================================================================${c.white}`);
                 let accountId = access_dec.authData.accountId;
-                //todo save JWT in mongo  using uid
-                db.get.then((db_instance) => {
-                    db_instance
-                        .collection('users')
-                        .update(
-                            { accountId: accountId },
-                            {
-                                accountId: accountId,
-                                accessToken: jwt.access_token,
-                                refreshToken: jwt.refresh_token,
-                            },
-                            { upsert: true } // update or insert
-                        )
-                        .then((result) => {
-                            console.log(`Insert accountId "${accountId}" OK`);
-                        })
-                        .catch((e) => console.log(e));
-                });
+                /** Update or Insert user/client JWT using accountId */
+                upsert(accountId, jwt);
                 resolve(jwt.access_token);
             })
             .catch((e) => {
@@ -109,13 +120,32 @@ const verifyJWT = (access_tkn) =>
     new Promise((resolve, reject) => {
         _jwt.verify(access_tkn, pub_key, (err, decoded) => {
             if (err) {
-                refreshJWT('refreshToken');
-                refreshJWT('refreshToken')
-                    .then((new_token) => {
-                        // todo SAVE/UPDATE mongo JWT pair for USERID
-                        resolve(new_token);
-                    })
-                    .catch((e) => reject(e)); // reject with error from SSO
+                let access_dec = _jwt.decode(jwt.access_token); // decode client JWT access_token
+                let accountId = access_dec.authData.accountId; // lookup accountId from decoded JWT access_token
+                /** lookup refresh_token by accountId in MongoDb */
+                db.get.then((db_instance) => {
+                    db_instance
+                        .collection('users')
+                        .findOne({ accountId: accountId })
+                        .then((db_token) => {
+                            console.log(`find JWT pair by accountId "${accountId}"`);
+                            console.log(`${c.red} Refreshing JWT pair${c.white}`);
+                            let refreshToken = db_token.accountId;
+                            /** ask SSO service for new JWT pair by refresh_token */
+                            refreshJWT(refreshToken)
+                                .then((new_token) => {
+                                    /** Update or Insert user/client JWT using accountId */
+                                    upsert(accountId, new_token);
+                                    resolve(new_token);
+                                })
+                                .catch((e) => reject(e)); // reject with error from SSO
+                        })
+                        .catch((e) => {
+                            console.log(`DB lookup JWT failed by accountId "${accountId}"`);
+                            console.log(e);
+                            reject(e);
+                        });
+                });
                 reject(err); // reject with error from verify (never)
             }
             console.log(`${c.green}============= Client JWT access_token is verified =============${c.yellow}`);
