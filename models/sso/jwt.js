@@ -1,10 +1,11 @@
-const cfg = require('../../config/config'),
+const fs = require('fs'),
+    cfg = require('../../config/config'),
     JSONParse = require('json-parse-safe'),
     c = cfg.color,
     sso_service_url = cfg.sso.refreshJwtURL,
     _jwt = require('jsonwebtoken'),
     request = require('request'),
-    pub_key = require('../../config/sso_secret.pub');
+    pub_key = fs.readFileSync('config/sso_secret.pub', 'utf8');
 
 const error = {
     401: { errorCode: 401, errorMessage: 'SSO Authentication error. Bad Temp Token' },
