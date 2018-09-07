@@ -223,7 +223,7 @@ const init_io_handler = (io) => {
         /** 'list' event handler */
         socket.on(e.list, (data, err) => e_wrapper(e.list, data, err));
         /** 'disconnection' event handler */
-        socket.on('disconnection', (data) => log_event('disconnection', data, con_obj));
+        socket.on('disconnect', (data) => log_event('disconnect', data, con_obj));
         /** 'error' event handler */
         socket.on('error', (error) => logger.error(error));
 

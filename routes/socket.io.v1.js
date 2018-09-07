@@ -203,7 +203,7 @@ const init_io_handler = (io) => {
             else err_log = { error: '2nd argument is not a function', con_object: con_obj };
         });
 
-        socket.on('disconnection', (data) => log_event('disconnection', data, con_obj));
+        socket.on('disconnect', (data) => log_event('disconnect', data, con_obj));
         socket.on('error', (error) => {
             console.log(error);
         });
