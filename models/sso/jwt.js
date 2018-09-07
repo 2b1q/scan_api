@@ -49,7 +49,7 @@ const verifyTemp = (tmp_tkn) =>
                 console.log(`${c.cyan}=============== NEW JWT accessToken ============================${c.green}`);
                 let access_dec = _jwt.decode(jwt.access_token);
                 console.log(access_dec);
-                console.log(`${c.white}`);
+                console.log(`${c.cyan}================================================================${c.white}`);
                 let uid = access_dec.authData.accountId;
                 //todo save erfresh using uid
 
@@ -70,8 +70,9 @@ const verifyJWT = (access_tkn) =>
     new Promise((resolve, reject) => {
         _jwt.verify(access_tkn, pub_key, (err, decoded) => {
             if (err) reject(err);
-            console.log(`${c.green}============= Client JWT access_token is verified =============${c.yellow}
-            ${decoded}${c.white}`);
+            console.log(`${c.green}============= Client JWT access_token is verified =============${c.yellow}`);
+            console.log(decoded);
+            console.log(`${c.green}===============================================================${c.white}`);
             resolve(access_tkn);
         });
     });
