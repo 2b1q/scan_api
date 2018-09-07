@@ -112,8 +112,8 @@ const ssoLogout = (access_tkn) =>
         );
     });
 
-/** verify accesToken from client
- * if token expired -> refresh
+/** verify accessToken from client
+ * if token expired -> refresh -> upsert
  * */
 const verifyJWT = (access_tkn) =>
     new Promise((resolve, reject) => {
@@ -129,8 +129,8 @@ const verifyJWT = (access_tkn) =>
                         .then((db_token) => {
                             console.log(`find JWT pair by accountId "${accountId}"`);
                             console.log(`${c.red} Refreshing JWT pair${c.white}`);
-                            let refreshToken = db_token.accountId;
-                            /** ask SSO service for new JWT pair by refresh_token */
+                            let refreshToken = db_token.refreshToken;
+                            /** ask SSO service for new JWT pair by refreshToken */
                             refreshJWT(refreshToken)
                                 .then((new_token) => {
                                     /** Update or Insert user/client JWT using accountId */
