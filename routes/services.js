@@ -1,4 +1,5 @@
-const tnx_controller_v1 = require('../controllers/v1/transaction'),
+const router = require('express').Router(),
+    tnx_controller_v1 = require('../controllers/v1/transaction'),
     block_controller_v1 = require('../controllers/v1/block'),
     addr_controller_v1 = require('../controllers/v1/address'),
     list_controller_v1 = require('../controllers/v1/list'),
@@ -6,14 +7,11 @@ const tnx_controller_v1 = require('../controllers/v1/transaction'),
     block_controller_v2 = require('../controllers/v2/block'),
     addr_controller_v2 = require('../controllers/v2/address'),
     common_v2 = require('../controllers/v2/common'),
-    router = require('express').Router(),
+    seacrh = require('../controllers/v2/search'),
     auth_controller = require('../controllers/restricted_area');
 
 const v1_ptrn = (path) => new RegExp(`(^\/v1\/${path}$)|(^\/${path}$)`); // v1 route RegExp pattern
 const v2_ptrn = (path) => new RegExp(`(^\/v2\/${path}$)`); // v2 route RegExp pattern
-
-/* ETH test endpoinds */
-// router.get('/nodes', eth_api.getLastBlocks); // nodes last blocks
 
 /** REST API v.2 endpoints
  * - routing by path (new routing)
@@ -33,7 +31,12 @@ router.get(v2_ptrn('address/tokens'), addr_controller_v2.tokens); // Get Address
 router.get(v2_ptrn('address/ether'), addr_controller_v2.eth); // Get Address ETH Transactions endpoint    [HTTP GET]
 router.get(v2_ptrn('address/details'), addr_controller_v2.details); // Get Address details endpoint [HTTP GET]
 router.get(v2_ptrn('address/token-balance'), addr_controller_v2.tokenBalance); // Get Address toke balance endpoint [HTTP GET]
-router.get(v2_ptrn('nodes'), common_v2.NodeStatus); // Get Address toke balance endpoint [HTTP GET]
+
+/** node info */
+router.get(v2_ptrn('nodes'), common_v2.NodeStatus);
+
+/** search endpointds*/
+router.get(v2_ptrn('search'), seacrh.tokenOrBlock);
 
 /** SSO Auth endpoint */
 router.get('/auth', auth_controller.setJWT);

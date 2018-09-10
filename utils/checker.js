@@ -41,8 +41,8 @@ const check_module_singleton = (() => {
             no_size: { errorCode: 400, errorMessage: 'parameter "size" not found or wrong' }, // API v.2
             no_addr: { errorCode: 400, errorMessage: 'parameter "addr" not found' }, // API v.2
             wrong_addr: { errorCode: 400, errorMessage: 'Wrong "addr" property' }, // API v.2
-            bad_hash: (hash) =>
-                Object({ errorCode: 400, errorMessage: `Bad Hash value "${hash}"` }), // API v.2
+            bad_search_parameter: (q) => Object({ errorCode: 400, errorMessage: `Wrong "q" property: "${q}"` }), // API v.2
+            bad_hash: (hash) => Object({ errorCode: 400, errorMessage: `Bad Hash value "${hash}"` }), // API v.2
             wrong_io_params: { errorCode: 400, errorMessage: 'Wrong "parameters" ' }, // API v.2
             unknown_listid_io: { errorCode: 404, errorMessage: 'Unknown listId' }, // API v.2
             unknown_listid: { error: 'Unknown listId' },
@@ -164,12 +164,10 @@ const check_module_singleton = (() => {
         let check_addr = (caddr) => (caddr.length === 40 ? true : false);
 
         // check listId from client request
-        let check_listId = (listId) =>
-            Object.values(cfg.list_type).includes(listId) ? true : false;
+        let check_listId = (listId) => (Object.values(cfg.list_type).includes(listId) ? true : false);
 
         // check ModuleId from client request
-        let check_moduleId = (moduleId) =>
-            Object.values(cfg.modules).includes(moduleId) ? true : false;
+        let check_moduleId = (moduleId) => (Object.values(cfg.modules).includes(moduleId) ? true : false);
 
         // check entityId from client request
         let check_entityId = (entityId = 0) => {
@@ -191,8 +189,7 @@ const check_module_singleton = (() => {
         let cut_0x = (hash) => (typeof hash === 'string' ? hash.split('0x').pop() : '');
 
         // remove unexpected chars from hex
-        let clean_Hex = (hash) =>
-            typeof hash === 'string' ? hash.replace(/[^a-fA-F0-9]+/g, '') : '';
+        let clean_Hex = (hash) => (typeof hash === 'string' ? hash.replace(/[^a-fA-F0-9]+/g, '') : '');
 
         // cut '0x' then remove unexpected chars from hex
         let cut0x_Clean = (hash) => clean_Hex(cut_0x(hash)).toLowerCase();
@@ -211,8 +208,7 @@ const check_module_singleton = (() => {
             // build_block_opts: (block, size, offset) => block_opts(block, size, offset), // API v.2 bulid block options
             // build_addr_opts: (addr, ps, pn) => addr_opts(addr, ps, pn), // API v.2 bulid block options
             build_options: (req, lid, mid, eid) => build_params(req, lid, mid, eid), // build query options
-            build_io_opts: (params, listId, moduleId, entityId) =>
-                build_params_io(params, listId, moduleId, entityId),
+            build_io_opts: (params, listId, moduleId, entityId) => build_params_io(params, listId, moduleId, entityId),
             cut0x: (hash) => cut_0x(hash), // cut '0x' from hash string
             cut0xClean: (hash) => cut0x_Clean(hash), // cut '0x' then remove unexpected chars from hex
             checkHash: (chash) => check_Hash(chash), // check hash from client request
