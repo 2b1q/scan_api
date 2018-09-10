@@ -135,7 +135,6 @@ const init_io_handler = (io) => {
         /** 'disconnection' event handler */
         socket.on('disconnect', () => {
             con_obj.action = 'sso user disconnect';
-            con_obj.sso_msg = sso_msg;
             logger.auth(con_obj);
         });
 
