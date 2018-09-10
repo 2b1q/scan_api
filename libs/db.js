@@ -11,18 +11,20 @@ let db = null, // reference to db
 exports.get = () =>
     new Promise((resolve, reject) => {
         if (db) resolve(db);
-        MongoClient.connect(
-            url,
-            options
-        )
-            .then((client) => {
-                db = client.db(dbname);
-                console.log(`${c.green}[i] connected to MongoDB ${c.white}${url + dbname}}`);
-                resolve(db);
-            })
-            .catch((e) => {
-                db = null;
-                console.error(`${c.red}Failed connect to DB:\n${c.yellow}${e}${c.white}`);
-                reject(e);
-            });
+        else {
+            MongoClient.connect(
+                url,
+                options
+            )
+                .then((client) => {
+                    db = client.db(dbname);
+                    console.log(`${c.green}[i] connected to MongoDB ${c.white}${url + dbname}}`);
+                    resolve(db);
+                })
+                .catch((e) => {
+                    db = null;
+                    console.error(`${c.red}Failed connect to DB:\n${c.yellow}${e}${c.white}`);
+                    reject(e);
+                });
+        }
     });
