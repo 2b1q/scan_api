@@ -42,27 +42,30 @@ const ssoGetJWT = (tmp_tkn) =>
 /** Update or Insert user/client JWT using accountId */
 const upsert = (accountId, jwt) =>
     new Promise((resolve, reject) => {
-        db.get.then((db_instance) => {
-            db_instance
-                .collection('users')
-                .update(
-                    { accountId: accountId },
-                    {
-                        accountId: accountId,
-                        accessToken: jwt.access_token,
-                        refreshToken: jwt.refresh_token,
-                    },
-                    { upsert: true } // update or insert
-                )
-                .then(() => {
-                    console.log(`Upsert accountId "${accountId}" OK`);
-                    resolve();
-                })
-                .catch((e) => {
-                    console.log(e);
-                    reject();
-                });
-        });
+        db.get()
+            .then((db_instance) => {
+                if (!db_instance) reject(); // reject if no db instance empty after reconnect
+                db_instance
+                    .collection('users')
+                    .update(
+                        { accountId: accountId },
+                        {
+                            accountId: accountId,
+                            accessToken: jwt.access_token,
+                            refreshToken: jwt.refresh_token,
+                        },
+                        { upsert: true } // update or insert
+                    )
+                    .then(() => {
+                        console.log(`Upsert accountId "${accountId}" OK`);
+                        resolve();
+                    })
+                    .catch((e) => {
+                        console.log(e);
+                        reject();
+                    });
+            })
+            .catch(() => console.error('connection to MongoDB lost'));
     });
 
 /** Verify tempToken
@@ -122,29 +125,32 @@ const verifyJWT = (access_tkn) =>
                 let access_dec = _jwt.decode(jwt.access_token); // decode client JWT access_token
                 let accountId = access_dec.authData.accountId; // lookup accountId from decoded JWT access_token
                 /** lookup refresh_token by accountId in MongoDb */
-                db.get.then((db_instance) => {
-                    db_instance
-                        .collection('users')
-                        .findOne({ accountId: accountId })
-                        .then((db_token) => {
-                            console.log(`find JWT pair by accountId "${accountId}"`);
-                            console.log(`${c.red} Refreshing JWT pair${c.white}`);
-                            let refreshToken = db_token.refreshToken;
-                            /** ask SSO service for new JWT pair by refreshToken */
-                            refreshJWT(refreshToken)
-                                .then((new_token) => {
-                                    /** Update or Insert user/client JWT using accountId */
-                                    upsert(accountId, new_token);
-                                    resolve(new_token);
-                                })
-                                .catch((e) => reject(e)); // reject with error from SSO
-                        })
-                        .catch((e) => {
-                            console.log(`DB lookup JWT failed by accountId "${accountId}"`);
-                            console.log(e);
-                            reject(e);
-                        });
-                });
+                db.get()
+                    .then((db_instance) => {
+                        if (!db_instance) reject(); // reject if no db instance empty after reconnect
+                        db_instance
+                            .collection('users')
+                            .findOne({ accountId: accountId })
+                            .then((db_token) => {
+                                console.log(`find JWT pair by accountId "${accountId}"`);
+                                console.log(`${c.red} Refreshing JWT pair${c.white}`);
+                                let refreshToken = db_token.refreshToken;
+                                /** ask SSO service for new JWT pair by refreshToken */
+                                refreshJWT(refreshToken)
+                                    .then((new_token) => {
+                                        /** Update or Insert user/client JWT using accountId */
+                                        upsert(accountId, new_token);
+                                        resolve(new_token);
+                                    })
+                                    .catch((e) => reject(e)); // reject with error from SSO
+                            })
+                            .catch((e) => {
+                                console.log(`DB lookup JWT failed by accountId "${accountId}"`);
+                                console.log(e);
+                                reject(e);
+                            });
+                    })
+                    .catch(() => console.error('connection to MongoDB lost'));
                 reject(err); // reject with error from verify (never)
             }
             console.log(`${c.green}============= Client JWT access_token is verified =============${c.yellow}`);

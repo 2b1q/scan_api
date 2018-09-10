@@ -7,9 +7,9 @@ let db = null, // reference to db
     options = config.store.mongo.options,
     c = config.color;
 
-let initDb = () => {
-    return new Promise(function(resolve, reject) {
-        if (db) resolve(db); // if already have reference to mongo then resolve(db)
+/** get DB instance Promise */
+exports.get = () =>
+    new Promise((resolve, reject) => {
         MongoClient.connect(
             url,
             options
@@ -20,15 +20,7 @@ let initDb = () => {
                 resolve(db);
             })
             .catch((e) => {
-                console.log(`${c.red}Failed connect to DB: ${c.white}${e}`);
-                reject();
+                db = null;
+                reject(e);
             });
-    });
-};
-
-// wait mongo connection and return Promise with DB reference
-let getInstance = async () => await initDb();
-
-module.exports = {
-    get: getInstance(), // get DB instance
-};
+    }).catch((e) => console.error(`${c.red}Failed connect to DB:\n${c.yellow}${e}${c.white}`));
