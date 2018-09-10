@@ -188,7 +188,7 @@ const log_event = (event, data, con_obj) =>
     logger.socket_requests({
         api: 'v.2',
         event: event,
-        data: JSON.parse(data),
+        data: data,
         timestamp: moment().format('DD.MM.YYYY HH:mm:ss'),
         connected_obj: con_obj,
     });
