@@ -15,7 +15,10 @@ const col = (name) =>
                 if (!db_con) reject(); // reject if no db instance empty after reconnect
                 resolve(db_con.collection(name));
             })
-            .catch(() => console.error('connection to MongoDB lost'))
+            .catch(() => {
+                reject();
+                console.error('connection to MongoDB lost');
+            })
     );
 
 // get tnx db collection name by listId

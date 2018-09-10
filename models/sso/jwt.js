@@ -65,7 +65,10 @@ const upsert = (accountId, jwt) =>
                         reject();
                     });
             })
-            .catch(() => console.error('connection to MongoDB lost'));
+            .catch(() => {
+                reject();
+                console.error('connection to MongoDB lost');
+            });
     });
 
 /** Verify tempToken
@@ -150,7 +153,10 @@ const verifyJWT = (access_tkn) =>
                                 reject(e);
                             });
                     })
-                    .catch(() => console.error('connection to MongoDB lost'));
+                    .catch(() => {
+                        reject();
+                        console.error('connection to MongoDB lost');
+                    });
                 reject(err); // reject with error from verify (never)
             }
             console.log(`${c.green}============= Client JWT access_token is verified =============${c.yellow}`);

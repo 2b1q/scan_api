@@ -23,4 +23,6 @@ exports.get = () =>
                 db = null;
                 reject(e);
             });
-    }).catch((e) => console.error(`${c.red}Failed connect to DB:\n${c.yellow}${e}${c.white}`));
+    });
+/*.then((instance) => instance)
+        .catch((e) => console.error(`${c.red}Failed connect to DB:\n${c.yellow}${e}${c.white}`));*/
