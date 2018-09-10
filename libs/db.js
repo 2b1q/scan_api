@@ -10,8 +10,14 @@ let db = null, // reference to db
 /** get DB instance Promise */
 exports.get = () =>
     new Promise((resolve, reject) => {
-        if (db) resolve(db);
-        else {
+        if (db) {
+            db.stats()
+                .then(() => resolve(db)) // Try get stats from "DB instance" then resolve "DB instance object" reference
+                .catch((e) => {
+                    db = null; // clear bad reference to "DB instance object"
+                    reject(e);
+                });
+        } else {
             MongoClient.connect(
                 url,
                 options
@@ -22,7 +28,7 @@ exports.get = () =>
                     resolve(db);
                 })
                 .catch((e) => {
-                    db = null;
+                    db = null; // clear bad reference to "DB instance object"
                     console.error(`${c.red}Failed connect to DB:\n${c.yellow}${e}${c.white}`);
                     reject(e);
                 });
