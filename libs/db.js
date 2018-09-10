@@ -10,6 +10,7 @@ let db = null, // reference to db
 /** get DB instance Promise */
 exports.get = () =>
     new Promise((resolve, reject) => {
+        if (db) resolve(db);
         MongoClient.connect(
             url,
             options
