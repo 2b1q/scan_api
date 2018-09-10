@@ -68,8 +68,10 @@ const init_io_handler = (io) => {
                 .verifyTempToken(client_token.tempToken)
                 .then((at) => {
                     access_token = at;
+                    let authData = _jwt.decode(access_token).authData;
                     con_obj.action = 'SSO temp token verify => OK';
                     con_obj.new_access_token = access_token;
+                    con_obj.authData = authData;
                     logger.auth(con_obj);
                     next();
                 })
@@ -86,8 +88,10 @@ const init_io_handler = (io) => {
                 .verifyAccessToken(client_token.accessToken)
                 .then((at) => {
                     access_token = at;
+                    let authData = _jwt.decode(access_token).authData;
                     con_obj.access_token = access_token;
                     con_obj.action = 'SSO verify access token => OK';
+                    con_obj.authData = authData;
                     logger.auth(con_obj);
                     next();
                 })
@@ -101,18 +105,20 @@ const init_io_handler = (io) => {
     /** event 'connection' occurred after io.use middleware checks
      * */
     io.on('connection', (socket) => {
+        // store access_token in socket.io handshake
+        socket.handshake.accessToken = access_token;
+        // log con_obj
         let con_obj = {
             client_ip: socket.handshake.address,
             url: socket.handshake.url,
             query: socket.handshake.query,
             sid: socket.client.id,
             action: 'sso connected',
+            authData: _jwt.decode(access_token).authData,
         };
         console.log(
             wid_ptrn(`client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${c.magenta}${socket.handshake.url}${c.green}`)
         );
-        // store access_token in socket.io handshake
-        socket.handshake.accessToken = access_token;
 
         // set new JWT AccessToken to client app
         socket.emit('newToken', access_token);
