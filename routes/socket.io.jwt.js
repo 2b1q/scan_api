@@ -123,14 +123,22 @@ const init_io_handler = (io) => {
         // set new JWT AccessToken to client app
         socket.emit('newToken', access_token);
 
-        /** 'disconnection' event handler */
-        socket.on('disconnect', () => {
-            con_obj.action = 'sso user disconnect';
+        // user 'logout' event handler
+        socket.on('logout', () => {
+            con_obj.action = 'sso user has been looged out';
             jwt.ssoLogout(socket.handshake.accessToken).then((sso_msg) => {
                 con_obj.sso_msg = sso_msg;
                 logger.auth(con_obj);
             });
         });
+
+        /** 'disconnection' event handler */
+        socket.on('disconnect', () => {
+            con_obj.action = 'sso user disconnect';
+            con_obj.sso_msg = sso_msg;
+            logger.auth(con_obj);
+        });
+
         /** 'error' event handler */
         socket.on('error', (error) => logger.error(error));
     });
