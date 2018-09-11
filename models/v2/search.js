@@ -6,7 +6,7 @@ const cluster = require('cluster'),
     moment = require('moment'),
     c = cfg.color,
     block_range = 1000000,
-    MAX_RESULT_SIZE = 300000;
+    MAX_RESULT_SIZE = 1000;
 
 /** worker id pattern */
 const wid_ptrn = (msg) =>
@@ -37,15 +37,17 @@ function* range(start = 5000000, end = start + 100, step = 1) {
 
 /** search by block number model */
 const searchBlock = (query) =>
-    new Promise(async (resolve, reject) => {
+    new Promise(async (resolve) => {
         logger.model(logit('searchBlock', query));
         console.log(`${wid_ptrn('searchBlock query: ' + query)}`);
         let max_block = Math.max(...(await ethproxy.getStatus()));
-        let result = Array.from(Array(max_block + 1).keys())
-            .filter((v) => v.toString().includes(query.toString()))
-            .map((v) => Object({ type: 'block', attributes: { block: v } }));
-        /** slice from end MAX_RESULT_SIZE if > MAX_RESULT_SIZE */
-        resolve(result.length > MAX_RESULT_SIZE ? result.slice(-MAX_RESULT_SIZE) : result);
+
+        let arr = Array.from(Array(max_block + 1).keys()).filter((v) => v.toString().includes(query.toString()));
+        // unshift first element then slice and splice
+        let first = arr.shift();
+        arr = arr.slice(-MAX_RESULT_SIZE + 1);
+        arr.splice(0, 0, first);
+        resolve(arr.map((v) => Object({ type: 'block', attributes: { block: v } })));
         /*
         /!** last 10^6 sequence *!/
         resolve(
