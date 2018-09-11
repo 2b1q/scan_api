@@ -30,7 +30,7 @@ const searchBlock = (query) =>
         console.log(`${wid_ptrn('searchBlock query: ' + query)}`);
         let max_block = Math.max(...(await ethproxy.getStatus()));
         resolve(
-            Array.from(Array(max_block).keys())
+            Array.from(Array(max_block + 1).keys())
                 .filter((v) => v.toString().includes(query.toString()))
                 .map((v) => Object({ type: 'block', attributes: { block: v } }))
         );
