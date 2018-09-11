@@ -4,7 +4,8 @@ const cluster = require('cluster'),
     token_head = cfg.store.cols.token_head,
     logger = require('../../utils/logger')(module),
     moment = require('moment'),
-    c = cfg.color;
+    c = cfg.color,
+    block_range = 1000000;
 
 /** worker id pattern */
 const wid_ptrn = (msg) =>
@@ -46,7 +47,7 @@ const searchBlock = (query) =>
         );*/
         /** last 10^6 sequence */
         resolve(
-            [...range(undefined, max_block + 1)]
+            [...range(max_block - block_range, max_block + 1)]
                 .filter((v) => v.toString().includes(query.toString()))
                 .map((v) => Object({ type: 'block', attributes: { block: v } }))
         );
