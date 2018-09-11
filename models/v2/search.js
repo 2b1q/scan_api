@@ -5,7 +5,8 @@ const cluster = require('cluster'),
     logger = require('../../utils/logger')(module),
     moment = require('moment'),
     c = cfg.color,
-    block_range = 1000000;
+    block_range = 1000000,
+    MAX_RESULT_SIZE = 300000;
 
 /** worker id pattern */
 const wid_ptrn = (msg) =>
@@ -40,17 +41,18 @@ const searchBlock = (query) =>
         logger.model(logit('searchBlock', query));
         console.log(`${wid_ptrn('searchBlock query: ' + query)}`);
         let max_block = Math.max(...(await ethproxy.getStatus()));
-        /*  resolve(
-            Array.from(Array(max_block + 1).keys())
-                .filter((v) => v.toString().includes(query.toString()))
-                .map((v) => Object({ type: 'block', attributes: { block: v } }))
-        );*/
-        /** last 10^6 sequence */
+        let result = Array.from(Array(max_block + 1).keys())
+            .filter((v) => v.toString().includes(query.toString()))
+            .map((v) => Object({ type: 'block', attributes: { block: v } }));
+        /** slice from end MAX_RESULT_SIZE if > MAX_RESULT_SIZE */
+        resolve(result.length > MAX_RESULT_SIZE ? result.slice(-MAX_RESULT_SIZE) : result);
+        /*
+        /!** last 10^6 sequence *!/
         resolve(
             [...range(max_block - block_range, max_block + 1)]
                 .filter((v) => v.toString().includes(query.toString()))
                 .map((v) => Object({ type: 'block', attributes: { block: v } }))
-        );
+        );*/
     });
 
 /** search by token name model */
