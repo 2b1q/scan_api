@@ -14,7 +14,9 @@ const cfg = require('../../config/config'),
 
 // worker id pattern
 const wid_ptrn = (endpoint) =>
-    `${c.green}worker[${cluster.worker.id}]${c.red}[API v.2]${c.yellow}[transaction model]${c.red} > ${c.green}[${endpoint}] ${c.white}`;
+    `${c.green}worker[${cluster.worker.id}]${c.red}[API v.2]${c.yellow}[transaction model]${c.red} > ${c.green}[${endpoint}] ${
+        c.white
+    }`;
 
 /** GetLastTransactions */
 const GetLastTransactions = async ({ collection, size, offset }) => {
@@ -62,8 +64,17 @@ const GetLastTransactions = async ({ collection, size, offset }) => {
                   tokentype: 1,
               };
 
-    const db_col = await dbquery.getcol(collection);
-    let count = await db_col.count(selector);
+    let count, db_col;
+    /** safe db query*/
+    try {
+        db_col = await dbquery.getcol(collection);
+        count = await db_col.count(selector);
+    } catch (e) {
+        return {
+            head: {},
+            rows: [],
+        };
+    }
 
     return new Promise((resolve) =>
         db_col
