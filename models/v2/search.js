@@ -23,14 +23,30 @@ let logit = (api, query) => {
     };
 };
 
+/** range sequence generator */
+function* range(start = 5000000, end = start + 100, step = 1) {
+    let n = 0;
+    for (let i = start; i < end; i += step) {
+        n += 1;
+        yield i;
+    }
+    return n;
+}
+
 /** search by block number model */
 const searchBlock = (query) =>
     new Promise(async (resolve, reject) => {
         logger.model(logit('searchBlock', query));
         console.log(`${wid_ptrn('searchBlock query: ' + query)}`);
         let max_block = Math.max(...(await ethproxy.getStatus()));
-        resolve(
+        /*  resolve(
             Array.from(Array(max_block + 1).keys())
+                .filter((v) => v.toString().includes(query.toString()))
+                .map((v) => Object({ type: 'block', attributes: { block: v } }))
+        );*/
+        /** last 10^6 sequence */
+        resolve(
+            [...range(undefined, max_block + 1)]
                 .filter((v) => v.toString().includes(query.toString()))
                 .map((v) => Object({ type: 'block', attributes: { block: v } }))
         );
