@@ -1,7 +1,7 @@
 const cluster = require('cluster'),
     cfg = require('../../config/config'),
-    token_head = cfg.store.cols.token_head,
     logger = require('../../utils/logger')(module),
+    search_model = require('../../models/v2/search'),
     moment = require('moment'),
     check = require('../../utils/checker').cheker(),
     c = cfg.color;
@@ -42,17 +42,16 @@ const checkSearchParams = (req, res) => {
     };
 };
 
-/** search by block number */
-const searchBlock = (block) => new Promise((resolve, rexject) => {});
-
-/** search by Token name*/
-const searchToken = (token) => new Promise((resolve, rexject) => {});
-
-/** Common controller for Block/Token search */
+/** Common REST API controller for Block/Token search */
 const tokenOrBlockSearch = async (req, res) => {
-    console.log(`${wid_ptrn('GetLastTnxEthRest')}`);
+    console.log(`${wid_ptrn('tokenOrBlockSearch')}`);
     let query_params = checkSearchParams(req, res);
-    if (query_params) res.json(query_params); // todo searchToken OR searchBlock
+    if (query_params) {
+        let response = query_params.block
+            ? await search_model.block(query_params.query)
+            : await search_model.token(query_params.query);
+        res.json(response);
+    }
 };
 
 module.exports = {
