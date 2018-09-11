@@ -27,7 +27,7 @@ const log_event = (event, data, con_obj) =>
     logger.socket_requests({
         api: 'v.1',
         event: event,
-        data: JSON.parse(data),
+        data: data,
         timestamp: moment().format('DD.MM.YYYY HH:mm:ss'),
         connected_obj: con_obj,
     });
@@ -39,7 +39,8 @@ const randstr = () =>
         .substring(2, 12);
 
 // check block/address options.
-const checkOptions = (listId, moduleId, entityId, params) => (entityId !== 0 ? check.build_io_opts(params, listId, moduleId, entityId) : false);
+const checkOptions = (listId, moduleId, entityId, params) =>
+    entityId !== 0 ? check.build_io_opts(params, listId, moduleId, entityId) : false;
 
 // check addr is set, clear addr then check length
 const checkAddr = (addr) => {
@@ -182,7 +183,11 @@ const init_io_handler = (io) => {
         };
 
         console.log(
-            wid_ptrn(`client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${c.magenta}${socket.handshake.url}${c.green}`)
+            wid_ptrn(
+                `client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${c.magenta}${
+                    socket.handshake.url
+                }${c.green}`
+            )
         );
         let err_log; // errors
 
