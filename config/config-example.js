@@ -30,6 +30,17 @@ config.store = {
     },
 };
 
+// cookie config for SSO JWT
+config.cookie = {
+    maxAge: 86400000, // 24h 86400 sec
+    httpOnly: true,
+};
+
+config.sso = {
+    refreshJwtURL: 'https://sso-uat.bankexlab.com/api/v1/token', // SSO POST refresh JWT endpoint
+    logoutJwtURL: 'https://sso-uat.bankexlab.com/api/v1/logout', // SSO POST Logout Backend endpoint
+};
+
 // interaction with other SCAN API nodes
 config.interaction = {
     ethURL: 'http://localhost:4000', // stand alone ETH proxy requests
@@ -86,6 +97,10 @@ config.restOptions = {
 };
 
 config.ethOptions = {
+    // node-geth01 (172.31.38.183)
+    // node-geth02 (172.31.41.24)
+    // node-geth03 (172.31.42.253)
+    // gethURLs: ['ws://192.168.1.151:8548'],
     gethURLs: ['ws://localhost:8548'],
     maxNodesDelta: 20,
     upNodeFrequency: 10000,

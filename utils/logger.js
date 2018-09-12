@@ -20,6 +20,13 @@ function getLogger(module) {
         ],
     }).info;
 
+    logger.auth = winston.createLogger({
+        transports: [
+            new winston.transports.Console(console),
+            new winston.transports.File({ filename: './logs/auth.log', label: path }),
+        ],
+    }).info;
+
     logger.error = winston.createLogger({
         transports: [
             new winston.transports.Console(console),
@@ -40,6 +47,18 @@ function getLogger(module) {
             // new (winston.transports.Console)(console),
             new winston.transports.File({
                 filename: './logs/api_requests.log',
+                label: path,
+                timestamp: true,
+                colorize: true,
+            }),
+        ],
+    }).info;
+
+    logger.model = winston.createLogger({
+        transports: [
+            // new (winston.transports.Console)(console),
+            new winston.transports.File({
+                filename: './logs/model.log',
                 label: path,
                 timestamp: true,
                 colorize: true,

@@ -8,6 +8,8 @@ nohup.out
 node.log
 .idea
 config.js
+config/secret
+config/sso_secret.pub
 
 # test results
 tests/test_result/

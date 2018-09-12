@@ -188,7 +188,7 @@ const log_event = (event, data, con_obj) =>
     logger.socket_requests({
         api: 'v.2',
         event: event,
-        data: JSON.parse(data),
+        data: data,
         timestamp: moment().format('DD.MM.YYYY HH:mm:ss'),
         connected_obj: con_obj,
     });
@@ -223,7 +223,7 @@ const init_io_handler = (io) => {
         /** 'list' event handler */
         socket.on(e.list, (data, err) => e_wrapper(e.list, data, err));
         /** 'disconnection' event handler */
-        socket.on('disconnection', (data) => log_event('disconnection', data, con_obj));
+        socket.on('disconnect', (data) => log_event('disconnect', data, con_obj));
         /** 'error' event handler */
         socket.on('error', (error) => logger.error(error));
 

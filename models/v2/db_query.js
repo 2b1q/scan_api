@@ -7,7 +7,19 @@ const db = require('../../libs/db'),
     cfg = require('../../config/config');
 
 // get collection by name
-const col = (name) => new Promise((resolve) => db.get.then((db_con) => resolve(db_con.collection(name))));
+const col = (name) =>
+    new Promise((resolve, reject) =>
+        db
+            .get()
+            .then((db_con) => {
+                if (!db_con) reject(); // reject if no db instance empty after reconnect
+                resolve(db_con.collection(name));
+            })
+            .catch(() => {
+                reject();
+                console.error('connection to MongoDB lost');
+            })
+    );
 
 // get tnx db collection name by listId
 const get_tnx_col_by = (listId) => {
@@ -94,10 +106,7 @@ const distinct = async (collection, query = {}, key) => {
 
 // Only clear DB API without business logic
 module.exports = {
-    // getDbTransactions: GetDbTransactions, // common tnx get function (for block and tnx API)
     colCount: collectionCount, // count TNXS by ListId type
-    // TxDetails: TxDetails,
-    // blockDetails: GetBlock,          // get block details by options
     findOne: findOneQuery, // find one db doc from collection using query pattern
     find: findQuery, // find db docs from collection using query pattern
     distinct: distinct, // mongo distinct query

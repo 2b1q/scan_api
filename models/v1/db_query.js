@@ -10,7 +10,19 @@ const db = require('../../libs/db'),
     check = require('../../utils/checker').cheker();
 
 // get collection by name
-const col = (name) => new Promise((resolve) => db.get.then((db_con) => resolve(db_con.collection(name))));
+const col = (name) =>
+    new Promise((resolve, reject) =>
+        db
+            .get()
+            .then((db_con) => {
+                if (!db_con) reject(); // reject if no db instance empty after reconnect
+                resolve(db_con.collection(name));
+            })
+            .catch(() => {
+                reject();
+                console.error('connection to MongoDB lost');
+            })
+    );
 
 // get tnx db collection name by listId
 const get_tnx_col_by = (listId) => {
