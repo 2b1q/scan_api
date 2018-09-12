@@ -86,25 +86,41 @@ const findOneToken = (query) =>
             db_instance
                 .collection(token_head)
                 .findOne(query)
-                .then((token) => {
-                    console.log(token);
-                    resolve(token);
-                })
-                .catch(() => resolve());
+                .then((token) => resolve(token))
+                .catch((e) => {
+                    console.error(e);
+                    resolve();
+                });
         })
     );
 
-const findTokens = (query) =>
+const findTokens = (query, size) =>
     new Promise((resolve) =>
         db.get().then((db_instance) => {
             if (!db_instance) resolve();
             db_instance
                 .collection(token_head)
-                .find(query)
-                .toArray((err, docs) => {
+                .distinct('smbl', query)
+                .then(async (docs) => {
+                    let _p = [];
+                    docs.sort()
+                        .slice(0, size - 1)
+                        .forEach((token) =>
+                            _p.push(new Promise((resolve) => findOneToken({ smbl: token }).then((data) => resolve(data))))
+                        );
+                    await Promise.all(_p).then((ress) => {
+                        // console.log(ress);
+                        resolve(ress);
+                    });
+                })
+                .catch((e) => {
+                    console.error(e);
+                    resolve([]);
+                });
+            /*.toArray((err, docs) => {
                     if (err) resolve([]);
                     resolve(docs);
-                });
+                });*/
         })
     );
 
@@ -117,13 +133,13 @@ const searchToken = ({ token_query, size }) =>
         let q1 = { smbl: token_regexp };
         let q2 = { $or: [{ name: token_regexp }, { smbl: token_regexp }] };
         const p1 = findOneToken(q1);
-        const p2 = findTokens(q2);
+        const p2 = findTokens(q2, size);
         Promise.all([p1, p2])
             .then(([r1, r2]) => {
-                let first = { addr: r1.addr, name: r1.name, smbl: r1.smbl };
-                let arr = r2.map((tkn) => Object({ addr: tkn.addr, name: tkn.name, smbl: tkn.smbl }));
-
-                resolve([first, ...arr]);
+                let arr = [];
+                if (r1) arr.push(r1);
+                if (Array.isArray(r2)) arr = arr.concat(r2);
+                resolve(arr);
             })
             .catch((e) => {
                 console.error(e);

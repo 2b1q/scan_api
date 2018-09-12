@@ -51,7 +51,10 @@ const tokenOrBlockSearch = (req, res) => {
     if (query_params) {
         Promise.all([search_model.block(query_params), search_model.token(query_params)])
             .then(([blocks, tokens]) => {
-                res.json({ blocks: blocks, tokens: tokens });
+                res.json({
+                    blocks: blocks,
+                    tokens: tokens.map((t) => Object({ addr: t.addr, smbl: t.smbl, name: t.name })),
+                });
             })
             .catch(() => res.json({ blocks: [], tokens: [] }));
     }
