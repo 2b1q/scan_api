@@ -132,12 +132,12 @@ const searchToken = ({ token_query, size }) =>
         let token_regexp = new RegExp(`(^.*${token_query}.*)`, 'i');
         let q1 = { smbl: token_regexp };
         let q2 = { $or: [{ name: token_regexp }, { smbl: token_regexp }] };
-        const p1 = findOneToken(q1);
+        // const p1 = findOneToken(q1);
         const p2 = findTokens(q2, size);
-        Promise.all([p1, p2])
-            .then(([r1, r2]) => {
+        Promise.all([p2])
+            .then(([r2]) => {
                 let arr = [];
-                if (r1) arr.push(r1);
+                //if (r1) arr.push(r1);
                 if (Array.isArray(r2)) arr = arr.concat(r2);
                 resolve(arr);
             })
