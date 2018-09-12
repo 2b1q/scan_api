@@ -4,7 +4,8 @@ const cluster = require('cluster'),
     search_model = require('../../models/v2/search'),
     moment = require('moment'),
     check = require('../../utils/checker').cheker(),
-    c = cfg.color;
+    c = cfg.color,
+    MAX_RESULT_SIZE = 1000;
 
 /** worker id pattern */
 const wid_ptrn = (msg) =>
@@ -29,28 +30,30 @@ const checkSearchParams = (req, res) => {
     logger.api_requests(logit(req)); // log query data any way
     let params = req.query || {};
     // params destructing
-    let { q } = params;
+    let { q, size = 20 } = params;
+    size = size > MAX_RESULT_SIZE ? MAX_RESULT_SIZE : size;
     // check "q" parameter is exist OR !== 0
     if (!q || parseInt(q) === 0) {
         res.status(400).json(check.get_msg().bad_search_parameter(q));
         return false;
     }
-    let isBlock = !isNaN(parseInt(q)); // check query search is block
     return {
-        block: isBlock,
-        query: isBlock ? parseInt(q) : q, // if q isBlock => parseInt
+        block_query: parseInt(q), // NaN if string started from chars
+        token_query: q,
+        size: size,
     };
 };
 
 /** Common REST API controller for Block/Token search */
-const tokenOrBlockSearch = async (req, res) => {
+const tokenOrBlockSearch = (req, res) => {
     console.log(`${wid_ptrn('tokenOrBlockSearch')}`);
     let query_params = checkSearchParams(req, res);
     if (query_params) {
-        let response = query_params.block
-            ? await search_model.block(query_params.query)
-            : await search_model.token(query_params.query);
-        res.json(response);
+        Promise.all([search_model.block(query_params), search_model.token(query_params)])
+            .then(([blocks, tokens]) => {
+                res.json({ blocks: blocks, tokens: tokens });
+            })
+            .catch(() => res.json({ blocks: [], tokens: [] }));
     }
 };
 
