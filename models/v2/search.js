@@ -69,30 +69,7 @@ const searchBlock = ({ block_query, size }) =>
                 console.error(e);
                 console.error('connection to MongoDB lost');
             });
-
-        /*
-        /!** last 10^6 sequence *!/
-        resolve(
-            [...range(max_block - block_range, max_block + 1)]
-                .filter((v) => v.toString().includes(query.toString()))
-                .map((v) => Object({ type: 'block', attributes: { block: v } }))
-        );*/
     });
-
-const findOneToken = (query) =>
-    new Promise((resolve) =>
-        db.get().then((db_instance) => {
-            if (!db_instance) resolve();
-            db_instance
-                .collection(token_head)
-                .findOne(query)
-                .then((token) => resolve(token))
-                .catch((e) => {
-                    console.error(e);
-                    resolve();
-                });
-        })
-    );
 
 const findTokens = (query, size) =>
     new Promise((resolve) =>
@@ -100,27 +77,16 @@ const findTokens = (query, size) =>
             if (!db_instance) resolve();
             db_instance
                 .collection(token_head)
-                .distinct('smbl', query)
-                .then(async (docs) => {
-                    let _p = [];
-                    docs.sort()
-                        .slice(0, size - 1)
-                        .forEach((token) =>
-                            _p.push(new Promise((resolve) => findOneToken({ smbl: token }).then((data) => resolve(data))))
-                        );
-                    await Promise.all(_p).then((ress) => {
-                        // console.log(ress);
-                        resolve(ress);
-                    });
-                })
-                .catch((e) => {
-                    console.error(e);
-                    resolve([]);
+                .find(query, { addr: 1, smbl: 1, name: 1 })
+                .sort({ smbl: 1 })
+                .limit(size)
+                .toArray((err, tokens) => {
+                    if (err) {
+                        console.error(err);
+                        resolve([]);
+                    }
+                    resolve(tokens);
                 });
-            /*.toArray((err, docs) => {
-                    if (err) resolve([]);
-                    resolve(docs);
-                });*/
         })
     );
 
@@ -130,17 +96,9 @@ const searchToken = ({ token_query, size }) =>
         logger.model(logit('searchToken', token_query));
         console.log(`${wid_ptrn('searchToken query: ' + token_query)}`);
         let token_regexp = new RegExp(`(^.*${token_query}.*)`, 'i');
-        let q1 = { smbl: token_regexp };
-        let q2 = { $or: [{ name: token_regexp }, { smbl: token_regexp }] };
-        // const p1 = findOneToken(q1);
-        const p2 = findTokens(q2, size);
-        Promise.all([p2])
-            .then(([r2]) => {
-                let arr = [];
-                //if (r1) arr.push(r1);
-                if (Array.isArray(r2)) arr = arr.concat(r2);
-                resolve(arr);
-            })
+        let query_pattern = { $or: [{ name: token_regexp }, { smbl: token_regexp }] };
+        findTokens(query_pattern, size)
+            .then((tokens) => resolve(tokens))
             .catch((e) => {
                 console.error(e);
                 resolve([]);

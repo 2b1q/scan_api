@@ -5,7 +5,8 @@ const cluster = require('cluster'),
     moment = require('moment'),
     check = require('../../utils/checker').cheker(),
     c = cfg.color,
-    MAX_RESULT_SIZE = 1000;
+    MAX_RESULT_SIZE = 1000,
+    DEFAULT_SIZE = 20;
 
 /** worker id pattern */
 const wid_ptrn = (msg) =>
@@ -30,7 +31,8 @@ const checkSearchParams = (req, res) => {
     logger.api_requests(logit(req)); // log query data any way
     let params = req.query || {};
     // params destructing
-    let { q, size = 20 } = params;
+    let { q, size = DEFAULT_SIZE } = params;
+    size = isNaN(parseInt(size)) ? DEFAULT_SIZE : parseInt(size);
     size = size > MAX_RESULT_SIZE ? MAX_RESULT_SIZE : size;
     // check "q" parameter is exist OR !== 0
     if (!q || parseInt(q) === 0) {
