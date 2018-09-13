@@ -8,7 +8,8 @@ const router = require('express').Router(),
     addr_controller_v2 = require('../controllers/v2/address'),
     common_v2 = require('../controllers/v2/common'),
     seacrh = require('../controllers/v2/search'),
-    auth_controller = require('../controllers/restricted_area');
+    auth_controller = require('../controllers/restricted_area'),
+    token_controller = require('../controllers/v2/token');
 
 const v1_ptrn = (path) => new RegExp(`(^\/v1\/${path}$)|(^\/${path}$)`); // v1 route RegExp pattern
 const v2_ptrn = (path) => new RegExp(`(^\/v2\/${path}$)`); // v2 route RegExp pattern
@@ -33,10 +34,16 @@ router.get(v2_ptrn('address/details'), addr_controller_v2.details); // Get Addre
 router.get(v2_ptrn('address/token-balance'), addr_controller_v2.tokenBalance); // Get Address toke balance endpoint [HTTP GET]
 
 /** node info */
-router.get(v2_ptrn('nodes'), common_v2.NodeStatus);
+router.get(v2_ptrn('nodes'), common_v2.NodeStatus); // last block info ETH proxy
 
 /** search endpointds*/
-router.get(v2_ptrn('search'), seacrh.tokenOrBlock);
+router.get(v2_ptrn('search'), seacrh.tokenOrBlock); // search token/block controller
+
+/** token info endpoints */
+router.get(v2_ptrn('erc20/details'), token_controller.erc20details); // ERC20 token info
+router.get(v2_ptrn('erc20/transactions'), token_controller.txs); // list token transactions
+router.get(v2_ptrn('erc20/holders'), token_controller.holders); // ERC20 holders
+router.get(v2_ptrn('erc20/market'), token_controller.market); // Token market history
 
 /** SSO Auth endpoint */
 router.get('/auth', auth_controller.setJWT);
