@@ -8,7 +8,9 @@ const cluster = require('cluster'),
 
 /** worker id pattern */
 const wid_ptrn = (msg) =>
-    `${c.green}worker[${cluster.worker.id}]${c.red}[API v.2]${c.cyan}[token controller]${c.red} > ${c.green}[${msg}] ${c.white}`;
+    `${c.green}worker[${cluster.worker.id}]${c.red}[API v.2]${c.cyan}[token controller]${c.red} > ${
+        c.green
+    }[${msg}] ${c.white}`;
 
 /** simple query logger */
 let logit = (req, msg = '') => {
@@ -16,6 +18,7 @@ let logit = (req, msg = '') => {
         msg: msg,
         post_params: req.body,
         get_params: req.query,
+        module: 'token controller',
         timestamp: (() => moment().format('DD.MM.YYYY HH:mm:ss'))(),
         path: module.filename
             .split('/')
@@ -24,28 +27,65 @@ let logit = (req, msg = '') => {
     };
 };
 
-/** Check parameters */
-const checkSearchParams = (req, res) => {
-    logger.api_requests(logit(req)); // log query data any way
+/** Check Address, size, offset parameters */
+const checkAddrkParams = (req, res) => {
+    // log query data any way
+    logger.api_requests(logit(req));
     let params = req.query || {};
     // params destructing
-    let { q, size = DEFAULT_SIZE } = params;
+    let { addr, offset, size } = params;
+    offset = parseInt(offset); // convert to Number
+    size = parseInt(size); // convert to Number
+    // check params existing
+    if (!addr) {
+        res.status(400).json(check.get_msg().no_addr);
+        return false;
+    } else if (!offset && offset !== 0) {
+        res.status(400).json(check.get_msg().no_offset);
+        return false;
+    } else if (!size) {
+        res.status(400).json(check.get_msg().no_size);
+        return false;
+    }
+    addr = check.cut0xClean(addr);
+    if (check.checkAddr(addr)) return check.normalize_pagination({ addr: addr }, size, offset);
+    else {
+        res.status(400).json(check.get_msg().wrong_addr);
+        return false;
+    }
 };
 
-/** ERC20 token info */
-const erc20info = (req, res) => {
-    console.log(`${wid_ptrn('erc20info')}`);
+/** Check Address */
+const checkAddr = (req, res) => {
+    logger.api_requests(logit(req)); // log query data any way
     let addr = req.query.addr; // addr from request
     let c_addr = check.cut0xClean(addr); // cut 0x and clean address
     // check cleared address by length
     if (!check.checkAddr(c_addr, addr)) {
         if (!addr) return res.status(400).json(check.get_msg().no_addr); // if addr undefined
         res.status(400).json(check.get_msg().bad_addr(addr)); // if wrong addr format
-    } else token_module.erc20info(c_addr).then((response) => res.json(response));
+    } else return c_addr;
+};
+
+/** ERC20 token info */
+const erc20info = (req, res) => {
+    console.log(`${wid_ptrn('erc20info')}`);
+    let c_addr = checkAddr(req, res);
+    c_addr &&
+        token_module
+            .erc20info(c_addr)
+            .then((response) => (response.errorCode && res.status(404).json(response)) || res.json(response));
 };
 
 /** list token transactions */
-const txlist = async (req, res) => {};
+const txlist = (req, res) => {
+    console.log(`${wid_ptrn('txlist')}`);
+    let options = checkAddrkParams(req, res);
+    options &&
+        token_module
+            .erc20txlist(options)
+            .then((response) => (response.errorCode && res.status(404).json(response)) || res.json(response));
+};
 
 /** ERC20 holders */
 const holders = async (req, res) => {};
@@ -54,8 +94,8 @@ const holders = async (req, res) => {};
 const markethist = async (req, res) => {};
 
 module.exports = {
-    erc20details: erc20info,
-    txs: txlist,
-    holders: holders,
-    market: markethist,
+    erc20details: erc20info, // REST GET 'erc20/details' ERC20 token info
+    txs: txlist, // REST GET 'erc20/transactions' list token transactions
+    holders: holders, // REST GET 'erc20/holders' ERC20 holders
+    market: markethist, // REST GET 'erc20/market' Token market history
 };

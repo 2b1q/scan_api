@@ -39,7 +39,7 @@ function* range(start = 5000000, end = start + 100, step = 1) {
 
 /** search by block number model */
 const searchBlock = ({ block_query, size }) =>
-    new Promise((resolve) => {
+    new Promise((resolve, reject) => {
         logger.model(logit('searchBlock', block_query));
         console.log(`${wid_ptrn('searchBlock query: ' + block_query)}`);
         if (isNaN(block_query)) resolve([]);
@@ -52,7 +52,7 @@ const searchBlock = ({ block_query, size }) =>
                     .sort({ block: -1 })
                     .limit(1)
                     .toArray((err, [{ block: max_block }]) => {
-                        if (err) resolve([]);
+                        if (err) reject(err); // handle error on DB query crash
                         console.log(`max_block in DB: ${max_block}`);
                         let arr = Array.from(Array(max_block + 1).keys()).filter((v) =>
                             v.toString().includes(block_query.toString())
@@ -64,30 +64,28 @@ const searchBlock = ({ block_query, size }) =>
                         resolve(arr);
                     });
             })
-            .catch((e) => {
-                resolve([]);
-                console.error(e);
-                console.error('connection to MongoDB lost');
-            });
+            .catch((e) => reject(e)); // handle error if no DB connection
     });
 
-const findTokens = (query, size) =>
-    new Promise((resolve) =>
-        db.get().then((db_instance) => {
-            if (!db_instance) resolve();
-            db_instance
-                .collection(token_head)
-                .find(query, { addr: 1, smbl: 1, name: 1 })
-                .sort({ smbl: 1 })
-                .limit(size)
-                .toArray((err, tokens) => {
-                    if (err) {
-                        console.error(err);
-                        resolve([]);
-                    }
-                    resolve(tokens);
-                });
-        })
+/** find tokens by query pattern */
+const findTokens = (query, size, fields) =>
+    new Promise(
+        (resolve, reject) =>
+            db
+                .get()
+                .then((db_instance) => {
+                    if (!db_instance) resolve();
+                    db_instance
+                        .collection(token_head)
+                        .find(query, { fields })
+                        .sort({ smbl: 1 })
+                        .limit(size)
+                        .toArray((err, tokens) => {
+                            if (err) reject(err);
+                            resolve(tokens);
+                        });
+                })
+                .catch((e) => reject(e)) // handle error if no DB connection
     );
 
 /** search by token name model */
@@ -97,7 +95,7 @@ const searchToken = ({ token_query, size }) =>
         console.log(`${wid_ptrn('searchToken query: ' + token_query)}`);
         let token_regexp = new RegExp(`(^.*${token_query}.*)`, 'i');
         let query_pattern = { $or: [{ name: token_regexp }, { smbl: token_regexp }] };
-        findTokens(query_pattern, size)
+        findTokens(query_pattern, size, { addr: 1, smbl: 1, name: 1, _id: 0 })
             .then((tokens) => resolve(tokens))
             .catch((e) => {
                 console.error(e);

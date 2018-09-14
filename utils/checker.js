@@ -34,6 +34,7 @@ const check_module_singleton = (() => {
         // client msgs
         const msg = {
             not_found: { head: {}, rows: [] }, // API v.2 & API v.1
+            404: { errorCode: 404, errorMessage: 'Not found' }, // API v.2
             block_not_found: { errorCode: 404, errorMessage: 'Block not found' }, // API v.2
             transaction_not_found: { errorCode: 404, errorMessage: 'Transaction not found' }, // API v.2
             wrong_block: { errorCode: 400, errorMessage: 'Wrong block number' }, // API v.2
