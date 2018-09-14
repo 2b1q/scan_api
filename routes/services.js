@@ -43,7 +43,7 @@ router.get(v2_ptrn('search'), seacrh.tokenOrBlock); // search token/block contro
 router.get(v2_ptrn('erc20/details'), token_controller.erc20details); // ERC20 token info
 router.get(v2_ptrn('erc20/transactions'), token_controller.txs); // list token transactions
 router.get(v2_ptrn('erc20/holders'), token_controller.holders); // ERC20 holders
-router.get(v2_ptrn('erc20/market'), token_controller.market); // Token market history
+router.get(v2_ptrn('erc20/price'), token_controller.market); // Token market history
 
 /** SSO Auth endpoint */
 router.get('/auth', auth_controller.setJWT);
