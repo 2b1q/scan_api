@@ -67,7 +67,7 @@ exports.auth = async (req, res) => {
     if (token.type === 'access_token') {
         try {
             let jwt_access_token = await jwt.verifyAccessToken(token.token);
-            res.set('Authorization', 'Bearer ' + token).json(jwt_access_token);
+            res.set('Authorization', 'Bearer ' + jwt_access_token).json();
         } catch (e) {
             res.status(401).json(e);
         }
@@ -75,7 +75,7 @@ exports.auth = async (req, res) => {
         // check AUTH token
         try {
             let jwt_access_token = await jwt.verifyTempToken(token.token);
-            res.set('Authorization', 'Bearer ' + token).json(jwt_access_token);
+            res.set('Authorization', 'Bearer ' + jwt_access_token).json();
         } catch (e) {
             res.status(401).json(e);
         }
