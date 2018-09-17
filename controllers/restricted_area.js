@@ -1,7 +1,18 @@
 const moment = require('moment'),
     cfg = require('../config/config'),
     logger = require('../utils/logger')(module),
-    jwt = require('../models/sso/jwt');
+    cluster = require('cluster'),
+    _jwt = require('jsonwebtoken'),
+    jwt = require('../models/sso/jwt'),
+    c = cfg.color,
+    check = require('../utils/checker').cheker();
+
+// cluster.worker.id
+const wid = cluster.worker.id;
+
+// worker id pattern
+const wid_ptrn = (endpoint) =>
+    `${c.green}worker[${wid}]${c.red}[JWT]${c.cyan}[REST API AUTH controller]${c.red} > ${c.green}[${endpoint}] ${c.white}`;
 
 // simple query logger
 let logit = (req, msg = '') => {
@@ -17,6 +28,24 @@ let logit = (req, msg = '') => {
     };
 };
 
+/** Check Address */
+const getToken = (req) => {
+    logger.auth(logit(req)); // log query data any way
+    let { authorization } = req.headers; // Authorization
+    if (!authorization) return check.get_msg().no_jwt; // invalid token
+    // get the decoded payload and header
+    let token = _jwt.decode(authorization);
+    let response = { token: authorization };
+    // check JWT access_token
+    if (token.tokenType === 'access_token') {
+        response.type = 'access_token';
+        return response;
+    } else if (token.tokenType === 'auth_code') {
+        response.type = 'auth_code';
+        return response;
+    }
+};
+
 const newJWT = async (req, res) => {
     logger.auth(logit(req)); // log auth requests
     let tmp_tkn = req.query.tkn;
@@ -29,6 +58,26 @@ const newJWT = async (req, res) => {
     else res.redirect('/');
 };
 
-module.exports = {
-    setJWT: newJWT, // Generate JWT by tempToken
+/** REST AUTH */
+exports.auth = async (req, res) => {
+    console.log(`${wid_ptrn('auth')}`);
+    let token = getToken(req);
+    if (token.hasOwnProperty('errorCode')) return res.status(401).json(token);
+    // check JWT access_token
+    if (token.type === 'access_token') {
+        try {
+            let jwt_access_token = await jwt.verifyAccessToken(token.token);
+            res.set('Authorization', 'Bearer ' + token).json(jwt_access_token);
+        } catch (e) {
+            res.status(401).json(e);
+        }
+    } else {
+        // check AUTH token
+        try {
+            let jwt_access_token = await jwt.verifyTempToken(token.token);
+            res.set('Authorization', 'Bearer ' + token).json(jwt_access_token);
+        } catch (e) {
+            res.status(401).json(e);
+        }
+    }
 };

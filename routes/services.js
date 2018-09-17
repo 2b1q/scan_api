@@ -46,7 +46,7 @@ router.get(v2_ptrn('erc20/holders'), token_controller.holders); // ERC20 holders
 router.get(v2_ptrn('erc20/price'), token_controller.market); // Token market history
 
 /** SSO Auth endpoint */
-router.get('/auth', auth_controller.setJWT);
+router.get(v2_ptrn('auth'), auth_controller.auth);
 
 /** REST API v.1 endpoints
  * - routing by moduleId parameter (current)

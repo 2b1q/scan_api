@@ -41,6 +41,7 @@ const check_module_singleton = (() => {
             no_offset: { errorCode: 400, errorMessage: 'parameter "offset" not found or wrong' }, // API v.2
             no_size: { errorCode: 400, errorMessage: 'parameter "size" not found or wrong' }, // API v.2
             no_addr: { errorCode: 400, errorMessage: 'parameter "addr" not found' }, // API v.2
+            no_jwt: { errorCode: 401, errorMessage: 'invalid token' }, // API v.2
             wrong_addr: { errorCode: 400, errorMessage: 'Wrong "addr" property' }, // API v.2
             bad_search_parameter: (q) => Object({ errorCode: 400, errorMessage: `Wrong "q" property: "${q}"` }), // API v.2
             bad_hash: (hash) => Object({ errorCode: 400, errorMessage: `Bad Hash value "${hash}"` }), // API v.2
