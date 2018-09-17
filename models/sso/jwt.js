@@ -33,6 +33,7 @@ const ssoGetJWT = (tmp_tkn) =>
             (err, res, body) => {
                 if (err) reject(err);
                 let statusCode = res.statusCode;
+                console.log(body);
                 if (statusCode === 401) reject(error['401']);
                 resolve(body);
             }
@@ -89,10 +90,7 @@ const verifyTemp = (tmp_tkn) =>
                 upsert(accountId, jwt);
                 resolve(jwt.access_token);
             })
-            .catch((e) => {
-                console.log(e);
-                reject(e);
-            });
+            .catch((e) => reject(e));
     });
 
 /** Logout user from SSO service

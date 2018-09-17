@@ -32,19 +32,8 @@ let logit = (req, msg = '') => {
 const getToken = (req) => {
     logger.auth(logit(req)); // log query data any way
     let { authorization } = req.headers; // Authorization
-    let redirectUrl = req.query.redirectUrl || '/';
     if (!authorization) return check.get_msg().no_jwt; // invalid token
-    // get the decoded payload and header
-    let token = _jwt.decode(authorization);
-    let response = { token: authorization, redirectUrl: redirectUrl };
-    // check JWT access_token
-    if (token.tokenType === 'access_token') {
-        response.type = 'access_token';
-        return response;
-    } else if (token.tokenType === 'auth_code') {
-        response.type = 'auth_code';
-        return response;
-    }
+    return authorization;
 };
 
 const newJWT = async (req, res) => {
@@ -64,21 +53,11 @@ exports.auth = async (req, res) => {
     console.log(`${wid_ptrn('auth')}`);
     let token = getToken(req);
     if (token.hasOwnProperty('errorCode')) return res.status(401).json(token);
-    // check JWT access_token
-    if (token.type === 'access_token') {
-        try {
-            let jwt_access_token = await jwt.verifyAccessToken(token.token);
-            res.set('Authorization', 'Bearer ' + jwt_access_token).redirect(token.redirectUrl);
-        } catch (e) {
-            res.status(401).json(e);
-        }
-    } else {
-        // check AUTH token
-        try {
-            let jwt_access_token = await jwt.verifyTempToken(token.token);
-            res.set('Authorization', 'Bearer ' + jwt_access_token).redirect(token.redirectUrl);
-        } catch (e) {
-            res.status(401).json(e);
-        }
+    // check AUTH token
+    try {
+        // res.set('Authorization', 'Bearer ' + jwt_access_token).json(jwt_access_token);
+        res.json(await jwt.verifyTempToken(token));
+    } catch (e) {
+        res.status(401).json(e);
     }
 };
