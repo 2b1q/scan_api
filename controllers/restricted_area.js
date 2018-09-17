@@ -31,7 +31,8 @@ let logit = (req, msg = '') => {
 /** Check Address */
 const getToken = (req) => {
     logger.auth(logit(req)); // log query data any way
-    let { authorization, redirectUrl = '/' } = req.headers; // Authorization
+    let { authorization } = req.headers; // Authorization
+    let redirectUrl = req.query.redirectUrl || '/';
     if (!authorization) return check.get_msg().no_jwt; // invalid token
     // get the decoded payload and header
     let token = _jwt.decode(authorization);
