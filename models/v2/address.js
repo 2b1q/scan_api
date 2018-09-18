@@ -12,7 +12,10 @@ const cfg = require('../../config/config'),
     address_eth_txn_col = 'address_eth_txn',
     address_token_txn_col = 'address_token_txn',
     ethproxy = require('../../node_interaction/eth-proxy-client'),
-    TOKEN_LIST_SIZE = 55; // TODO move to config
+    TOKEN_LIST_SIZE = 55, // TODO move to config
+    ETHDCM = cfg.constants.ethdcm,
+    TOKENDCM = cfg.constants.tokendcm,
+    FEEDCM = cfg.constants.feedcm;
 
 /* eth get data timeouts. */
 const wait = (ms) => new Promise((resolve) => setTimeout(() => resolve(), ms));
@@ -56,8 +59,7 @@ const GetAddressDetails = async (addr) => {
                 innerTxCount: inner_cnt, // кол-во внутренних транзакций эфира
                 tokenTxCount: token_tx_cnt, // кол-во всех транзакций по токенам
                 totalTokens: erc_20_cnt, // кол-во токенов которые были или есть у данного адреса
-                balance: eth_balance === null || eth_balance === undefined ? null : eth_balance, // баланс ETH
-                decimals: 18, // знаков после "."
+                balance: { val: eth_balance === null || eth_balance === undefined ? null : eth_balance, dcm: ETHDCM },
             };
             return response;
         })
