@@ -10,7 +10,10 @@ const cfg = require('../../config/config'),
     eth_col = cfg.store.cols.eth,
     token_col = cfg.store.cols.token,
     data_col = 'data_txn',
-    c = cfg.color;
+    c = cfg.color,
+    ETHDCM = cfg.constants.ethdcm,
+    TOKENDCM = cfg.constants.tokendcm,
+    FEEDCM = cfg.constants.feedcm;
 
 // worker id pattern
 const wid_ptrn = (endpoint) =>
@@ -149,8 +152,8 @@ const GetTxDetails = async (hash) => {
                         status: -1, // Статус = -1. Результат транзакции не определен.
                         error: '',
                         isContract: 0, // 0 - обычная транзакция, 1 - создание транзакции
-                        value: { val: tx.value === null || tx.value === undefined ? null : tx.value, dcm: 18 },
-                        txFee: { val: '0', dcm: 18 }, // Всегда 0. Не известно сколько газа потрачено.
+                        value: { val: tx.value === null || tx.value === undefined ? null : tx.value, dcm: ETHDCM },
+                        txFee: { val: '0', dcm: FEEDCM }, // Всегда 0. Не известно сколько газа потрачено.
                         gasUsed: 0, // Всегда 0. Не известно сколько газа потрачено.
                         gasCost: tx.gascost, // стоимость газа в ETH
                         data: tx.data, // данные, которые были отправлены в транзакцию. В бинарном виде
@@ -170,8 +173,8 @@ const GetTxDetails = async (hash) => {
                     status: eth_tx.status,
                     error: eth_tx.error,
                     isContract: eth_tx.iscontract,
-                    value: { val: eth_tx.value, dcm: 18 },
-                    txFee: { val: eth_tx.txfee, dcm: 18 },
+                    value: { val: eth_tx.value, dcm: ETHDCM },
+                    txFee: { val: eth_tx.txfee, dcm: FEEDCM },
                     gasUsed: eth_tx.gasused,
                     gasCost: eth_tx.gascost,
                     data: eth_tx.hash === data.hash ? data.data : undefined,
@@ -191,13 +194,12 @@ const GetTxDetails = async (hash) => {
                             error: token.error,
                             isContract: token.iscontract,
                             isInner: token.isinner,
-                            value: { val: token.value, dcm: token.tokendcm },
+                            value: { val: token.value, dcm: token.tokendcm || TOKENDCM },
+                            txFee: { val: token.txfee, dcm: FEEDCM },
                             tokenAddr: token.tokenaddr,
                             tokenName: token.tokenname,
                             tokenSmbl: token.tokensmbl,
                             tokenType: token.tokentype,
-                            txFee: { val: token.txfee, dcm: token.tokendcm },
-                            dcm: token.tokendcm,
                             gasUsed: token.gasused,
                             gasCost: token.gascost,
                         })
