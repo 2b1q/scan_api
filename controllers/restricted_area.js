@@ -77,7 +77,7 @@ exports.logout = async (req, res) => {
 };
 
 /** REST restricted TEST JWT */
-exports.restricted = async (req, res) => {
+exports.restricted = (req, res) => {
     let secret_payload = {
         msg: 'secret_payload ',
     };
