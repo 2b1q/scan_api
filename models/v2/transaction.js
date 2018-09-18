@@ -132,9 +132,7 @@ const GetTxDetails = async (hash) => {
     return await Promise.all([ethTx_p, tokenTx_p, data_p])
         .then(async ([eth_txs, token_txs, data]) => {
             let response = {};
-            if (!Array.isArray(eth_txs)) response.empty = true;
-            // set no data flag
-            else var [eth_tx] = eth_txs; // use var instead of let
+            if (!Array.isArray(eth_txs)) response.empty = true; // set no data flag
             // if no txs in DB => ask ETH node
             if (response.hasOwnProperty('empty')) {
                 console.log(wid_ptrn(`ask ETH proxy for a pending transaction 0x${hash}`));
@@ -161,50 +159,56 @@ const GetTxDetails = async (hash) => {
                     response.rows = [];
                 }
             } else {
-                // ETH head
-                response.head = {
-                    id: eth_tx._id,
-                    hash: eth_tx.hash,
-                    block: eth_tx.block,
-                    addrFrom: eth_tx.addrfrom,
-                    addrTo: eth_tx.addrto,
-                    time: eth_tx.isotime,
-                    type: eth_tx.type,
-                    status: eth_tx.status,
-                    error: eth_tx.error,
-                    isContract: eth_tx.iscontract,
-                    value: { val: eth_tx.value, dcm: ETHDCM },
-                    txFee: { val: eth_tx.txfee, dcm: FEEDCM },
-                    gasUsed: eth_tx.gasused,
-                    gasCost: eth_tx.gascost,
-                    data: eth_tx.hash === data.hash ? data.data : undefined,
-                };
+                response.rows = [];
+                eth_txs.forEach((eth_tx) => {
+                    let tx = Object({
+                        id: eth_tx._id,
+                        hash: eth_tx.hash,
+                        block: eth_tx.block,
+                        addrFrom: eth_tx.addrfrom,
+                        addrTo: eth_tx.addrto,
+                        time: eth_tx.isotime,
+                        type: eth_tx.type,
+                        status: eth_tx.status,
+                        error: eth_tx.error,
+                        isContract: eth_tx.iscontract,
+                        value: { val: eth_tx.value, dcm: ETHDCM },
+                        txFee: { val: eth_tx.txfee, dcm: FEEDCM },
+                        gasUsed: eth_tx.gasused,
+                        gasCost: eth_tx.gascost,
+                        data: eth_tx.hash === data.hash ? data.data : undefined,
+                    });
+                    // ETH head
+                    if (tx.type === 'tx') response.head = tx;
+                    else response.rows.push(tx);
+                });
                 // token txs
-                if (Array.isArray(token_txs)) {
-                    response.rows = token_txs.map((token) =>
-                        Object({
-                            id: token._id,
-                            hash: token.hash,
-                            block: token.block,
-                            addrFrom: token.addrfrom,
-                            addrTo: token.addrto,
-                            time: token.isotime,
-                            type: token.type,
-                            status: token.status,
-                            error: token.error,
-                            isContract: token.iscontract,
-                            isInner: token.isinner,
-                            value: { val: token.value, dcm: token.tokendcm || TOKENDCM },
-                            txFee: { val: token.txfee, dcm: FEEDCM },
-                            tokenAddr: token.tokenaddr,
-                            tokenName: token.tokenname,
-                            tokenSmbl: token.tokensmbl,
-                            tokenType: token.tokentype,
-                            gasUsed: token.gasused,
-                            gasCost: token.gascost,
-                        })
+                if (Array.isArray(token_txs))
+                    response.rows.concat(
+                        token_txs.map((token) =>
+                            Object({
+                                id: token._id,
+                                hash: token.hash,
+                                block: token.block,
+                                addrFrom: token.addrfrom,
+                                addrTo: token.addrto,
+                                time: token.isotime,
+                                type: token.type,
+                                status: token.status,
+                                error: token.error,
+                                isContract: token.iscontract,
+                                isInner: token.isinner,
+                                value: { val: token.value, dcm: token.tokendcm || TOKENDCM },
+                                txFee: { val: token.txfee, dcm: FEEDCM },
+                                tokenAddr: token.tokenaddr,
+                                tokenName: token.tokenname,
+                                tokenSmbl: token.tokensmbl,
+                                tokenType: token.tokentype,
+                                gasUsed: token.gasused,
+                                gasCost: token.gascost,
+                            })
+                        )
                     );
-                } else response.rows = [];
             }
             return response;
         })
