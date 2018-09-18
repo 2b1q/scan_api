@@ -86,6 +86,6 @@ exports.restricted = async (req, res) => {
     if (token.hasOwnProperty('errorCode')) return res.status(401).json(token);
     // check access token
     jwt.verifyAccessToken(token)
-        .then(res.set('Authorization', 'Bearer ' + jwt_access_token).json(secret_payload))
+        .then((jwt_access_token) => res.set('Authorization', 'Bearer ' + jwt_access_token).json(secret_payload))
         .catch((e) => res.status(401).json(e));
 };
