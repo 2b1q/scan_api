@@ -14,7 +14,9 @@ const addr_model = require('../../models/v2/address'),
 
 // worker id pattern
 const wid_ptrn = (endpoint) =>
-    `${c.green}worker[${cluster.worker.id}]${c.red}[API v.2]${c.cyan}[address controller]${c.red} > ${c.green}[${endpoint}] ${c.white}`;
+    `${c.green}worker[${cluster.worker.id}]${c.red}[API v.2]${c.cyan}[address controller]${c.red} > ${c.green}[${endpoint}] ${
+        c.white
+    }`;
 
 // simple query logger
 let logit = (req, msg = '') => {
@@ -80,9 +82,8 @@ const GetAddrEth = async (req, res) => {
                     error: tx.error,
                     isContract: tx.iscontract,
                     isInner: tx.isinner,
-                    value: tx.value,
-                    txFee: tx.txfee,
-                    dcm: tx.tokendcm,
+                    value: { val: tx.value, dcm: tx.tokendcm },
+                    txFee: { val: tx.txfee, dcm: tx.tokendcm },
                     gasUsed: tx.gasused,
                     gasCost: tx.gascost,
                 };
@@ -118,9 +119,8 @@ const ioGetAddrEth = async (options) => {
                 error: tx.error,
                 isContract: tx.iscontract,
                 isInner: tx.isinner,
-                value: tx.value,
-                txFee: tx.txfee,
-                dcm: tx.tokendcm || 18,
+                value: { val: tx.value, dcm: tx.tokendcm || 18 },
+                txFee: { val: tx.txfee, dcm: tx.tokendcm || 18 },
                 gasUsed: tx.gasused,
                 gasCost: tx.gascost,
             };
@@ -154,14 +154,14 @@ const GetAddrTokens = async (req, res) => {
                     error: tx.error,
                     isContract: tx.iscontract,
                     isInner: tx.isinner,
-                    value: tx.value,
+                    value: { val: tx.value, dcm: tx.tokendcm || 0 },
                     tokenAddr: tx.tokenaddr,
                     tokenName: tx.tokenname,
                     tokenSmbl: tx.tokensmbl,
-                    tokenDcm: tx.tokendcm,
+                    tokenDcm: tx.tokendcm, // todo remove
                     tokenType: tx.tokentype,
-                    txFee: tx.txfee,
-                    dcm: tx.tokendcm || 0,
+                    txFee: { val: tx.txfee, dcm: tx.tokendcm || 0 },
+                    dcm: tx.tokendcm || 0, // todo remove
                     gasUsed: tx.gasused,
                     gasCost: tx.gascost,
                 };
@@ -196,14 +196,14 @@ const ioGetAddrTokens = async (options) => {
                 error: tx.error,
                 isContract: tx.iscontract,
                 isInner: tx.isinner,
-                value: tx.value,
+                value: { val: tx.value, dcm: tx.tokendcm },
                 tokenAddr: tx.tokenaddr,
                 tokenName: tx.tokenname,
                 tokenSmbl: tx.tokensmbl,
-                tokenDcm: tx.tokendcm,
+                tokenDcm: tx.tokendcm, // todo remove
                 tokenType: tx.tokentype,
-                txFee: tx.txfee,
-                dcm: tx.tokendcm,
+                txFee: { val: tx.txfee, dcm: tx.tokendcm },
+                dcm: tx.tokendcm, // todo remove
                 gasUsed: tx.gasused,
                 gasCost: tx.gascost,
             };
@@ -271,9 +271,8 @@ const GetTokenBalance = async (req, res) => {
                     addr: token.addr,
                     name: token.name,
                     smbl: token.smbl,
-                    dcm: token.dcm,
                     type: token.type,
-                    balance: token.balance,
+                    balance: { val: token.balance, dcm: token.dcm },
                     icon: token.icon,
                     dynamic: token.dynamic,
                 };
@@ -298,9 +297,8 @@ const ioGetTokenBalance = async (options) => {
                 addr: token.addr,
                 name: token.name,
                 smbl: token.smbl,
-                dcm: token.dcm,
                 type: token.type,
-                balance: token.balance,
+                balance: { val: token.balance, dcm: token.dcm },
                 icon: token.icon,
                 dynamic: token.dynamic,
             };
