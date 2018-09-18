@@ -183,31 +183,32 @@ const GetTxDetails = async (hash) => {
                     else response.rows.push(tx);
                 });
                 // token txs
-                token_txs.forEach((token_tx) =>
-                    response.rows.push(
-                        Object({
-                            id: token_tx._id,
-                            hash: token_tx.hash,
-                            block: token_tx.block,
-                            addrFrom: token_tx.addrfrom,
-                            addrTo: token_tx.addrto,
-                            time: token_tx.isotime,
-                            type: token_tx.type,
-                            status: token_tx.status,
-                            error: token_tx.error,
-                            isContract: token_tx.iscontract,
-                            isInner: token_tx.isinner,
-                            value: { val: token_tx.value, dcm: token_tx.tokendcm || TOKENDCM },
-                            txFee: { val: token_tx.txfee, dcm: FEEDCM },
-                            tokenAddr: token_tx.tokenaddr,
-                            tokenName: token_tx.tokenname,
-                            tokenSmbl: token_tx.tokensmbl,
-                            tokenType: token_tx.tokentype,
-                            gasUsed: token_tx.gasused,
-                            gasCost: token_tx.gascost,
-                        })
-                    )
-                );
+                Array.isArray(token_txs) &&
+                    token_txs.forEach((token_tx) =>
+                        response.rows.push(
+                            Object({
+                                id: token_tx._id,
+                                hash: token_tx.hash,
+                                block: token_tx.block,
+                                addrFrom: token_tx.addrfrom,
+                                addrTo: token_tx.addrto,
+                                time: token_tx.isotime,
+                                type: token_tx.type,
+                                status: token_tx.status,
+                                error: token_tx.error,
+                                isContract: token_tx.iscontract,
+                                isInner: token_tx.isinner,
+                                value: { val: token_tx.value, dcm: token_tx.tokendcm || TOKENDCM },
+                                txFee: { val: token_tx.txfee, dcm: FEEDCM },
+                                tokenAddr: token_tx.tokenaddr,
+                                tokenName: token_tx.tokenname,
+                                tokenSmbl: token_tx.tokensmbl,
+                                tokenType: token_tx.tokentype,
+                                gasUsed: token_tx.gasused,
+                                gasCost: token_tx.gascost,
+                            })
+                        )
+                    );
             }
             return response;
         })
