@@ -45,8 +45,9 @@ router.get(v2_ptrn('erc20/transactions'), token_controller.txs); // list token t
 router.get(v2_ptrn('erc20/holders'), token_controller.holders); // ERC20 holders
 router.get(v2_ptrn('erc20/price'), token_controller.market); // Token market history
 
-/** SSO Auth endpoint */
+/** SSO Auth/Logout endpoint */
 router.get(v2_ptrn('auth'), auth_controller.auth);
+router.get(v2_ptrn('logout'), auth_controller.logout);
 
 /** REST API v.1 endpoints
  * - routing by moduleId parameter (current)

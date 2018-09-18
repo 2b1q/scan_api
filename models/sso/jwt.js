@@ -108,7 +108,7 @@ const ssoLogout = (access_tkn) =>
                 if (err) reject(err);
                 let statusCode = res.statusCode;
                 if (statusCode === 401) reject(error['401']);
-                console.log(`${c.green}============= Client loged out from SSO by access_token =============${c.yellow}`);
+                console.log(`${c.green}============= Client logged out from SSO by access_token =============${c.yellow}`);
                 console.log(body);
                 console.log(`${c.green}=====================================================================${c.white}`);
                 resolve(body);

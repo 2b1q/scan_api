@@ -61,3 +61,17 @@ exports.auth = async (req, res) => {
         res.status(401).json(e);
     }
 };
+
+/** REST LOGOUT */
+exports.logout = async (req, res) => {
+    console.log(`${wid_ptrn('auth')}`);
+    let token = getToken(req);
+    if (token.hasOwnProperty('errorCode')) return res.status(401).json(token);
+    // check AUTH token
+    try {
+        // res.set('Authorization', 'Bearer ' + jwt_access_token).json(jwt_access_token);
+        res.json(await jwt.ssoLogout(token));
+    } catch (e) {
+        res.status(401).json(e);
+    }
+};
