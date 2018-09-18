@@ -7,7 +7,10 @@ const block_model = require('../../models/v2/block'),
     check = require('../../utils/checker').cheker(),
     cfg = require('../../config/config'),
     cluster = require('cluster'),
-    c = cfg.color;
+    c = cfg.color,
+    ETHDCM = cfg.constants.ethdcm,
+    TOKENDCM = cfg.constants.tokendcm,
+    FEEDCM = cfg.constants.feedcm;
 
 // worker id pattern
 const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[block controller][API v.2] ${c.white}`)();
@@ -109,8 +112,8 @@ const io_GetBlockEth = async (options) => {
                     error: tx.error,
                     isContract: tx.iscontract,
                     isInner: tx.isinner,
-                    value: { val: tx.value, dcm: tx.tokendcm || 18 },
-                    txFee: { val: tx.txfee, dcm: tx.tokendcm || 18 },
+                    value: { val: tx.value, dcm: ETHDCM },
+                    txFee: { val: tx.txfee, dcm: FEEDCM },
                     gasUsed: tx.gasused,
                     gasCost: tx.gascost,
                 };
@@ -147,13 +150,12 @@ const io_GetBlockTokens = async (options) => {
                     error: tx.error,
                     isContract: tx.iscontract,
                     isInner: tx.isinner,
-                    value: { val: tx.value, dcm: tx.tokendcm || 0 },
+                    value: { val: tx.value, dcm: tx.tokendcm || TOKENDCM },
+                    txFee: { val: tx.txfee, dcm: FEEDCM },
                     tokenAddr: tx.tokenaddr,
                     tokenName: tx.tokenname,
                     tokenSmbl: tx.tokensmbl,
-                    tokenDcm: tx.tokendcm,
                     tokenType: tx.tokentype,
-                    txFee: { val: tx.txfee, dcm: tx.tokendcm },
                     gasUsed: tx.gasused,
                     gasCost: tx.gascost,
                 };
@@ -187,8 +189,8 @@ const GetBlockEth = async (req, res) => {
                     error: tx.error,
                     isContract: tx.iscontract,
                     isInner: tx.isinner,
-                    value: { val: tx.value, dcm: tx.tokendcm },
-                    txFee: { val: tx.txfee, dcm: tx.tokendcm },
+                    value: { val: tx.value, dcm: ETHDCM },
+                    txFee: { val: tx.txfee, dcm: FEEDCM },
                     gasUsed: tx.gasused,
                     gasCost: tx.gascost,
                 };
@@ -222,13 +224,13 @@ const GetBlockTokens = async (req, res) => {
                     error: tx.error,
                     isContract: tx.iscontract,
                     isInner: tx.isinner,
-                    value: { val: tx.value, dcm: tx.tokendcm || 18 },
+                    value: { val: tx.value, dcm: tx.tokendcm || TOKENDCM },
+                    txFee: { val: tx.txfee, dcm: FEEDCM },
                     tokenAddr: tx.tokenaddr,
                     tokenName: tx.tokenname,
                     tokenSmbl: tx.tokensmbl,
                     tokenDcm: tx.tokendcm,
                     tokenType: tx.tokentype,
-                    txFee: { val: tx.txfee, dcm: tx.tokendcm },
                     gasUsed: tx.gasused,
                     gasCost: tx.gascost,
                 };

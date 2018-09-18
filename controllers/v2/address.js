@@ -10,7 +10,10 @@ const addr_model = require('../../models/v2/address'),
     token_col = cfg.store.cols.token,
     erc_20_col = cfg.store.cols.erc20_cache,
     cluster = require('cluster'),
-    c = cfg.color;
+    c = cfg.color,
+    ETHDCM = cfg.constants.ethdcm,
+    TOKENDCM = cfg.constants.tokendcm,
+    FEEDCM = cfg.constants.feedcm;
 
 // worker id pattern
 const wid_ptrn = (endpoint) =>
@@ -82,8 +85,8 @@ const GetAddrEth = async (req, res) => {
                     error: tx.error,
                     isContract: tx.iscontract,
                     isInner: tx.isinner,
-                    value: { val: tx.value, dcm: tx.tokendcm },
-                    txFee: { val: tx.txfee, dcm: tx.tokendcm },
+                    value: { val: tx.value, dcm: ETHDCM },
+                    txFee: { val: tx.txfee, dcm: FEEDCM },
                     gasUsed: tx.gasused,
                     gasCost: tx.gascost,
                 };
@@ -119,8 +122,8 @@ const ioGetAddrEth = async (options) => {
                 error: tx.error,
                 isContract: tx.iscontract,
                 isInner: tx.isinner,
-                value: { val: tx.value, dcm: tx.tokendcm || 18 },
-                txFee: { val: tx.txfee, dcm: tx.tokendcm || 18 },
+                value: { val: tx.value, dcm: ETHDCM },
+                txFee: { val: tx.txfee, dcm: FEEDCM },
                 gasUsed: tx.gasused,
                 gasCost: tx.gascost,
             };
@@ -154,14 +157,12 @@ const GetAddrTokens = async (req, res) => {
                     error: tx.error,
                     isContract: tx.iscontract,
                     isInner: tx.isinner,
-                    value: { val: tx.value, dcm: tx.tokendcm || 0 },
+                    value: { val: tx.value, dcm: tx.tokendcm || TOKENDCM },
+                    txFee: { val: tx.txfee, dcm: FEEDCM },
                     tokenAddr: tx.tokenaddr,
                     tokenName: tx.tokenname,
                     tokenSmbl: tx.tokensmbl,
-                    tokenDcm: tx.tokendcm, // todo remove
                     tokenType: tx.tokentype,
-                    txFee: { val: tx.txfee, dcm: tx.tokendcm || 0 },
-                    dcm: tx.tokendcm || 0, // todo remove
                     gasUsed: tx.gasused,
                     gasCost: tx.gascost,
                 };
@@ -196,14 +197,12 @@ const ioGetAddrTokens = async (options) => {
                 error: tx.error,
                 isContract: tx.iscontract,
                 isInner: tx.isinner,
-                value: { val: tx.value, dcm: tx.tokendcm },
+                value: { val: tx.value, dcm: tx.tokendcm || TOKENDCM },
+                txFee: { val: tx.txfee, dcm: FEEDCM },
                 tokenAddr: tx.tokenaddr,
                 tokenName: tx.tokenname,
                 tokenSmbl: tx.tokensmbl,
-                tokenDcm: tx.tokendcm, // todo remove
                 tokenType: tx.tokentype,
-                txFee: { val: tx.txfee, dcm: tx.tokendcm },
-                dcm: tx.tokendcm, // todo remove
                 gasUsed: tx.gasused,
                 gasCost: tx.gascost,
             };
@@ -272,7 +271,7 @@ const GetTokenBalance = async (req, res) => {
                     name: token.name,
                     smbl: token.smbl,
                     type: token.type,
-                    balance: { val: token.balance, dcm: token.dcm },
+                    balance: { val: token.balance, dcm: token.dcm || TOKENDCM },
                     icon: token.icon,
                     dynamic: token.dynamic,
                 };
@@ -298,7 +297,7 @@ const ioGetTokenBalance = async (options) => {
                 name: token.name,
                 smbl: token.smbl,
                 type: token.type,
-                balance: { val: token.balance, dcm: token.dcm },
+                balance: { val: token.balance, dcm: token.dcm || TOKENDCM },
                 icon: token.icon,
                 dynamic: token.dynamic,
             };
