@@ -48,6 +48,7 @@ router.get(v2_ptrn('erc20/price'), token_controller.market); // Token market his
 /** SSO Auth/Logout endpoint */
 router.get(v2_ptrn('auth'), auth_controller.auth);
 router.get(v2_ptrn('logout'), auth_controller.logout);
+router.get(v2_ptrn('restricted_'), auth_controller.restricted);
 
 /** REST API v.1 endpoints
  * - routing by moduleId parameter (current)

@@ -64,7 +64,7 @@ exports.auth = async (req, res) => {
 
 /** REST LOGOUT */
 exports.logout = async (req, res) => {
-    console.log(`${wid_ptrn('auth')}`);
+    console.log(`${wid_ptrn('logout')}`);
     let token = getToken(req);
     if (token.hasOwnProperty('errorCode')) return res.status(401).json(token);
     // check AUTH token
@@ -74,4 +74,18 @@ exports.logout = async (req, res) => {
     } catch (e) {
         res.status(401).json(e);
     }
+};
+
+/** REST restricted TEST JWT */
+exports.restricted = async (req, res) => {
+    let secret_payload = {
+        msg: 'secret_payload ',
+    };
+    console.log(`${wid_ptrn('restricted test')}`);
+    let token = getToken(req);
+    if (token.hasOwnProperty('errorCode')) return res.status(401).json(token);
+    // check access token
+    jwt.verifyAccessToken(token)
+        .then(res.set('Authorization', 'Bearer ' + jwt_access_token).json(secret_payload))
+        .catch((e) => res.status(401).json(e));
 };
