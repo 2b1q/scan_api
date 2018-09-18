@@ -147,10 +147,10 @@ const GetTxDetails = async (hash) => {
                         time: moment(), // время транзакции = текущее время. Номер блока не определен.
                         type: 'tx', // тип транзакции. Возможны варианты: [tx]
                         status: -1, // Статус = -1. Результат транзакции не определен.
+                        error: '',
                         isContract: 0, // 0 - обычная транзакция, 1 - создание транзакции
-                        value: tx.value === null || tx.value === undefined ? null : tx.value,
-                        txFee: '0', // Всегда 0. Не известно сколько газа потрачено.
-                        dcm: 18,
+                        value: { val: tx.value === null || tx.value === undefined ? null : tx.value, dcm: 18 },
+                        txFee: { val: '0', dcm: 18 }, // Всегда 0. Не известно сколько газа потрачено.
                         gasUsed: 0, // Всегда 0. Не известно сколько газа потрачено.
                         gasCost: tx.gascost, // стоимость газа в ETH
                         data: tx.data, // данные, которые были отправлены в транзакцию. В бинарном виде
@@ -170,9 +170,8 @@ const GetTxDetails = async (hash) => {
                     status: eth_tx.status,
                     error: eth_tx.error,
                     isContract: eth_tx.iscontract,
-                    value: eth_tx.value,
-                    txFee: eth_tx.txfee,
-                    dcm: 18,
+                    value: { val: eth_tx.value, dcm: 18 },
+                    txFee: { val: eth_tx.txfee, dcm: 18 },
                     gasUsed: eth_tx.gasused,
                     gasCost: eth_tx.gascost,
                     data: eth_tx.hash === data.hash ? data.data : undefined,
@@ -192,12 +191,12 @@ const GetTxDetails = async (hash) => {
                             error: token.error,
                             isContract: token.iscontract,
                             isInner: token.isinner,
-                            value: token.value,
+                            value: { val: token.value, dcm: token.tokendcm },
                             tokenAddr: token.tokenaddr,
                             tokenName: token.tokenname,
                             tokenSmbl: token.tokensmbl,
                             tokenType: token.tokentype,
-                            txFee: token.txfee,
+                            txFee: { val: token.txfee, dcm: token.tokendcm },
                             dcm: token.tokendcm,
                             gasUsed: token.gasused,
                             gasCost: token.gascost,
