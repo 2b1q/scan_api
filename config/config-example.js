@@ -9,6 +9,13 @@ config.server = {
 // cluster config workers (not by CPU count!)
 config.workers = process.env.NODE_ENV == 'PROD' ? 4 : 2;
 
+// dcm constants
+config.constants = {
+    tokendcm: 0,
+    ethdcm: 18,
+    feedcm: 18,
+};
+
 // DataStore config
 config.store = {
     mongo: {
@@ -37,8 +44,8 @@ config.cookie = {
 };
 
 config.sso = {
-    refreshJwtURL: 'https://sso-uat.bankexlab.com/api/v1/token', // SSO POST refresh JWT endpoint
-    logoutJwtURL: 'https://sso-uat.bankexlab.com/api/v1/logout', // SSO POST Logout Backend endpoint
+    refreshJwtURL: 'https://sso-dev.bankexlab.com/api/v1/token', // SSO POST refresh JWT endpoint
+    logoutJwtURL: 'https://sso-dev.bankexlab.com/api/v1/logout', // SSO POST Logout Backend endpoint
 };
 
 // interaction with other SCAN API nodes
