@@ -1,8 +1,9 @@
 const moment = require('moment'),
     cfg = require('../config/config'),
+    project = cfg.project,
+    api_version = cfg.api_version,
     logger = require('../utils/logger')(module),
     cluster = require('cluster'),
-    _jwt = require('jsonwebtoken'),
     jwt = require('../models/sso/jwt'),
     c = cfg.color,
     check = require('../utils/checker').cheker();
@@ -18,9 +19,12 @@ const wid_ptrn = (endpoint) =>
 let logit = (req, msg = '') => {
     return {
         msg: msg,
+        api_version: api_version,
+        module: 'SSO AUTH REST API controller',
+        project: project,
         post_params: req.body,
         get_params: req.query,
-        timestamp: (() => moment().format('DD.MM.YYYY HH:mm:ss'))(),
+        timestamp: (() => moment())(),
         path: module.filename
             .split('/')
             .slice(-2)

@@ -6,6 +6,8 @@ const block_model = require('../../models/v2/block'),
     moment = require('moment'),
     check = require('../../utils/checker').cheker(),
     cfg = require('../../config/config'),
+    api_version = cfg.api_version,
+    project = cfg.project,
     cluster = require('cluster'),
     c = cfg.color,
     ETHDCM = cfg.constants.ethdcm,
@@ -15,13 +17,15 @@ const block_model = require('../../models/v2/block'),
 // worker id pattern
 const wid_ptrn = (() => `${c.green}worker[${cluster.worker.id}]${c.cyan}[block controller][API v.2] ${c.white}`)();
 
-// simple query logger
 let logit = (req, msg = '') => {
     return {
         msg: msg,
+        api_version: api_version,
+        module: 'block controller',
+        project: project,
         post_params: req.body,
         get_params: req.query,
-        timestamp: (() => moment().format('DD.MM.YYYY HH:mm:ss'))(),
+        timestamp: (() => moment())(),
         path: module.filename
             .split('/')
             .slice(-2)

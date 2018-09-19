@@ -14,6 +14,7 @@ function getLogger(module) {
         };
 
     logger.info = winston.createLogger({
+        format: winston.format.json(),
         transports: [
             new winston.transports.Console(console),
             new winston.transports.File({ filename: './logs/info.log', label: path }),
@@ -21,6 +22,7 @@ function getLogger(module) {
     }).info;
 
     logger.auth = winston.createLogger({
+        format: winston.format.json(),
         transports: [
             new winston.transports.Console(console),
             new winston.transports.File({ filename: './logs/auth.log', label: path }),
@@ -28,6 +30,7 @@ function getLogger(module) {
     }).info;
 
     logger.error = winston.createLogger({
+        format: winston.format.json(),
         transports: [
             new winston.transports.Console(console),
             new winston.transports.File({
@@ -39,12 +42,14 @@ function getLogger(module) {
     }).error;
 
     logger.warn = winston.createLogger({
+        format: winston.format.json(),
         transports: [new winston.transports.Console(console)],
     }).warn;
 
     logger.api_requests = winston.createLogger({
+        format: winston.format.json(),
         transports: [
-            // new (winston.transports.Console)(console),
+            // new winston.transports.Console(console),
             new winston.transports.File({
                 filename: './logs/api_requests.log',
                 label: path,
@@ -55,6 +60,7 @@ function getLogger(module) {
     }).info;
 
     logger.model = winston.createLogger({
+        format: winston.format.json(),
         transports: [
             // new (winston.transports.Console)(console),
             new winston.transports.File({
@@ -67,6 +73,7 @@ function getLogger(module) {
     }).info;
 
     logger.socket_requests = winston.createLogger({
+        format: winston.format.json(),
         transports: [
             new winston.transports.Console(console),
             new winston.transports.File({

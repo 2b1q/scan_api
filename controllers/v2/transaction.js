@@ -5,6 +5,8 @@
 const tnx_model = require('../../models/v2/transaction'),
     cluster = require('cluster'),
     cfg = require('../../config/config'),
+    api_version = cfg.api_version,
+    project = cfg.project,
     eth_col = cfg.store.cols.eth,
     token_col = cfg.store.cols.token,
     logger = require('../../utils/logger')(module),
@@ -25,9 +27,12 @@ const wid_ptrn = (endpoint) =>
 let logit = (req, msg = '') => {
     return {
         msg: msg,
+        api_version: api_version,
+        module: 'transaction controller',
+        project: project,
         post_params: req.body,
         get_params: req.query,
-        timestamp: (() => moment().format('DD.MM.YYYY HH:mm:ss'))(),
+        timestamp: (() => moment())(),
         path: module.filename
             .split('/')
             .slice(-2)

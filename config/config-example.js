@@ -1,5 +1,7 @@
 const config = {};
 
+config.api_version = 'v. 2.1';
+
 config.server = {
     port1: 3000,
     port2: 3001,
@@ -20,7 +22,7 @@ config.constants = {
 config.store = {
     mongo: {
         uri: 'mongodb://localhost:26017/', // hardcoded
-        dbname: 'bkx_main_2',
+        dbname: 'bkx_main_3',
         options: {
             // autoIndex: false,
             poolSize: 10, // количество подключений в пуле

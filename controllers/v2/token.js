@@ -1,5 +1,7 @@
 const cluster = require('cluster'),
     cfg = require('../../config/config'),
+    api_version = cfg.api_version,
+    project = cfg.project,
     logger = require('../../utils/logger')(module),
     token_module = require('../../models/v2/token'),
     moment = require('moment'),
@@ -14,10 +16,12 @@ const wid_ptrn = (msg) =>
 let logit = (req, msg = '') => {
     return {
         msg: msg,
+        api_version: api_version,
+        module: 'token controller',
+        project: project,
         post_params: req.body,
         get_params: req.query,
-        module: 'token controller',
-        timestamp: (() => moment().format('DD.MM.YYYY HH:mm:ss'))(),
+        timestamp: (() => moment())(),
         path: module.filename
             .split('/')
             .slice(-2)
