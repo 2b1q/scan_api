@@ -26,7 +26,7 @@ const print_event = (action) => {
 
 // io options API v.2
 const io_opts = {
-    path: '/ws', // API v2 PATH
+    path: '/ws/v2_1', // API v2 PATH
     serveClient: false, // (Boolean): whether to serve the client files
     // below are engine.IO options
     pingInterval: 10000, // (Number): how many ms without a pong packet to consider the connection closed
@@ -37,7 +37,8 @@ const io_opts = {
 /** check listId*/
 const checkListId = (lid) => Object.values(config.list_type).includes(lid);
 /** check block options.*/
-const checkBlockOptions = (block, size, offset) => (block !== 0 ? check.normalize_pagination({ block: parseInt(block) }, size, offset) : false);
+const checkBlockOptions = (block, size, offset) =>
+    block !== 0 ? check.normalize_pagination({ block: parseInt(block) }, size, offset) : false;
 /** check size is undefined */
 const checkNoSize = (size) => (!size ? true : false);
 /** check offset is undefined or 0 */
@@ -208,7 +209,11 @@ const init_io_handler = (io) => {
             else err_log = { error: '2nd argument is not a function', con_object: con_obj };
         };
         console.log(
-            wid_ptrn(`client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${c.magenta}${socket.handshake.url}${c.green}`)
+            wid_ptrn(
+                `client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${c.magenta}${
+                    socket.handshake.url
+                }${c.green}`
+            )
         );
 
         /** socket.on(eventName, cb(arg1, arg2))
