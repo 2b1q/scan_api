@@ -54,14 +54,6 @@ config.interaction = {
     scanEngine: 'http://localhost:7009', // Scan Engine events and ETH proxy requests
 };
 
-// pager API v.1
-config.page = {
-    min_page: 1,
-    max_page: 30000,
-    min_size: 10,
-    max_size: 200,
-};
-
 // pagination API v.2 (offset & size) properties
 config.pagination = {
     min_offset: 0,
