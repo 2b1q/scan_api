@@ -29,11 +29,11 @@ const check_module_singleton = (() => {
             no_addr: { errorCode: 400, errorMessage: 'parameter "addr" not found' }, // API v.2
             no_jwt: { errorCode: 401, errorMessage: 'invalid token' }, // API v.2
             wrong_addr: { errorCode: 400, errorMessage: 'Wrong "addr" property' }, // API v.2
+            no_blockNumber: { error: 'blockNumber not found' }, // API v.2
             bad_search_parameter: (q) => Object({ errorCode: 400, errorMessage: `Wrong "q" property: "${q}"` }), // API v.2
             bad_hash: (hash) => Object({ errorCode: 400, errorMessage: `Bad Hash value "${hash}"` }), // API v.2
             wrong_io_params: { errorCode: 400, errorMessage: 'Wrong "parameters" ' }, // API v.2
             unknown_listid_io: { errorCode: 404, errorMessage: 'Unknown listId' }, // API v.2
-            unknown_listid: { error: 'Unknown listId' },
             bad_addr: (addr) => Object({ error: `Bad addr value "${addr}"` }),
         };
         // normalize (size, offset) params API v.2
