@@ -44,9 +44,9 @@ describe('Socket.io API v. 2.1 "search block or tokens"', () => {
         socket.on('connect', () => {
             socket.emit(event, JSON.stringify(serch_query), (e) => error_handler(socket, e, done));
             socket.on(event, (data) => {
-                console.log(data);
                 expect(JSON.parse(data).blocks).to.be.an('array').that.is.not.empty;
                 done();
+                console.log(data);
                 socket.disconnect();
             });
         });
