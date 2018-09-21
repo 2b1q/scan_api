@@ -34,9 +34,8 @@ describe('Socket.io API v. 2.1 "search block or tokens"', () => {
         });
     });
 
-    it(`event "${event}" and serch_query "${
-        serch_query.q
-    }" => should emit event ${event} blocks array that is not empty`, (done) => {
+    it(`event "${event}" and q:"${serch_query.q}" 
+    => server should emit "${event}" event with blocks and tokens not empty arrays`, (done) => {
         const socket = io.connect(
             url,
             io_options
@@ -44,7 +43,26 @@ describe('Socket.io API v. 2.1 "search block or tokens"', () => {
         socket.on('connect', () => {
             socket.emit(event, JSON.stringify(serch_query), (e) => error_handler(socket, e, done));
             socket.on(event, (data) => {
-                expect(JSON.parse(data).blocks).to.be.an('array').that.is.not.empty;
+                let object = JSON.parse(data);
+                expect(object.blocks).to.be.an('array').that.is.not.empty;
+                expect(object.tokens).to.be.an('array').that.is.not.empty;
+                done();
+                console.log(data);
+                socket.disconnect();
+                serch_query.q = 'bKx';
+            });
+        });
+    });
+
+    it(`event "${event}" and q:"${serch_query.q}" => server should emit "${event}" event with BKX token`, (done) => {
+        const socket = io.connect(
+            url,
+            io_options
+        );
+        socket.on('connect', () => {
+            socket.emit(event, JSON.stringify(serch_query), (e) => error_handler(socket, e, done));
+            socket.on(event, (data) => {
+                expect(JSON.parse(data).tokens[0].smbl).to.includes('BKX');
                 done();
                 console.log(data);
                 socket.disconnect();
