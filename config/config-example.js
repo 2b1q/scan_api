@@ -1,6 +1,7 @@
 const config = {};
 
 config.api_version = 'v. 2.1';
+config.project = 'BANKEX SCAN';
 
 config.server = {
     port1: 3000,
@@ -16,6 +17,12 @@ config.constants = {
     tokendcm: 0,
     ethdcm: 18,
     feedcm: 18,
+};
+
+// search constants
+config.search = {
+    MAX_RESULT_SIZE: 1000,
+    DEFAULT_SIZE: 20,
 };
 
 // DataStore config
@@ -86,6 +93,8 @@ config.events = {
         tx_d: 'txDetails',
         block_d: 'blockDetails',
         addr_d: 'addressDetails',
+        search: 'search',
+        erc20_det: 'erc20Details',
     },
 };
 
