@@ -78,6 +78,6 @@ const tokenOrBlockSearchIO = (query_params) =>
     });
 
 module.exports = {
-    tokenOrBlock: tokenOrBlockSearch, // [HTTP REST] (API v.2) tokenOrBlockSearch
-    tokenOrBlockIO: tokenOrBlockSearchIO,
+    tokenOrBlock: tokenOrBlockSearch, // [HTTP REST] (API v.2.1) tokenOrBlockSearch
+    tokenOrBlockIO: tokenOrBlockSearchIO, // [Socket.io] (API v.2.1) tokenOrBlockSearchIO
 };

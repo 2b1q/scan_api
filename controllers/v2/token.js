@@ -72,7 +72,7 @@ const checkAddr = (req, res) => {
     } else return c_addr;
 };
 
-/** ERC20 token info */
+/** ERC20 token info REST API */
 const erc20info = (req, res) => {
     console.log(`${wid_ptrn('erc20info')}`);
     let c_addr = checkAddr(req, res);
@@ -81,6 +81,13 @@ const erc20info = (req, res) => {
             .erc20info(c_addr)
             .then((response) => (response.errorCode && res.status(404).json(response)) || res.json(response));
 };
+
+/** ERC20 token info Socket.io */
+const erc20infoIO = (addr) =>
+    new Promise((resolve) => {
+        console.log(`${wid_ptrn('erc20info socket.io')}`);
+        addr && token_module.erc20info(addr).then((response) => (response.errorCode && resolve(response)) || resolve(response));
+    });
 
 /** list token transactions */
 const txlist = (req, res) => {
@@ -117,4 +124,5 @@ module.exports = {
     txs: txlist, // REST GET 'erc20/transactions' list token transactions
     holders: holders, // REST GET 'erc20/holders' ERC20 holders
     market: markethist, // REST GET 'erc20/price' Token market history
+    erc20infoIO: erc20infoIO, // socket.io erc20Details event
 };

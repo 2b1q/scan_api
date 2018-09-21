@@ -12,6 +12,7 @@ const cluster = require('cluster'),
     block_controller = require('../controllers/v2/block'),
     addr_controller = require('../controllers/v2/address'),
     search_controller = require('../controllers/v2/search'),
+    token_controller = require('../controllers/v2/token'),
     MAX_RESULT_SIZE = cfg.search.MAX_RESULT_SIZE,
     DEFAULT_SIZE = cfg.search.DEFAULT_SIZE;
 
@@ -92,6 +93,7 @@ const emit = async (event, socket, data, con_obj, err) => {
     // setup request params
     let options = {},
         response = {},
+        caddr,
         { listId, moduleId, params, addr = 0, block, hash = 0, q, size } = JSON.parse(data);
     if (params) {
         let { entityId = 0, size, offset } = params || {};
@@ -181,7 +183,7 @@ const emit = async (event, socket, data, con_obj, err) => {
             break;
         case e.addr_d: // get addr details event = 'addressDetails'
             print_event('socket.io > addressDetails');
-            let caddr = check.cut0xClean(addr);
+            caddr = check.cut0xClean(addr);
             response = check.checkAddr(caddr) ? await addr_controller.io_details(caddr) : check.get_msg().wrong_addr;
             break;
         case e.block_d: // get block details event = 'blockDetails'
@@ -199,6 +201,11 @@ const emit = async (event, socket, data, con_obj, err) => {
             print_event('socket.io > search');
             let search_params = checkSearchParams(q, size);
             response = search_params ? await search_controller.tokenOrBlockIO(search_params) : check.get_msg().wrong_io_params;
+            break;
+        case e.erc20_det: // get tnx details event = 'erc20Details'
+            print_event('socket.io > erc20Details');
+            caddr = check.cut0xClean(addr);
+            response = check.checkAddr(caddr) ? await token_controller.erc20infoIO(caddr) : check.get_msg().wrong_addr;
             break;
         default:
             response = { errorCode: 404, errorMessage: 'Unknown moduleId' };
@@ -254,6 +261,8 @@ const init_io_handler = (io) => {
         socket.on(e.list, (data, err) => e_wrapper(e.list, data, err));
         /** 'search' event handler */
         socket.on(e.search, (data, err) => e_wrapper(e.search, data, err));
+        /** 'erc20Details' event handler */
+        socket.on(e.erc20_det, (data, err) => e_wrapper(e.erc20_det, data, err));
 
         /** 'disconnection' event handler */
         socket.on('disconnect', (data) => log_event('disconnect', data, con_obj));
