@@ -94,10 +94,8 @@ const emit = async (event, socket, data, con_obj, err) => {
     let options = {},
         response = {},
         caddr,
-        { listId, moduleId, params, addr = 0, block, hash = 0, q, size } = JSON.parse(data);
-    if (params) {
-        let { entityId = 0, size, offset } = params || {};
-    }
+        { listId, moduleId, params, addr = 0, block, hash = 0, q } = JSON.parse(data);
+    let { entityId = 0, size, offset } = params || {};
 
     // tx_opts = check.build_io_opts(params, listId, mod`uleId, entityId); // built tx options for GetlastTx
     switch (event) {
@@ -200,6 +198,7 @@ const emit = async (event, socket, data, con_obj, err) => {
         case e.search: // get tnx details event = 'search'
             print_event('socket.io > search');
             let search_params = checkSearchParams(q, size);
+            console.log(search_params);
             response = search_params ? await search_controller.tokenOrBlockIO(search_params) : check.get_msg().wrong_io_params;
             break;
         case e.erc20_det: // get tnx details event = 'erc20Details'
