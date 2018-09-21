@@ -1,0 +1,24 @@
+{
+  "name": "test_api",
+  "version": "1.0.0",
+  "description": "BANKEX SCAN Unit tests",
+  "scripts": {
+    "//test": "block=6366555 scanurl='http://192.168.1.87:3000' JUNIT_REPORT_PATH=test_result/result.xml mocha --timeout 25000 --colors --reporter mocha-jenkins-reporter || true",
+    "test": "block=6366555 scanurl='https://scan-dev.bkxtech.com' JUNIT_REPORT_PATH=test_result/result.xml mocha --timeout 25000 --colors --reporter mocha-jenkins-reporter || true"
+  },
+  "keywords": [
+    "bankex",
+    "scan",
+    "test",
+    "api"
+  ],
+  "author": "2bb1q",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
+    "mocha-jenkins-reporter": "^0.4.0",
+    "supertest": "^3.3.0"
+  }
+}
