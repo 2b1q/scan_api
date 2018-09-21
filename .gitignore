@@ -12,7 +12,7 @@ config/secret
 config/sso_secret.pub
 
 # test results
-test_result
+result.xml
 
 # OS X files
 .DS_Store
