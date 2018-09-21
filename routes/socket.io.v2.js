@@ -1,16 +1,19 @@
 // socket.io controller
 const cluster = require('cluster'),
-    config = require('../config/config'),
-    c = config.color,
-    e = config.events.client, // socket IO client events
-    m = config.modules, // modules
-    l = config.list_type, // modules
+    cfg = require('../config/config'),
+    c = cfg.color,
+    e = cfg.events.client, // socket IO client events
+    m = cfg.modules, // modules
+    l = cfg.list_type, // modules
     logger = require('../utils/logger')(module),
     moment = require('moment'),
     check = require('../utils/checker').cheker(),
     tnx_controller = require('../controllers/v2/transaction'),
     block_controller = require('../controllers/v2/block'),
-    addr_controller = require('../controllers/v2/address');
+    addr_controller = require('../controllers/v2/address'),
+    search_controller = require('../controllers/v2/search'),
+    MAX_RESULT_SIZE = cfg.search.MAX_RESULT_SIZE,
+    DEFAULT_SIZE = cfg.search.DEFAULT_SIZE;
 
 // cluster.worker.id
 const wid = cluster.worker.id;
@@ -35,7 +38,7 @@ const io_opts = {
 };
 
 /** check listId*/
-const checkListId = (lid) => Object.values(config.list_type).includes(lid);
+const checkListId = (lid) => Object.values(cfg.list_type).includes(lid);
 /** check block options.*/
 const checkBlockOptions = (block, size, offset) =>
     block !== 0 ? check.normalize_pagination({ block: parseInt(block) }, size, offset) : false;
@@ -64,6 +67,20 @@ const checkTxOptions = (listId, size, offset) => {
     return obj;
 };
 
+/** Check search parameters */
+const checkSearchParams = (q, size) => {
+    size = isNaN(parseInt(size)) ? DEFAULT_SIZE : parseInt(size);
+    size = size > MAX_RESULT_SIZE ? MAX_RESULT_SIZE : size;
+    // check "q" parameter is exist OR !== 0
+    return !q || parseInt(q) === 0
+        ? false
+        : {
+              block_query: parseInt(q), // NaN if string started from chars
+              token_query: q,
+              size: size,
+          };
+};
+
 /** send msg to client*/
 const emitMsg = (socket, event, msg) => socket.emit(event, JSON.stringify(msg));
 
@@ -75,8 +92,10 @@ const emit = async (event, socket, data, con_obj, err) => {
     // setup request params
     let options = {},
         response = {},
-        { listId, moduleId, params, addr = 0, block, hash = 0 } = JSON.parse(data),
-        { entityId = 0, size, offset } = params || {};
+        { listId, moduleId, params, addr = 0, block, hash = 0, q, size } = JSON.parse(data);
+    if (params) {
+        let { entityId = 0, size, offset } = params || {};
+    }
 
     // tx_opts = check.build_io_opts(params, listId, mod`uleId, entityId); // built tx options for GetlastTx
     switch (event) {
@@ -176,6 +195,11 @@ const emit = async (event, socket, data, con_obj, err) => {
             let chash = check.cut0xClean(hash);
             response = check.checkHash(chash) ? await tnx_controller.io_details(chash) : check.get_msg().bad_hash(hash);
             break;
+        case e.search: // get tnx details event = 'search'
+            print_event('socket.io > search');
+            let search_params = checkSearchParams(q, size);
+            response = search_params ? await search_controller.tokenOrBlockIO(search_params) : check.get_msg().wrong_io_params;
+            break;
         default:
             response = { errorCode: 404, errorMessage: 'Unknown moduleId' };
     }
@@ -187,10 +211,11 @@ const emit = async (event, socket, data, con_obj, err) => {
 // log Event
 const log_event = (event, data, con_obj) =>
     logger.socket_requests({
-        api: 'v.2',
+        api: 'v. 2.1',
         event: event,
+        module: 'ws socket.io',
         data: data,
-        timestamp: moment().format('DD.MM.YYYY HH:mm:ss'),
+        timestamp: moment(),
         connected_obj: con_obj,
     });
 
@@ -227,6 +252,9 @@ const init_io_handler = (io) => {
         socket.on(e.tx_d, (data, err) => e_wrapper(e.tx_d, data, err));
         /** 'list' event handler */
         socket.on(e.list, (data, err) => e_wrapper(e.list, data, err));
+        /** 'search' event handler */
+        socket.on(e.search, (data, err) => e_wrapper(e.search, data, err));
+
         /** 'disconnection' event handler */
         socket.on('disconnect', (data) => log_event('disconnect', data, con_obj));
         /** 'error' event handler */

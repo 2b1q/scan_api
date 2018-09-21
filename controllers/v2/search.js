@@ -7,8 +7,8 @@ const cluster = require('cluster'),
     moment = require('moment'),
     check = require('../../utils/checker').cheker(),
     c = cfg.color,
-    MAX_RESULT_SIZE = 1000,
-    DEFAULT_SIZE = 20;
+    MAX_RESULT_SIZE = cfg.search.MAX_RESULT_SIZE,
+    DEFAULT_SIZE = cfg.search.DEFAULT_SIZE;
 
 /** worker id pattern */
 const wid_ptrn = (msg) =>
@@ -31,7 +31,7 @@ let logit = (req, msg = '') => {
     };
 };
 
-/** Check Tx parameters */
+/** Check search parameters */
 const checkSearchParams = (req, res) => {
     logger.api_requests(logit(req)); // log query data any way
     let params = req.query || {};
@@ -53,7 +53,7 @@ const checkSearchParams = (req, res) => {
 
 /** Common REST API controller for Block/Token search */
 const tokenOrBlockSearch = (req, res) => {
-    console.log(`${wid_ptrn('tokenOrBlockSearch')}`);
+    console.log(`${wid_ptrn('tokenOrBlockSearch REST')}`);
     let query_params = checkSearchParams(req, res);
     if (query_params) {
         Promise.all([search_model.block(query_params), search_model.token(query_params)])
@@ -67,6 +67,17 @@ const tokenOrBlockSearch = (req, res) => {
     }
 };
 
+/** Common IO API controller for Block/Token search */
+const tokenOrBlockSearchIO = (query_params) =>
+    new Promise((resolve) => {
+        if (query_params) {
+            Promise.all([search_model.block(query_params), search_model.token(query_params)])
+                .then(([blocks, tokens]) => resolve({ blocks: blocks, tokens: tokens }))
+                .catch(() => resolve({ blocks: [], tokens: [] }));
+        }
+    });
+
 module.exports = {
     tokenOrBlock: tokenOrBlockSearch, // [HTTP REST] (API v.2) tokenOrBlockSearch
+    tokenOrBlockIO: tokenOrBlockSearchIO,
 };
