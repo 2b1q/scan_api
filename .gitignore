@@ -10,6 +10,7 @@ node.log
 config.js
 config/secret
 config/sso_secret.pub
+package-lock.json
 
 # test results
 result.xml
