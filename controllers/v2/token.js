@@ -92,7 +92,13 @@ const txlistIO = (options) =>
     new Promise((resolve) => {
         console.log(`${wid_ptrn('txlistIO socket.io')}`);
         options &&
-            token_module.erc20txlist(options).then((response) => (response.errorCode && resolve(response)) || resolve(response));
+            token_module.erc20txlist(options).then((response) => {
+                response.head.entityId = options.addr;
+                response.head.listId = 'listOfTokens';
+                response.head.moduleId = 'erc20Token';
+                response.head.addr && delete response.head.addr;
+                (response.errorCode && resolve(response)) || resolve(response);
+            });
     });
 
 /** list token transactions REST  */
