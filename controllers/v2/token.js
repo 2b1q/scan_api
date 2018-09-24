@@ -88,7 +88,7 @@ const markethistIO = (options) =>
                 response.head.entityId = options.addr;
                 response.head.size = options.size;
                 response.head.offset = options.offset;
-                response.head.listId = 'listOfTokens';
+                response.head.listId = 'listOfTokenPrice';
                 response.head.moduleId = 'erc20Token';
                 response.head.addr && delete response.head.addr;
                 (response.errorCode && resolve(response)) || resolve(response);
