@@ -198,6 +198,9 @@ const emit = async (event, socket, data, con_obj, err) => {
                         case l.token:
                             response = await token_controller.txlistIO({ addr: caddr, size: size, offset: offset });
                             break;
+                        case l.token_holders:
+                            response = await token_controller.txlistIO({ addr: caddr, size: size, offset: offset });
+                            break;
                         default:
                             response = check.get_msg().unknown_listid_io;
                     }

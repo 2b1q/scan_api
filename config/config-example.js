@@ -86,6 +86,7 @@ config.list_type = {
     token: 'listOfTokens',
     token_balance: 'listOfTokenBalance',
     token_price: 'listOfTokenPrice',
+    token_holders: 'listOfHolders',
 };
 
 // socket io client evens

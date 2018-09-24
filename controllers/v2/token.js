@@ -101,6 +101,14 @@ const txlistIO = (options) =>
             });
     });
 
+/** ERC20 holders */
+const holdersIO = (options) =>
+    new Promise((resolve) => {
+        console.log(`${wid_ptrn('holdersIO socket.io')}`);
+        options &&
+            token_module.erc20holders(options).then((response) => (response.errorCode && resolve(response)) || resolve(response));
+    });
+
 /** list token transactions REST  */
 const txlist = (req, res) => {
     console.log(`${wid_ptrn('txlist rest')}`);
@@ -121,7 +129,7 @@ const erc20info = (req, res) => {
             .then((response) => (response.errorCode && res.status(404).json(response)) || res.json(response));
 };
 
-/** ERC20 holders */
+/** ERC20 holders REST */
 const holders = (req, res) => {
     console.log(`${wid_ptrn('holders')}`);
     let options = checkAddrkParams(req, res, { with_offset: true });
@@ -147,6 +155,7 @@ module.exports = {
     holders: holders, // REST GET 'erc20/holders' ERC20 holders
     market: markethist, // REST GET 'erc20/price' Token market history
     erc20infoIO: erc20infoIO, // socket.io erc20Details event
-    markethistIO: markethistIO, // socket.io erc20 token market history
-    txlistIO: txlistIO, // socket.io erc20 token transactions
+    markethistIO: markethistIO, // socket.io ERC20 token market history
+    txlistIO: txlistIO, // socket.io ERC20  token transactions
+    holdersIO: holdersIO, // socket.io ERC20  token holders
 };
