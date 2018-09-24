@@ -84,7 +84,15 @@ const markethistIO = (options) =>
     new Promise((resolve) => {
         console.log(`${wid_ptrn('markethist socket.io')}`);
         options &&
-            token_module.erc20market(options).then((response) => (response.errorCode && resolve(response)) || resolve(response));
+            token_module.erc20market(options).then((response) => {
+                response.head.entityId = options.addr;
+                response.head.size = options.size;
+                response.head.offset = options.offset;
+                response.head.listId = 'listOfTokens';
+                response.head.moduleId = 'erc20Token';
+                response.head.addr && delete response.head.addr;
+                (response.errorCode && resolve(response)) || resolve(response);
+            });
     });
 
 /** list token transactions socket.io */
@@ -94,6 +102,8 @@ const txlistIO = (options) =>
         options &&
             token_module.erc20txlist(options).then((response) => {
                 response.head.entityId = options.addr;
+                response.head.size = options.size;
+                response.head.offset = options.offset;
                 response.head.listId = 'listOfTokens';
                 response.head.moduleId = 'erc20Token';
                 response.head.addr && delete response.head.addr;
