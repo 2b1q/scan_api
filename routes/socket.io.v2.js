@@ -152,7 +152,7 @@ const emit = async (event, socket, data, con_obj, err) => {
                     break;
                 case m.addr: // moduleId => address
                     // clear address
-                    let caddr = check.cut0xClean(entityId);
+                    caddr = check.cut0xClean(entityId);
                     // check bad address
                     if (!check.checkAddr(caddr)) response = check.get_msg().wrong_addr;
                     else {
@@ -180,13 +180,20 @@ const emit = async (event, socket, data, con_obj, err) => {
                     }
                     break;
                 case m.erc20: // moduleId => erc20Token
+                    // clear address
+                    caddr = check.cut0xClean(entityId);
+                    // check bad address
+                    if (!check.checkAddr(caddr)) {
+                        response = check.get_msg().wrong_addr;
+                        break;
+                    }
                     if (check_opts.bad) {
                         response = check_opts.msg;
                         break;
                     }
                     switch (listId) {
                         case l.token_price:
-                            response = await token_controller.markethistIO({ addr: entityId, size: size });
+                            response = await token_controller.markethistIO({ addr: caddr, size: size });
                             break;
                         default:
                             response = check.get_msg().unknown_listid_io;
