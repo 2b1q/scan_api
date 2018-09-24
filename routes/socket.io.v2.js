@@ -195,6 +195,9 @@ const emit = async (event, socket, data, con_obj, err) => {
                         case l.token_price:
                             response = await token_controller.markethistIO({ addr: caddr, size: size });
                             break;
+                        case l.token:
+                            response = await token_controller.txlistIO({ addr: caddr, size: size, offset: offset });
+                            break;
                         default:
                             response = check.get_msg().unknown_listid_io;
                     }
