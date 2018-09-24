@@ -40,6 +40,7 @@ describe('Socket.io API v. 2.1 "ERC20 token transactions"', () => {
                     .to.have.property('head')
                     .that.is.not.empty.and.to.have.property('rows');
                 done();
+                console.log(object.head);
                 socket.disconnect();
             });
         });
