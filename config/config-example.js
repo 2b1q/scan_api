@@ -77,6 +77,7 @@ config.modules = {
     block: 'block',
     addr: 'address',
     token: 'tokens',
+    erc20: 'erc20Token',
 };
 
 // tx types list
@@ -84,6 +85,7 @@ config.list_type = {
     eth: 'listOfETH',
     token: 'listOfTokens',
     token_balance: 'listOfTokenBalance',
+    token_price: 'listOfTokenPrice',
 };
 
 // socket io client evens

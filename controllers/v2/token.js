@@ -72,21 +72,19 @@ const checkAddr = (req, res) => {
     } else return c_addr;
 };
 
-/** ERC20 token info REST API */
-const erc20info = (req, res) => {
-    console.log(`${wid_ptrn('erc20info')}`);
-    let c_addr = checkAddr(req, res);
-    c_addr &&
-        token_module
-            .erc20info(c_addr)
-            .then((response) => (response.errorCode && res.status(404).json(response)) || res.json(response));
-};
-
 /** ERC20 token info Socket.io */
 const erc20infoIO = (addr) =>
     new Promise((resolve) => {
         console.log(`${wid_ptrn('erc20info socket.io')}`);
         addr && token_module.erc20info(addr).then((response) => (response.errorCode && resolve(response)) || resolve(response));
+    });
+
+/** Token market history socket.io */
+const markethistIO = (options) =>
+    new Promise((resolve) => {
+        console.log(`${wid_ptrn('markethist socket.io')}`);
+        options &&
+            token_module.erc20market(options).then((response) => (response.errorCode && resolve(response)) || resolve(response));
     });
 
 /** list token transactions */
@@ -96,6 +94,16 @@ const txlist = (req, res) => {
     options &&
         token_module
             .erc20txlist(options)
+            .then((response) => (response.errorCode && res.status(404).json(response)) || res.json(response));
+};
+
+/** ERC20 token info REST API */
+const erc20info = (req, res) => {
+    console.log(`${wid_ptrn('erc20info')}`);
+    let c_addr = checkAddr(req, res);
+    c_addr &&
+        token_module
+            .erc20info(c_addr)
             .then((response) => (response.errorCode && res.status(404).json(response)) || res.json(response));
 };
 
@@ -109,7 +117,7 @@ const holders = (req, res) => {
             .then((response) => (response.errorCode && res.status(404).json(response)) || res.json(response));
 };
 
-/** Token market history */
+/** Token market history REST */
 const markethist = (req, res) => {
     console.log(`${wid_ptrn('markethist')}`);
     let options = checkAddrkParams(req, res, { with_offset: false });
@@ -125,4 +133,5 @@ module.exports = {
     holders: holders, // REST GET 'erc20/holders' ERC20 holders
     market: markethist, // REST GET 'erc20/price' Token market history
     erc20infoIO: erc20infoIO, // socket.io erc20Details event
+    markethistIO: markethistIO, // socket.io token market history
 };

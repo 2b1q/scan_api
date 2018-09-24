@@ -60,11 +60,14 @@ const checkTxOptions = (listId, size, offset) => {
             bad: true,
             msg: check.get_msg().no_size,
         };
-    if (checkNoOffset(offset))
-        obj = {
-            bad: true,
-            msg: check.get_msg().no_offset,
-        };
+    // if listOfTokenPrice => do not check offset
+    if (listId !== cfg.list_type.token_price) {
+        if (checkNoOffset(offset))
+            obj = {
+                bad: true,
+                msg: check.get_msg().no_offset,
+            };
+    }
     return obj;
 };
 
@@ -86,7 +89,7 @@ const checkSearchParams = (q, size) => {
 const emitMsg = (socket, event, msg) => socket.emit(event, JSON.stringify(msg));
 
 /**
-    emmit/log/event/error API v.2 wrapper
+    emmit/log/event/error API v.2.1 wrapper
 */
 const emit = async (event, socket, data, con_obj, err) => {
     log_event(event, data, con_obj); // log events
@@ -174,6 +177,19 @@ const emit = async (event, socket, data, con_obj, err) => {
                             }
                             break;
                         }
+                    }
+                    break;
+                case m.erc20: // moduleId => erc20Token
+                    if (check_opts.bad) {
+                        response = check_opts.msg;
+                        break;
+                    }
+                    switch (listId) {
+                        case l.token_price:
+                            response = await token_controller.markethistIO({ addr: entityId, size: size });
+                            break;
+                        default:
+                            response = check.get_msg().unknown_listid_io;
                     }
                     break;
             }
