@@ -28,8 +28,9 @@ router.get(v2_1_ptrn('address/ether'), addr_controller_v2.eth); // Get Address E
 router.get(v2_1_ptrn('address/details'), addr_controller_v2.details); // Get Address details endpoint [HTTP GET]
 router.get(v2_1_ptrn('address/token-balance'), addr_controller_v2.tokenBalance); // Get Address toke balance endpoint [HTTP GET]
 
-/** node info v.2.1 endpoint */
+/** tools/info v.2.1 endpoints */
 router.get(v2_1_ptrn('nodes'), common_v2.NodeStatus); // last block info ETH proxy
+router.get(v2_1_ptrn('transactions/pending'), common_v2.pending); // ETH pending txs
 
 /** search v.2.1 endpoint */
 router.get(v2_1_ptrn('search'), seacrh.tokenOrBlock); // search token/block controller
