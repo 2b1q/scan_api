@@ -43,6 +43,8 @@ config.store = {
         token_head: 'token_header',
         contract: 'contract_header',
         erc20_cache: 'erc20_cache',
+        pending_tx: 'pending_txn',
+        tx_data: 'data_txn',
     },
 };
 

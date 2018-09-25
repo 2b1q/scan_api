@@ -7,9 +7,11 @@ const cfg = require('../../config/config'),
     moment = require('moment'),
     dbquery = require('./db_query'),
     ethproxy = require('../../node_interaction/eth-proxy-client'),
-    eth_col = cfg.store.cols.eth,
-    token_col = cfg.store.cols.token,
-    data_col = 'data_txn',
+    cols = cfg.store.cols,
+    eth_col = cols.eth,
+    token_col = cols.token,
+    data_col = cols.tx_data,
+    pending_col = cols.pending_tx,
     c = cfg.color,
     ETHDCM = cfg.constants.ethdcm,
     TOKENDCM = cfg.constants.tokendcm,
@@ -125,27 +127,28 @@ const GetTxDetails = async (hash) => {
         // rcplogs: 1, // not necessary yet
     };
     // DB queries
-    const data_p = dbquery.findOne(data_col, selector, data_fields);
-    const ethTx_p = dbquery.find(eth_col, selector, tx_fields);
-    const tokenTx_p = dbquery.find(token_col, selector);
+    const data_p = dbquery.findOne(data_col, selector, data_fields); // lookup tx data
+    const ethTx_p = dbquery.find(eth_col, selector, tx_fields); // lookup ETH txs in DB
+    const tokenTx_p = dbquery.find(token_col, selector); // lookup token txs in DB
+    const pendingTx_p = dbquery.findOne(pending_col, selector); // lookup pending tx in DB
 
-    return await Promise.all([ethTx_p, tokenTx_p, data_p])
-        .then(async ([eth_txs, token_txs, data]) => {
+    return await Promise.all([ethTx_p, tokenTx_p, data_p, pendingTx_p])
+        .then(async ([eth_txs, token_txs, data, pending_tx]) => {
             let response = {};
             if (!Array.isArray(eth_txs)) response.empty = true; // set no data flag
             // if no txs in DB => ask ETH node
             if (response.hasOwnProperty('empty')) {
-                console.log(wid_ptrn(`ask ETH proxy for a pending transaction 0x${hash}`));
-                const tx = await ethproxy.getTransaction(hash).catch(() => null);
+                console.log(wid_ptrn(`ask for a pending transaction 0x${hash}`));
+                const tx = !pending_tx.hash ? await ethproxy.getTransaction(hash).catch(() => null) : pending_tx;
                 if (tx) {
                     delete response.empty; // unset no data flag
                     response.head = {
-                        id: '',
+                        id: tx._id ? tx._id : null,
                         hash: tx.hash,
                         block: tx.block || 0,
                         addrFrom: tx.addrfrom,
                         addrTo: tx.addrto,
-                        time: moment(), // время транзакции = текущее время. Номер блока не определен.
+                        time: tx.isotime ? tx.isotime : moment(),
                         type: 'tx', // тип транзакции. Возможны варианты: [tx]
                         status: -1, // Статус = -1. Результат транзакции не определен.
                         error: '',
@@ -154,6 +157,7 @@ const GetTxDetails = async (hash) => {
                         txFee: { val: '0', dcm: FEEDCM }, // Всегда 0. Не известно сколько газа потрачено.
                         gasUsed: 0, // Всегда 0. Не известно сколько газа потрачено.
                         gasCost: tx.gascost, // стоимость газа в ETH
+                        gasLimit: tx.gaslimit ? tx.gaslimit : null,
                         data: tx.data, // данные, которые были отправлены в транзакцию. В бинарном виде
                     };
                     response.rows = [];
