@@ -39,8 +39,14 @@ describe('Socket.io API v. 2.1 "ERC20 token transactions"', () => {
                 expect(object)
                     .to.have.property('head')
                     .that.is.not.empty.and.to.have.property('rows');
+                expect(object.head)
+                    .to.have.property('moduleId')
+                    .equal('erc20Token');
+                expect(object.head)
+                    .to.have.property('listId')
+                    .equal('listOfTokens');
                 done();
-                console.log(object.head);
+                // console.log(object.head);
                 socket.disconnect();
             });
         });

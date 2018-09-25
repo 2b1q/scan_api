@@ -40,7 +40,7 @@ describe('Socket.io API v. 2.1 "ERC20 token market history"', () => {
                     .that.is.not.empty.and.to.have.property('rows.price[0]')
                     .that.satisfy((price) => price >= 0);
                 done();
-                console.log(data);
+                // console.log(data);
                 socket.disconnect();
             });
         });

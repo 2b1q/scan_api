@@ -64,7 +64,7 @@ describe('Socket.io API v. 2.1 "search block or tokens"', () => {
             socket.on(event, (data) => {
                 expect(JSON.parse(data).tokens[0].smbl).to.includes('BKX');
                 done();
-                console.log(data);
+                // console.log(data);
                 socket.disconnect();
             });
         });
