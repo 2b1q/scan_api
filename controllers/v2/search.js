@@ -59,11 +59,22 @@ const tokenOrBlockSearch = (req, res) => {
         Promise.all([search_model.block(query_params), search_model.token(query_params)])
             .then(([blocks, tokens]) => {
                 res.json({
+                    head: {
+                        updateTime: moment(),
+                    },
                     blocks: blocks,
                     tokens: tokens,
                 });
             })
-            .catch(() => res.json({ blocks: [], tokens: [] }));
+            .catch(() =>
+                res.json({
+                    head: {
+                        updateTime: moment(),
+                    },
+                    blocks: [],
+                    tokens: [],
+                })
+            );
     }
 };
 
@@ -72,8 +83,24 @@ const tokenOrBlockSearchIO = (query_params) =>
     new Promise((resolve) => {
         if (query_params) {
             Promise.all([search_model.block(query_params), search_model.token(query_params)])
-                .then(([blocks, tokens]) => resolve({ blocks: blocks, tokens: tokens }))
-                .catch(() => resolve({ blocks: [], tokens: [] }));
+                .then(([blocks, tokens]) =>
+                    resolve({
+                        head: {
+                            updateTime: moment(),
+                        },
+                        blocks: blocks,
+                        tokens: tokens,
+                    })
+                )
+                .catch(() =>
+                    resolve({
+                        head: {
+                            updateTime: moment(),
+                        },
+                        blocks: [],
+                        tokens: [],
+                    })
+                );
         }
     });
 
