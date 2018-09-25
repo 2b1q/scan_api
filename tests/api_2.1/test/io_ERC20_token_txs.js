@@ -41,10 +41,10 @@ describe('Socket.io API v. 2.1 "ERC20 token transactions"', () => {
                     .that.is.not.empty.and.to.have.property('rows');
                 expect(object.head)
                     .to.have.property('moduleId')
-                    .equal('erc20Token');
+                    .equal(payload.moduleId);
                 expect(object.head)
                     .to.have.property('listId')
-                    .equal('listOfTokens');
+                    .equal(payload.listId);
                 done();
                 // console.log(object.head);
                 socket.disconnect();
