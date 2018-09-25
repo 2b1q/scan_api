@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "BANKEX SCAN Unit tests",
   "scripts": {
-    "//test": "block=6366555 scanurl='http://192.168.1.87:3000' JUNIT_REPORT_PATH=test_result/result.xml mocha --timeout 25000 --colors --reporter mocha-jenkins-reporter || true",
-    "test": "block=6366555 scanurl='https://scan-dev.bkxtech.com' JUNIT_REPORT_PATH=test_result/result.xml mocha --timeout 25000 --colors --reporter mocha-jenkins-reporter || true"
+    "//test": "block=6366555 addr=0x0000000000000000000000000000000000000000 scanurl='http://192.168.1.87:3000' JUNIT_REPORT_PATH=test_result/result.xml mocha --timeout 25000 --colors --reporter mocha-jenkins-reporter || true",
+    "test": "block=6366555 addr=0x0000000000000000000000000000000000000000 scanurl='https://scan-dev.bkxtech.com' JUNIT_REPORT_PATH=test_result/result.xml mocha --timeout 25000 --colors --reporter mocha-jenkins-reporter || true"
   },
   "keywords": [
     "bankex",
