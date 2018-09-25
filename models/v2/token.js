@@ -163,7 +163,6 @@ exports.erc20txlist = ({ size, offset, addr }) =>
                                     tokenAddr: tx.tokenaddr,
                                     tokenName: tx.tokenname,
                                     tokenSmbl: tx.tokensmbl,
-                                    tokenDcm: tx.tokendcm,
                                     tokenType: tx.tokentype,
                                     txFee: { val: tx.txfee, dcm: tx.tokendcm },
                                     gasUsed: tx.gasused,
