@@ -1,6 +1,7 @@
 const chai = require('chai'),
     expect = chai.expect,
-    supertest = require('supertest');
+    supertest = require('supertest'),
+    check = require('../../utils/tools').check;
 
 const url = process.env.scanurl || 'http://localhost:3000';
 const api = supertest(url);
