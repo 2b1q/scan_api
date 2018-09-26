@@ -18,6 +18,17 @@ describe('REST API v. 2.1 "block details"', () => {
             .expect(200, done());
     });
 
+    it(`${endpoint}?block=${block} => should return block details for block ${block}`, (done) => {
+        api.get(`${endpoint}?block=${block}`)
+            .expect('Content-Type', /json/)
+            .expect(200)
+            .end((err, res) => {
+                if (err) return done(err);
+                expect(res.body.head.block).to.equal(Number(block));
+                done();
+            });
+    });
+
     it(`${endpoint}?block=${block} => should return a JSON with head property with fields ${block_head_keys} that is not empty`, (done) => {
         api.get(`${endpoint}?block=${block}`)
             .expect('Content-Type', /json/)
