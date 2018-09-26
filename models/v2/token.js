@@ -175,6 +175,8 @@ exports.erc20txlist = ({ size, offset, addr }) =>
             .catch((e) => console.error(e) && resolve({ head: {} }));
     });
 
+const sortHexString = (a, b) => parseInt(a, 16) - parseInt(b, 16);
+
 /** ERC20 holders */
 exports.erc20holders = ({ size, offset, addr }) =>
     new Promise((resolve) => {
@@ -215,7 +217,7 @@ exports.erc20market = ({ addr, size }) =>
         console.log(`${wid_ptrn('erc20market')}`);
         let query = { addr: addr };
         /** register Promises */
-        const marketsP = find(hour_market_stat_col, query, 0, size, { datetime: -1 });
+        const marketsP = find(hour_market_stat_col, query, 0, size, { datetime: 1 });
         const tokenInfoP = findOne(token_head, query, { addr: 1, name: 1, smbl: 1, dcm: 1, _id: 0 });
         /** resolve in parallel */
         Promise.all([tokenInfoP, marketsP])
