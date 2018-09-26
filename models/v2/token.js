@@ -139,7 +139,7 @@ exports.erc20txlist = ({ size, offset, addr }) =>
         let query = { tokenaddr: addr };
         /** register Promises */
         const totalEntitiesP = count(token_col, query);
-        const txsP = find(token_col, query, offset, size);
+        const txsP = find(token_col, query, offset, size, { isotime: -1 });
         /** resolve in parallel */
         Promise.all([totalEntitiesP, txsP])
             .then(
