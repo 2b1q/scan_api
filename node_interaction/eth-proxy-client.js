@@ -61,6 +61,13 @@ exports.getTransaction = (msg) =>
         else reject('no connection to ScanEngine ETH proxy');
     });
 
+// io getTransaction  emitter
+exports.getPendingTransaction = (msg) =>
+    new Promise((resolve, reject) => {
+        if (scanproxyconnected()) scanemit(scanEngineProxy, 'getPendingTransaction', msg, resolve, reject);
+        else reject('no connection to ScanEngine ETH proxy');
+    });
+
 // io tokenBalance  emitter
 exports.tokenBalance = (msg) =>
     new Promise((resolve, reject) => {
