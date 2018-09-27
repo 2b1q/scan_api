@@ -40,7 +40,6 @@ function* range(start = 5000000, end = start + 100, step = 1) {
 /** search by block number model */
 const searchBlock = ({ block_query, size }) =>
     new Promise((resolve, reject) => {
-        resolve([1, 2, 3]);
         logger.model(logit('searchBlock', block_query));
         console.log(`${wid_ptrn('searchBlock query: ' + block_query)}`);
         if (isNaN(block_query)) resolve([]);
