@@ -93,8 +93,9 @@ const searchToken = ({ token_query, size }) =>
     new Promise((resolve) => {
         logger.model(logit('searchToken', token_query));
         console.log(`${wid_ptrn('searchToken query: ' + token_query)}`);
-        let token_regexp = new RegExp(`(^.*${token_query}.*)`, 'i');
-        let query_pattern = { $or: [{ name: token_regexp }, { smbl: token_regexp }] };
+        // let token_regexp = new RegExp(`(^.*${token_query}.*)`, 'i');
+        // let query_pattern = { $or: [{ name: token_regexp }, { smbl: token_regexp }] };
+        let query_pattern = { $text: { $search: token_query } };
         findTokens(query_pattern, size, { addr: 1, smbl: 1, name: 1, _id: 0 })
             .then((tokens) => resolve(tokens))
             .catch((e) => {
