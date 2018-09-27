@@ -53,7 +53,7 @@ const checkSearchParams = (req, res) => {
 
 /** Common REST API controller for Block/Token search */
 const tokenOrBlockSearch = (req, res) => {
-    // console.log(`${wid_ptrn('tokenOrBlockSearch REST')}`);
+    console.log(`${wid_ptrn('tokenOrBlockSearch REST')}`);
     let query_params = checkSearchParams(req, res);
     if (query_params) {
         Promise.all([search_model.block(query_params), search_model.token(query_params)])

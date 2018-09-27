@@ -40,8 +40,9 @@ function* range(start = 5000000, end = start + 100, step = 1) {
 /** search by block number model */
 const searchBlock = ({ block_query, size }) =>
     new Promise((resolve, reject) => {
-        // logger.model(logit('searchBlock', block_query));
-        // console.log(`${wid_ptrn('searchBlock query: ' + block_query)}`);
+        return resolve([1, 2, 3]);
+        logger.model(logit('searchBlock', block_query));
+        console.log(`${wid_ptrn('searchBlock query: ' + block_query)}`);
         isNaN(block_query) && resolve([]);
         db.get()
             .then((db_instance) => {
@@ -90,8 +91,8 @@ const findTokens = (query, size, fields) =>
 /** search by token name model */
 const searchToken = ({ token_query, size }) =>
     new Promise((resolve) => {
-        // logger.model(logit('searchToken', token_query));
-        // console.log(`${wid_ptrn('searchToken query: ' + token_query)}`);
+        logger.model(logit('searchToken', token_query));
+        console.log(`${wid_ptrn('searchToken query: ' + token_query)}`);
         // let token_regexp = new RegExp(`(^.*${token_query}.*)`, 'i');
         // let query_pattern = { $or: [{ name: token_regexp }, { smbl: token_regexp }] };
         let query_pattern = { $text: { $search: token_query } };
