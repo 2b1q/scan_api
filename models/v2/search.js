@@ -40,10 +40,9 @@ function* range(start = 5000000, end = start + 100, step = 1) {
 /** search by block number model */
 const searchBlock = ({ block_query, size }) =>
     new Promise((resolve, reject) => {
-        return resolve([1, 2, 3]);
         logger.model(logit('searchBlock', block_query));
         console.log(`${wid_ptrn('searchBlock query: ' + block_query)}`);
-        isNaN(block_query) && resolve([]);
+        if (isNaN(block_query)) return resolve([]);
         db.get()
             .then((db_instance) => {
                 if (!db_instance) resolve([]);
@@ -53,7 +52,7 @@ const searchBlock = ({ block_query, size }) =>
                     .sort({ block: -1 })
                     .limit(1)
                     .toArray((err, [{ block: max_block }]) => {
-                        if (err) reject(err); // handle error on DB query crash
+                        if (err) return reject(err); // handle error on DB query crash
                         console.log(`max_block in DB: ${max_block}`);
                         let arr = Array.from(Array(max_block + 1).keys()).filter((v) =>
                             v.toString().includes(block_query.toString())
