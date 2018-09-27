@@ -78,7 +78,6 @@ const findTokens = (query, size, fields) =>
                     db_instance
                         .collection(token_head)
                         .find(query, { fields })
-                        .sort({ smbl: 1 })
                         .limit(size)
                         .toArray((err, tokens) => {
                             if (err) reject(err);
