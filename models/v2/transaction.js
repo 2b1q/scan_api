@@ -139,7 +139,7 @@ const GetTxDetails = async (hash) => {
             // if no txs in DB => ask ETH node
             if (response.hasOwnProperty('empty')) {
                 console.log(wid_ptrn(`ask for a pending transaction 0x${hash}`));
-                const tx = !pending_tx.hash ? await ethproxy.getTransaction(hash).catch(() => null) : pending_tx;
+                const tx = !pending_tx.hash ? await ethproxy.getPendingTransaction(hash).catch(() => null) : pending_tx;
                 if (tx) {
                     delete response.empty; // unset no data flag
                     response.head = {
