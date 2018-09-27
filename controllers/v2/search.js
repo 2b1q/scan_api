@@ -45,7 +45,7 @@ const checkSearchParams = (req, res) => {
         return false;
     }
     return {
-        block_query: parseInt(q), // NaN if string started from chars
+        block_query: Number(q), // NaN if string contain chars
         token_query: q,
         size: size,
     };
