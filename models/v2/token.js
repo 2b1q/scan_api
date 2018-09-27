@@ -90,7 +90,11 @@ exports.erc20info = (addr) =>
         console.log(`${wid_ptrn('erc20info')}`);
         /** register Promises */
         const totalHoldersP = count(erc20cache, { tokenaddr: addr });
-        const tokenInfoP = findOne(token_head, { addr: addr, type: 20 }, { addr: 1, name: 1, smbl: 1, dcm: 1, _id: 0 });
+        const tokenInfoP = findOne(
+            token_head,
+            { addr: addr, type: 20 },
+            { addr: 1, name: 1, smbl: 1, dcm: 1, totalsupply: 1, _id: 0 }
+        );
         const tokenMarketP = findOne(
             day_market_stat_col,
             { addr: addr },
@@ -110,12 +114,12 @@ exports.erc20info = (addr) =>
         /** resolve in parallel */
         Promise.all([totalHoldersP, tokenInfoP, tokenMarketP])
             .then(
-                ([thp, tokenHeader, market]) =>
+                ([thp, { totalsupply: ts, ...tinfo }, market]) =>
                     (thp &&
                         resolve({
                             head: {
-                                ...tokenHeader,
-                                totalSupply: 0,
+                                ...tinfo,
+                                totalSupply: ts,
                                 totalHolders: thp,
                                 overview: '',
                                 percentChange: market ? market.percent_change : null,
