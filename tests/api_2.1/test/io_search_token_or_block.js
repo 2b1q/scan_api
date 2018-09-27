@@ -48,7 +48,7 @@ describe('Socket.io API v. 2.1 "search block or tokens"', () => {
                 expect(object.blocks).to.be.an('array').that.is.not.empty;
                 expect(object.tokens).to.be.an('array').that.is.not.empty;
                 done();
-                console.log(data);
+                // console.log(data);
                 socket.disconnect();
             });
         });
