@@ -291,7 +291,7 @@ const tokenBooster = async (addr, offset, size, fields, count, sort) =>
                 .skip(offset)
                 .limit(size)
                 .toArray((err, docs) => {
-                    if (err) resolve(false); // stop flow and return false without exeption
+                    if (err) return resolve(false); // stop flow and return false without exeption
                     resolve({
                         head: {
                             addr: addr,
@@ -316,7 +316,7 @@ const ethBooster = (addr, offset, size, fields, count, sort) =>
                 .skip(offset)
                 .limit(size)
                 .toArray((err, docs) => {
-                    if (err) resolve(false); // stop flow and return false without exeption
+                    if (err) return resolve(false); // stop flow and return false without exeption
                     resolve({
                         head: {
                             addr: addr,

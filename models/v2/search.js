@@ -45,7 +45,7 @@ const searchBlock = ({ block_query, size }) =>
         if (isNaN(block_query)) return resolve([]);
         db.get()
             .then((db_instance) => {
-                if (!db_instance) resolve([]);
+                if (!db_instance) return resolve([]);
                 db_instance
                     .collection(block_head)
                     .find({})
@@ -74,7 +74,7 @@ const findTokens = (query, size, fields) =>
             db
                 .get()
                 .then((db_instance) => {
-                    if (!db_instance) resolve();
+                    if (!db_instance) return resolve();
                     db_instance
                         .collection(token_head)
                         .find(query, { fields })

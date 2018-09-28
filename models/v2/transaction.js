@@ -88,7 +88,7 @@ const GetLastTransactions = async ({ collection, size, offset }) => {
             .skip(offset)
             .limit(size)
             .toArray((err, docs) => {
-                if (err) resolve(false);
+                if (err) return resolve(false);
                 resolve({
                     head: {
                         totalEntities: count > MAX_SKIP ? MAX_SKIP : count,

@@ -45,7 +45,7 @@ const upsert = (accountId, jwt) =>
     new Promise((resolve, reject) => {
         db.get()
             .then((db_instance) => {
-                if (!db_instance) reject(); // reject if no db instance empty after reconnect
+                if (!db_instance) return reject(); // reject if no db instance empty after reconnect
                 db_instance
                     .collection('users')
                     .update(
@@ -128,7 +128,7 @@ const verifyJWT = (access_tkn) =>
                 /** lookup refresh_token by accountId in MongoDb */
                 db.get()
                     .then((db_instance) => {
-                        if (!db_instance) reject(); // reject if no db instance empty after reconnect
+                        if (!db_instance) return reject(); // reject if no db instance empty after reconnect
                         db_instance
                             .collection('users')
                             .findOne({ accountId: accountId })
@@ -175,7 +175,7 @@ const refreshJWT = (refreshToken) =>
                 url: sso_service_url,
             },
             (err, res, new_token) => {
-                if (err) reject(err);
+                if (err) return reject(err);
                 let statusCode = res.statusCode;
                 if (statusCode === 401) reject(error['401']);
                 resolve(new_token);

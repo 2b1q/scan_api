@@ -33,6 +33,7 @@ config.store = {
         options: {
             // autoIndex: false,
             poolSize: 10, // количество подключений в пуле
+            useNewUrlParser: true,
         },
         max_skip: 300000, // max skip size limit
     },

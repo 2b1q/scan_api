@@ -22,7 +22,7 @@ const findOne = (collection, query, fields) =>
             db
                 .get()
                 .then((db_instance) => {
-                    if (!db_instance) resolve();
+                    if (!db_instance) return resolve();
                     db_instance
                         .collection(collection)
                         .findOne(query, { fields })
@@ -42,7 +42,7 @@ const find = (collection, query, skip, limit, sort) =>
             db
                 .get()
                 .then((db_instance) => {
-                    if (!db_instance) resolve();
+                    if (!db_instance) return resolve();
                     (sort &&
                         db_instance
                             .collection(collection)
@@ -74,7 +74,7 @@ const count = (collection, query) =>
             db
                 .get()
                 .then((db_instance) => {
-                    if (!db_instance) resolve();
+                    if (!db_instance) return resolve();
                     db_instance
                         .collection(collection)
                         .count(query)
