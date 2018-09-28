@@ -8,7 +8,7 @@ const cluster = require('cluster'),
     moment = require('moment'),
     c = cfg.color,
     block_range = 1000000,
-    MAX_RESULT_SIZE = 1000;
+    MAX_RESULT_SIZE = cfg.search.MAX_RESULT_SIZE;
 
 /** worker id pattern */
 const wid_ptrn = (msg) =>
@@ -54,10 +54,10 @@ const searchBlock = ({ block_query, size }) =>
                     .toArray((err, [{ block: max_block }]) => {
                         if (err) return reject(err); // handle error on DB query crash
                         console.log(`max_block in DB: ${max_block}`);
-                        let arr = [...range(max_block - size + 1, max_block)];
+                        let arr = [...range(max_block - MAX_RESULT_SIZE + 1, max_block)]; // generate MAX_RESULT_SIZE items
                         arr = arr.filter((v) => v.toString().includes(block_query.toString()));
-                        arr.splice(0, 0, block_query); // insert first element
-                        arr.pop(); // remove last element
+                        arr.splice(0, arr.length - size, block_query); // remove (arr.length - size) and insert first element
+                        arr.length > 1 && arr.pop(); // remove last element
                         resolve(arr);
                     });
             })
