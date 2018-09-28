@@ -191,7 +191,7 @@ exports.erc20holders = ({ size, offset, addr }) =>
         let query = { tokenaddr: addr };
         /** register Promises */
         const totalEntitiesP = count(erc20cache, query);
-        const txsP = find(erc20cache, query, offset, size, { value: -1 });
+        const txsP = find(erc20cache, query, offset, size, { percent: -1 });
         /** resolve in parallel */
         Promise.all([totalEntitiesP, txsP])
             .then(
@@ -199,7 +199,7 @@ exports.erc20holders = ({ size, offset, addr }) =>
                     (totalEntities &&
                         resolve({
                             head: { totalEntities: totalEntities, offset: offset, size: size, addr: addr, updateTime: moment() },
-                            rows: txs.map((tx) =>
+                            rows: txs.map((tx, i) =>
                                 Object({
                                     id: tx._id,
                                     addr: tx.addr,
@@ -209,6 +209,8 @@ exports.erc20holders = ({ size, offset, addr }) =>
                                         val: tx.value,
                                         dcm: tx.tokendcm,
                                     },
+                                    rankNumber: offset + i + 1,
+                                    percent: tx.percent ? tx.percent / 100 : '',
                                     icon: '/api/icon/' + tx.tokenaddr,
                                 })
                             ),
