@@ -21,7 +21,8 @@ config.constants = {
 
 // search constants
 config.search = {
-    MAX_RESULT_SIZE: 1000,
+    MAX_RESULT_SIZE: 100000,
+    MIN_RESULT_SIZE: 1,
     DEFAULT_SIZE: 20,
 };
 
