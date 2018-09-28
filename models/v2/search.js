@@ -30,7 +30,7 @@ let logit = (api, query) => {
 /** range sequence generator */
 function* range(start = 5000000, end = start + 100, step = 1) {
     let n = 0;
-    for (let i = start; i < end; i += step) {
+    for (let i = start; i <= end; i += step) {
         n += 1;
         yield i;
     }
@@ -54,13 +54,10 @@ const searchBlock = ({ block_query, size }) =>
                     .toArray((err, [{ block: max_block }]) => {
                         if (err) return reject(err); // handle error on DB query crash
                         console.log(`max_block in DB: ${max_block}`);
-                        let arr = Array.from(Array(max_block + 1).keys()).filter((v) =>
-                            v.toString().includes(block_query.toString())
-                        );
-                        // unshift first element then slice and splice
-                        let first = arr.shift();
-                        arr = arr.slice(-size + 1).reverse();
-                        arr.splice(0, 0, first);
+                        let arr = [...range(max_block - size + 1, max_block)];
+                        arr = arr.filter((v) => v.toString().includes(block_query.toString()));
+                        arr.splice(0, 0, block_query); // insert first element
+                        arr.pop(); // remove last element
                         resolve(arr);
                     });
             })

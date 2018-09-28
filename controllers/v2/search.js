@@ -8,6 +8,7 @@ const cluster = require('cluster'),
     check = require('../../utils/checker').cheker(),
     c = cfg.color,
     MAX_RESULT_SIZE = cfg.search.MAX_RESULT_SIZE,
+    MIN_RESULT_SIZE = cfg.search.MIN_RESULT_SIZE,
     DEFAULT_SIZE = cfg.search.DEFAULT_SIZE;
 
 /** worker id pattern */
@@ -39,6 +40,7 @@ const checkSearchParams = (req, res) => {
     let { q, size = DEFAULT_SIZE } = params;
     size = isNaN(parseInt(size)) ? DEFAULT_SIZE : parseInt(size);
     size = size > MAX_RESULT_SIZE ? MAX_RESULT_SIZE : size;
+    size = size < MIN_RESULT_SIZE ? MIN_RESULT_SIZE : size;
     // check "q" parameter is exist OR !== 0
     if (!q || parseInt(q) === 0) {
         res.status(400).json(check.get_msg().bad_search_parameter(q));

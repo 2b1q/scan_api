@@ -114,12 +114,15 @@ exports.erc20info = (addr) =>
         /** resolve in parallel */
         Promise.all([totalHoldersP, tokenInfoP, tokenMarketP])
             .then(
-                ([thp, { totalsupply: ts, ...tinfo }, market]) =>
+                ([thp, { totalsupply: ts, dcm: tdcm, ...tinfo }, market]) =>
                     (thp &&
                         resolve({
                             head: {
                                 ...tinfo,
-                                totalSupply: ts,
+                                totalSupply: {
+                                    val: ts,
+                                    dcm: tdcm,
+                                },
                                 totalHolders: thp,
                                 overview: '',
                                 percentChange: market ? market.percent_change : null,
