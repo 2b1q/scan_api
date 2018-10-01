@@ -13,7 +13,7 @@ describe('Socket.io API v. 2.1 "search block or tokens"', () => {
     let serch_query = {
         q: '2018',
         params: {
-            size: 5,
+            size: 300000,
         },
     };
     let token = 'bKx';
