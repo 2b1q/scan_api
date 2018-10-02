@@ -9,7 +9,8 @@ const cluster = require('cluster'),
     c = cfg.color,
     MAX_RESULT_SIZE = cfg.search.MAX_RESULT_SIZE,
     MIN_RESULT_SIZE = cfg.search.MIN_RESULT_SIZE,
-    DEFAULT_SIZE = cfg.search.DEFAULT_SIZE;
+    DEFAULT_SIZE = cfg.search.DEFAULT_SIZE,
+    STOT = 'Total searching time';
 
 /** worker id pattern */
 const wid_ptrn = (msg) =>
@@ -56,10 +57,12 @@ const checkSearchParams = (req, res) => {
 /** Common REST API controller for Block/Token search */
 const tokenOrBlockSearch = (req, res) => {
     console.log(`${wid_ptrn('tokenOrBlockSearch REST')}`);
+    console.time(STOT);
     let query_params = checkSearchParams(req, res);
     if (query_params) {
         Promise.all([search_model.block(query_params), search_model.token(query_params)])
             .then(([blocks, tokens]) => {
+                console.timeEnd(STOT);
                 res.json({
                     head: {
                         updateTime: moment(),
@@ -68,41 +71,45 @@ const tokenOrBlockSearch = (req, res) => {
                     tokens: tokens,
                 });
             })
-            .catch(() =>
+            .catch(() => {
+                console.timeEnd(STOT);
                 res.json({
                     head: {
                         updateTime: moment(),
                     },
                     blocks: [],
                     tokens: [],
-                })
-            );
+                });
+            });
     }
 };
 
 /** Common IO API controller for Block/Token search */
 const tokenOrBlockSearchIO = (query_params) =>
     new Promise((resolve) => {
+        console.time(STOT);
         if (query_params) {
             Promise.all([search_model.block(query_params), search_model.token(query_params)])
-                .then(([blocks, tokens]) =>
+                .then(([blocks, tokens]) => {
+                    console.timeEnd(STOT);
                     resolve({
                         head: {
                             updateTime: moment(),
                         },
                         blocks: blocks,
                         tokens: tokens,
-                    })
-                )
-                .catch(() =>
+                    });
+                })
+                .catch(() => {
+                    console.timeEnd(STOT);
                     resolve({
                         head: {
                             updateTime: moment(),
                         },
                         blocks: [],
                         tokens: [],
-                    })
-                );
+                    });
+                });
         }
     });
 

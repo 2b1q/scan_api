@@ -7,8 +7,9 @@ const cluster = require('cluster'),
     logger = require('../../utils/logger')(module),
     moment = require('moment'),
     c = cfg.color,
-    block_range = 1000000,
-    MAX_RESULT_SIZE = cfg.search.MAX_RESULT_SIZE;
+    MAX_RESULT_SIZE = cfg.search.MAX_RESULT_SIZE,
+    SBLOCK = 'Block searching time',
+    STOK = 'Token searching time';
 
 /** worker id pattern */
 const wid_ptrn = (msg) =>
@@ -42,7 +43,11 @@ const searchBlock = ({ block_query, size }) =>
     new Promise((resolve, reject) => {
         logger.model(logit('searchBlock', block_query));
         console.log(`${wid_ptrn('searchBlock query: ' + block_query)}`);
-        if (isNaN(block_query)) return resolve([]);
+        console.time(SBLOCK);
+        if (isNaN(block_query)) {
+            console.timeEnd(SBLOCK);
+            return resolve([]);
+        }
         db.get()
             .then((db_instance) => {
                 if (!db_instance) return resolve([]);
@@ -58,6 +63,7 @@ const searchBlock = ({ block_query, size }) =>
                         arr = arr.filter((v) => v.toString().includes(block_query.toString()));
                         arr.splice(0, arr.length - size, block_query); // remove (arr.length - size) and insert first element
                         arr.length > 1 && arr.pop(); // remove last element
+                        console.timeEnd(SBLOCK);
                         resolve(arr);
                     });
             })
@@ -92,8 +98,12 @@ const searchToken = ({ token_query, size }) =>
         // let token_regexp = new RegExp(`(^.*${token_query}.*)`, 'i');
         // let query_pattern = { $or: [{ name: token_regexp }, { smbl: token_regexp }] };
         let query_pattern = { $text: { $search: token_query } };
+        console.time(STOK);
         findTokens(query_pattern, size, { addr: 1, smbl: 1, name: 1, _id: 0 })
-            .then((tokens) => resolve(tokens))
+            .then((tokens) => {
+                console.timeEnd(STOK);
+                resolve(tokens);
+            })
             .catch((e) => {
                 console.error(e);
                 resolve([]);
