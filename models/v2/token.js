@@ -43,24 +43,25 @@ const find = (collection, query, skip, limit, sort) =>
                 .get()
                 .then((db_instance) => {
                     if (!db_instance) return resolve();
-                    (sort &&
-                        db_instance
+                    if (sort)
+                        return db_instance
                             .collection(collection)
                             .find(query)
                             .sort(sort)
                             .skip(skip)
                             .limit(limit)
                             .toArray((err, txs) => {
-                                if (err) reject(err); // handle error on query crash
+                                if (err) return reject(err); // handle error on query crash
                                 resolve(txs);
-                            })) ||
-                        db_instance
+                            });
+                    else
+                        return db_instance
                             .collection(collection)
                             .find(query)
                             .skip(skip)
                             .limit(limit)
                             .toArray((err, txs) => {
-                                if (err) reject(err); // handle error on query crash
+                                if (err) return reject(err); // handle error on query crash
                                 resolve(txs);
                             });
                 })
