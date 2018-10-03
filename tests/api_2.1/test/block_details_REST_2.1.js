@@ -12,9 +12,10 @@ describe('REST API v. 2.1 "block details"', () => {
     let block_head_keys = ['block', 'gasLimit', 'gasUsed', 'hash', 'innerTxCount', 'mainTxCount', 'time', 'tokenTxCount'];
     let time = 'time';
     let wrong_block = 100;
-    const HTTP404 = 404;
-    const HTTP400 = 400;
-    const ERRORCODE404 = HTTP404;
+    const HTTP404 = 404,
+        HTTP400 = 400,
+        ERRORCODE404 = HTTP404,
+        ERRORCODE400 = HTTP400;
 
     it(`${endpoint}?block=${block} => should return "Content-Type: json" and 200 response`, (done) => {
         api.get(`${endpoint}?block=${block}`)
@@ -50,6 +51,16 @@ describe('REST API v. 2.1 "block details"', () => {
             .end((err, res) => {
                 if (err) return done(err);
                 expect(res.body.errorCode).to.equal(ERRORCODE404);
+                done();
+            });
+    });
+
+    it(`${endpoint}?block= => should return HTTP status code "${HTTP400}" and errorCode "${ERRORCODE400}"`, (done) => {
+        api.get(`${endpoint}?block=`)
+            .expect(HTTP400)
+            .end((err, res) => {
+                if (err) return done(err);
+                expect(res.body.errorCode).to.equal(ERRORCODE400);
                 done();
             });
     });
