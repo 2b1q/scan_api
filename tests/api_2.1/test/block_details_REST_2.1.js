@@ -23,24 +23,51 @@ describe('REST API v. 2.1 "block details"', () => {
             .expect(200, done());
     });
 
-    it(`${endpoint}?block=${block} => should return block details for block ${block}`, (done) => {
+    it(`${endpoint}?block=${Number(block)} (Number) => should return Number block > 0`, (done) => {
         api.get(`${endpoint}?block=${block}`)
-            .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res) => {
                 if (err) return done(err);
-                expect(res.body.head.block).to.equal(Number(block));
+                expect(res.body.head.block).that.satisfy((block) => typeof block === 'number' && block > 0);
                 done();
             });
     });
 
-    it(`${endpoint}?block=${block} => should return block details for block ${block}`, (done) => {
+    it(`${endpoint}?block=${block} (String) => should return Number block > 0`, (done) => {
         api.get(`${endpoint}?block=${block}`)
-            .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res) => {
                 if (err) return done(err);
-                expect(res.body.head.block).to.equal(Number(block));
+                expect(res.body.head.block).that.satisfy((block) => typeof block === 'number' && block > 0);
+                done();
+            });
+    });
+
+    it(`${endpoint}?block=${block} => should return "gasLimit" & "gasUsed" >=0 `, (done) => {
+        api.get(`${endpoint}?block=${block}`)
+            .expect(200)
+            .end((err, res) => {
+                if (err) return done(err);
+                expect(res.body.head.gasLimit).that.satisfy((gasLimit) => typeof gasLimit === 'number' && gasLimit >= 0);
+                expect(res.body.head.gasUsed).that.satisfy((gasUsed) => typeof gasUsed === 'number' && gasUsed >= 0);
+                done();
+            });
+    });
+
+    it(`${endpoint}?block=${block} => "mainTxCount", "innerTxCount", "tokenTxCount" - целые числа`, (done) => {
+        api.get(`${endpoint}?block=${block}`)
+            .expect(200)
+            .end((err, res) => {
+                if (err) return done(err);
+                expect(res.body.head.mainTxCount).that.satisfy(
+                    (mainTxCount) => Number.isInteger(mainTxCount) && mainTxCount >= 0
+                );
+                expect(res.body.head.mainTxCount).that.satisfy(
+                    (innerTxCount) => Number.isInteger(innerTxCount) && innerTxCount >= 0
+                );
+                expect(res.body.head.mainTxCount).that.satisfy(
+                    (tokenTxCount) => Number.isInteger(tokenTxCount) && tokenTxCount >= 0
+                );
                 done();
             });
     });
