@@ -14,7 +14,8 @@ const addr_model = require('../../models/v2/address'),
     c = cfg.color,
     ETHDCM = cfg.constants.ethdcm,
     TOKENDCM = cfg.constants.tokendcm,
-    FEEDCM = cfg.constants.feedcm;
+    FEEDCM = cfg.constants.feedcm,
+    TB = 'GetTokenBalance time';
 
 // worker id pattern
 const wid_ptrn = (endpoint) =>
@@ -261,11 +262,13 @@ const GetAddrDetails = (req, res) => {
 
 /** Get token Balance REST API v.2 */
 const GetTokenBalance = async (req, res) => {
+    console.time(TB);
     logger.api_requests(logit(req)); // log query data any way
     console.log(`${wid_ptrn('REST GetTokenBalance')}`);
     let options = checkAddrkParams(req, res);
     if (options) {
         let response = await addr_model.tokenBalance(options);
+        console.timeEnd(TB);
         if (response) {
             // preparing data (map data from model)
             response.head.updateTime = moment(); // UTC time format
