@@ -12,7 +12,7 @@ describe('REST API v. 2.1 "address details"', () => {
     let balance_keys = ['dcm', 'val'];
 
     it(`${endpoint}?addr=${addr} => should return "Content-Type: json" and 200 response`, (done) => {
-        api.get(`${endpoint}?block=${addr}`)
+        api.get(`${endpoint}?addr=${addr}`)
             .expect('Content-Type', /json/)
             .expect(200, done());
     });
