@@ -8,7 +8,14 @@ const api = supertest(url);
 describe('REST API v. 2.1 "address tokenBalance"', () => {
     let endpoint = '/api/v2_1/address/token-balance';
     let addr = process.env.addr || '0x0000000000000000000000000000000000000000';
-    let addr_head_keys = ['addr', 'totalEntities', 'offset', 'size', 'infinityScroll', 'updateTime'];
+    let addr_head_keys = [
+        'addr',
+        'totalEntities',
+        'offset',
+        'size',
+        //'infinityScroll',
+        'updateTime',
+    ];
     let balance_keys = ['dcm', 'val'];
     let offset = 0,
         size = 50;
