@@ -1,6 +1,7 @@
 const chai = require('chai'),
     expect = chai.expect,
-    supertest = require('supertest');
+    supertest = require('supertest'),
+    check = require('../../utils/tools').check;
 
 const url = process.env.scanurl || 'http://localhost:3000';
 const api = supertest(url);
@@ -11,6 +12,8 @@ describe('REST API v. 2.1 "block ether"', () => {
         MINSIZE = 0,
         MAXOFFSET = 300000,
         MINOFFSET = MINSIZE;
+    let updtime = 'updateTime',
+        time = 'time';
     let endpoint = '/api/v2_1/block/ether';
     let block = process.env.block || '6366555',
         offset = 0,
@@ -46,7 +49,6 @@ describe('REST API v. 2.1 "block ether"', () => {
 
     it(`${endpoint}?blockNumber=${block}&offset=${offset}&size=${size} => should return a JSON with head property with fields ${block_head_keys} that is not empty`, (done) => {
         api.get(`${endpoint}?blockNumber=${block}&offset=${offset}&size=${size}`)
-            .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res) => {
                 if (err) return done(err);
@@ -57,7 +59,6 @@ describe('REST API v. 2.1 "block ether"', () => {
 
     it(`${endpoint}?blockNumber=${block}&offset=${offset}&size=${size} => should return a JSON with rows array wich first element is JSON with fields [${block_ether_rows_keys}]`, (done) => {
         api.get(`${endpoint}?blockNumber=${block}&offset=${offset}&size=${size}`)
-            .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res) => {
                 if (err) return done(err);
@@ -68,7 +69,6 @@ describe('REST API v. 2.1 "block ether"', () => {
 
     it(`${endpoint}?blockNumber=${block}&offset=${offset}&size=${size} => first ETH tx should have property 'value' with properties: "${value_keys}" where dcm === ETHDCM`, (done) => {
         api.get(`${endpoint}?blockNumber=${block}&offset=${offset}&size=${size}`)
-            .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res) => {
                 if (err) return done(err);
@@ -82,7 +82,6 @@ describe('REST API v. 2.1 "block ether"', () => {
 
     it(`${endpoint}?blockNumber=${block}&offset=${offset}&size=${size} => first ETH tx should have property 'txFee' with properties: "${value_keys}" where dcm === ETHDCM`, (done) => {
         api.get(`${endpoint}?blockNumber=${block}&offset=${offset}&size=${size}`)
-            .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res) => {
                 if (err) return done(err);
@@ -102,7 +101,6 @@ describe('REST API v. 2.1 "block ether"', () => {
 
     it(`${endpoint}?block=${block}&offset=${offset}&size=${size} => should return 400 response with error ${blockNumber_not_found_msg}`, (done) => {
         api.get(`${endpoint}?block=${block}&offset=${offset}&size=${size}`)
-            .expect('Content-Type', /json/)
             .expect(400)
             .end((err, res) => {
                 if (err) return done(err);
@@ -113,7 +111,6 @@ describe('REST API v. 2.1 "block ether"', () => {
 
     it(`${endpoint}?blockNumber=${block}&offset=${bad_offset}&size=${bad_size} => should normalize size & offset`, (done) => {
         api.get(`${endpoint}?blockNumber=${block}&offset=${bad_offset}&size=${bad_size}`)
-            .expect('Content-Type', /json/)
             .expect(200)
             .end((err, res) => {
                 if (err) return done(err);
@@ -123,6 +120,42 @@ describe('REST API v. 2.1 "block ether"', () => {
                 expect(res.body.head)
                     .property('size')
                     .to.satisfy((num) => num >= MINSIZE && num <= MAXSIZE);
+                done();
+            });
+    });
+
+    it(`head => should have property '${updtime}' with UTC format time value`, (done) => {
+        api.get(`${endpoint}?blockNumber=${block}&offset=${bad_offset}&size=${bad_size}`)
+            .expect(200)
+            .end((err, res) => {
+                if (err) return done(err);
+                expect(res.body.head)
+                    .to.have.property(updtime)
+                    .that.satisfy((time) => check.utc(time));
+                done();
+            });
+    });
+
+    it(`rows ETH objects => should have property '${time}' with UTC format time value`, (done) => {
+        api.get(`${endpoint}?blockNumber=${block}&offset=${bad_offset}&size=${bad_size}`)
+            .expect(200)
+            .end((err, res) => {
+                if (err) return done(err);
+                expect(res.body.rows[0])
+                    .to.have.property(time)
+                    .that.satisfy((time) => check.utc(time));
+                done();
+            });
+    });
+
+    it(`${endpoint}?blockNumber=${block}&offset=${bad_offset}&size=${bad_size} => should return ${block} info`, (done) => {
+        api.get(`${endpoint}?blockNumber=${block}&offset=${bad_offset}&size=${bad_size}`)
+            .expect(200)
+            .end((err, res) => {
+                if (err) return done(err);
+                expect(res.body.head)
+                    .to.have.property('blockNumber')
+                    .that.satisfy((b) => b === Number(block));
                 done();
             });
     });
