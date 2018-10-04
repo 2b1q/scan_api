@@ -14,6 +14,7 @@ describe('REST API v. 2.1 "block ether"', () => {
         MINOFFSET = MINSIZE;
     let updtime = 'updateTime',
         time = 'time';
+    let tx_type = ['tx', 'call', 'create', 'suicide'];
     let endpoint = '/api/v2_1/block/ether';
     let block = process.env.block || '6366555',
         offset = 0,
@@ -156,6 +157,16 @@ describe('REST API v. 2.1 "block ether"', () => {
                 expect(res.body.head)
                     .to.have.property('blockNumber')
                     .that.satisfy((b) => b === Number(block));
+                done();
+            });
+    });
+
+    it(`${endpoint}?blockNumber=${block}&offset=${bad_offset}&size=${bad_size} => should return one of TX_type ${tx_type} for each TXs`, (done) => {
+        api.get(`${endpoint}?blockNumber=${block}&offset=${bad_offset}&size=${bad_size}`)
+            .expect(200)
+            .end((err, res) => {
+                if (err) return done(err);
+                res.body.rows.forEach((tx) => expect(tx.type).that.satisfy((type) => tx_type.includes(type)));
                 done();
             });
     });
