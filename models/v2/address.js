@@ -255,7 +255,7 @@ const GetAddrTokenBalance = ({ size, offset, addr }) =>
                                     name: tx.tokenname,
                                     smbl: tx.tokensmbl,
                                     balance: {
-                                        val: tx.value,
+                                        val: tx.value || null,
                                         dcm: tx.tokendcm,
                                     },
                                     dynamic: tx.dynamic || 0,
