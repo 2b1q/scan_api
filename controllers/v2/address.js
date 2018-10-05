@@ -272,17 +272,15 @@ const GetTokenBalance = async (req, res) => {
         if (response) {
             // preparing data (map data from model)
             response.head.updateTime = moment(); // UTC time format
-            response.rows = response.rows.map((token) => {
-                return {
+            response.rows = response.rows.map((token) =>
+                Object({
                     addr: token.addr,
                     name: token.name,
                     smbl: token.smbl,
-                    type: token.type,
                     balance: { val: token.balance, dcm: token.dcm || TOKENDCM },
-                    icon: token.icon,
-                    dynamic: token.dynamic,
-                };
-            });
+                    dynamic: token.dynamic || 0,
+                })
+            );
             res.json(response);
         } else res.json(check.get_msg().not_found);
     }
@@ -290,25 +288,26 @@ const GetTokenBalance = async (req, res) => {
 
 /** io Get token Balance REST API v.2 */
 const ioGetTokenBalance = async (options) => {
+    console.time(TB);
     console.log(`${wid_ptrn('io GetTokenBalance')}`);
     let response = await addr_model.tokenBalance(options);
+    console.timeEnd(TB);
     if (response) {
         // preparing data (map data from model)
         response.head.updateTime = moment(); // UTC time format
         response.head.listId = 'listOfTokenBalance';
         response.head.moduleId = 'address';
         response.head.entityId = options.addr;
-        response.rows = response.rows.map((token) => {
-            return {
+        response.head.infinityScroll = 1;
+        response.rows = response.rows.map((token) =>
+            Object({
                 addr: token.addr,
                 name: token.name,
                 smbl: token.smbl,
-                type: token.type,
                 balance: { val: token.balance, dcm: token.dcm || TOKENDCM },
-                icon: token.icon,
-                dynamic: token.dynamic,
-            };
-        });
+                dynamic: token.dynamic || 0,
+            })
+        );
         return response;
     } else return check.get_msg().not_found;
 };
