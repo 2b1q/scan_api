@@ -254,12 +254,11 @@ const GetAddrTokenBalance = ({ size, offset, addr }) =>
                                     addr: tx.addr,
                                     name: tx.tokenname,
                                     smbl: tx.tokensmbl,
-                                    type: tx.type,
                                     balance: {
                                         val: tx.value,
                                         dcm: tx.tokendcm,
                                     },
-                                    icon: '/api/icon/' + tx.tokenaddr,
+                                    dynamic: tx.dynamic || 0,
                                 })
                             ),
                         })) ||

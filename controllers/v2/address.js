@@ -272,15 +272,6 @@ const GetTokenBalance = async (req, res) => {
         if (response) {
             // preparing data (map data from model)
             response.head.updateTime = moment(); // UTC time format
-            response.rows = response.rows.map((token) =>
-                Object({
-                    addr: token.addr,
-                    name: token.name,
-                    smbl: token.smbl,
-                    balance: { val: token.balance, dcm: token.dcm || TOKENDCM },
-                    dynamic: token.dynamic || 0,
-                })
-            );
             res.json(response);
         } else res.json(check.get_msg().not_found);
     }
@@ -299,15 +290,6 @@ const ioGetTokenBalance = async (options) => {
         response.head.moduleId = 'address';
         response.head.entityId = options.addr;
         response.head.infinityScroll = 1;
-        response.rows = response.rows.map((token) =>
-            Object({
-                addr: token.addr,
-                name: token.name,
-                smbl: token.smbl,
-                balance: { val: token.balance, dcm: token.dcm || TOKENDCM },
-                dynamic: token.dynamic || 0,
-            })
-        );
         return response;
     } else return check.get_msg().not_found;
 };
