@@ -237,7 +237,7 @@ const GetAddressDetails = async (addr) => {
 const GetAddrTokenBalance = ({ size, offset, addr }) =>
     new Promise((resolve) => {
         console.log(`${wid_ptrn('GetAddrTokenBalance')}`);
-        let query = { addr: addr };
+        let query = { addr: addr, tokenaddr: { $ne: '' }, tokenname: { $ne: '' }, tokensmbl: { $ne: '' } };
         /** register Promises */
         const totalEntitiesP = count(erc_20_col, query);
         const txsP = find(erc_20_col, query, offset, size);
@@ -248,7 +248,7 @@ const GetAddrTokenBalance = ({ size, offset, addr }) =>
                     (totalEntities &&
                         resolve({
                             head: { totalEntities: totalEntities, offset: offset, size: size, addr: addr, updateTime: moment() },
-                            rows: txs.map((tx, i) =>
+                            rows: txs.map((tx) =>
                                 Object({
                                     id: tx._id,
                                     addr: tx.addr,
