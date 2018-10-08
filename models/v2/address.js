@@ -237,7 +237,7 @@ const GetAddressDetails = async (addr) => {
 const GetAddrTokenBalance = ({ size, offset, addr }) =>
     new Promise((resolve) => {
         console.log(`${wid_ptrn('GetAddrTokenBalance')}`);
-        let query = { addr: addr, tokenaddr: { $ne: '' }, tokenname: { $ne: '' }, tokensmbl: { $ne: '' } };
+        let query = { addr: addr };
         /** register Promises */
         const totalEntitiesP = count(erc_20_col, query);
         const txsP = find(erc_20_col, query, offset, size);
