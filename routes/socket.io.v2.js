@@ -1,16 +1,20 @@
 // socket.io controller
 const cluster = require('cluster'),
-    config = require('../config/config'),
-    c = config.color,
-    e = config.events.client, // socket IO client events
-    m = config.modules, // modules
-    l = config.list_type, // modules
+    cfg = require('../config/config'),
+    c = cfg.color,
+    e = cfg.events.client, // socket IO client events
+    m = cfg.modules, // modules
+    l = cfg.list_type, // modules
     logger = require('../utils/logger')(module),
     moment = require('moment'),
     check = require('../utils/checker').cheker(),
     tnx_controller = require('../controllers/v2/transaction'),
     block_controller = require('../controllers/v2/block'),
-    addr_controller = require('../controllers/v2/address');
+    addr_controller = require('../controllers/v2/address'),
+    search_controller = require('../controllers/v2/search'),
+    token_controller = require('../controllers/v2/token'),
+    MAX_RESULT_SIZE = cfg.search.MAX_RESULT_SIZE,
+    DEFAULT_SIZE = cfg.search.DEFAULT_SIZE;
 
 // cluster.worker.id
 const wid = cluster.worker.id;
@@ -26,7 +30,7 @@ const print_event = (action) => {
 
 // io options API v.2
 const io_opts = {
-    path: '/ws', // API v2 PATH
+    path: '/ws/v2_1', // API v2 PATH
     serveClient: false, // (Boolean): whether to serve the client files
     // below are engine.IO options
     pingInterval: 10000, // (Number): how many ms without a pong packet to consider the connection closed
@@ -35,9 +39,10 @@ const io_opts = {
 };
 
 /** check listId*/
-const checkListId = (lid) => Object.values(config.list_type).includes(lid);
+const checkListId = (lid) => Object.values(cfg.list_type).includes(lid);
 /** check block options.*/
-const checkBlockOptions = (block, size, offset) => (block !== 0 ? check.normalize_pagination({ block: parseInt(block) }, size, offset) : false);
+const checkBlockOptions = (block, size, offset) =>
+    block !== 0 ? check.normalize_pagination({ block: parseInt(block) }, size, offset) : false;
 /** check size is undefined */
 const checkNoSize = (size) => (!size ? true : false);
 /** check offset is undefined or 0 */
@@ -55,27 +60,45 @@ const checkTxOptions = (listId, size, offset) => {
             bad: true,
             msg: check.get_msg().no_size,
         };
-    if (checkNoOffset(offset))
-        obj = {
-            bad: true,
-            msg: check.get_msg().no_offset,
-        };
+    // if listOfTokenPrice => do not check offset
+    if (listId !== cfg.list_type.token_price) {
+        if (checkNoOffset(offset))
+            obj = {
+                bad: true,
+                msg: check.get_msg().no_offset,
+            };
+    }
     return obj;
+};
+
+/** Check search parameters */
+const checkSearchParams = (q, size) => {
+    size = isNaN(parseInt(size)) ? DEFAULT_SIZE : parseInt(size);
+    size = size > MAX_RESULT_SIZE ? MAX_RESULT_SIZE : size;
+    // check "q" parameter is exist OR !== 0
+    return !q || parseInt(q) === 0
+        ? false
+        : {
+              block_query: parseInt(q), // NaN if string started from chars
+              token_query: q,
+              size: size,
+          };
 };
 
 /** send msg to client*/
 const emitMsg = (socket, event, msg) => socket.emit(event, JSON.stringify(msg));
 
 /**
-    emmit/log/event/error API v.2 wrapper
+    emmit/log/event/error API v.2.1 wrapper
 */
 const emit = async (event, socket, data, con_obj, err) => {
     log_event(event, data, con_obj); // log events
     // setup request params
     let options = {},
         response = {},
-        { listId, moduleId, params, addr = 0, block, hash = 0 } = JSON.parse(data),
-        { entityId = 0, size, offset } = params || {};
+        caddr,
+        { listId, moduleId, params, addr = 0, block, hash = 0, q } = JSON.parse(data);
+    let { entityId = 0, size, offset } = params || {};
 
     // tx_opts = check.build_io_opts(params, listId, mod`uleId, entityId); // built tx options for GetlastTx
     switch (event) {
@@ -129,7 +152,7 @@ const emit = async (event, socket, data, con_obj, err) => {
                     break;
                 case m.addr: // moduleId => address
                     // clear address
-                    let caddr = check.cut0xClean(entityId);
+                    caddr = check.cut0xClean(entityId);
                     // check bad address
                     if (!check.checkAddr(caddr)) response = check.get_msg().wrong_addr;
                     else {
@@ -156,12 +179,38 @@ const emit = async (event, socket, data, con_obj, err) => {
                         }
                     }
                     break;
+                case m.erc20: // moduleId => erc20Token
+                    // clear address
+                    caddr = check.cut0xClean(entityId);
+                    // check bad address
+                    if (!check.checkAddr(caddr)) {
+                        response = check.get_msg().wrong_addr;
+                        break;
+                    }
+                    if (check_opts.bad) {
+                        response = check_opts.msg;
+                        break;
+                    }
+                    switch (listId) {
+                        case l.token_price:
+                            response = await token_controller.markethistIO({ addr: caddr, size: size });
+                            break;
+                        case l.token:
+                            response = await token_controller.txlistIO({ addr: caddr, size: size, offset: offset });
+                            break;
+                        case l.token_holders:
+                            response = await token_controller.holdersIO({ addr: caddr, size: size, offset: offset });
+                            break;
+                        default:
+                            response = check.get_msg().unknown_listid_io;
+                    }
+                    break;
             }
             print_event(`${event} > ${moduleId} > ${listId}`);
             break;
         case e.addr_d: // get addr details event = 'addressDetails'
             print_event('socket.io > addressDetails');
-            let caddr = check.cut0xClean(addr);
+            caddr = check.cut0xClean(addr);
             response = check.checkAddr(caddr) ? await addr_controller.io_details(caddr) : check.get_msg().wrong_addr;
             break;
         case e.block_d: // get block details event = 'blockDetails'
@@ -175,6 +224,17 @@ const emit = async (event, socket, data, con_obj, err) => {
             let chash = check.cut0xClean(hash);
             response = check.checkHash(chash) ? await tnx_controller.io_details(chash) : check.get_msg().bad_hash(hash);
             break;
+        case e.search: // get tnx details event = 'search'
+            print_event('socket.io > search');
+            let search_params = checkSearchParams(q, size);
+            console.log(search_params);
+            response = search_params ? await search_controller.tokenOrBlockIO(search_params) : check.get_msg().wrong_io_params;
+            break;
+        case e.erc20_det: // get tnx details event = 'erc20Details'
+            print_event('socket.io > erc20Details');
+            caddr = check.cut0xClean(addr);
+            response = check.checkAddr(caddr) ? await token_controller.erc20infoIO(caddr) : check.get_msg().wrong_addr;
+            break;
         default:
             response = { errorCode: 404, errorMessage: 'Unknown moduleId' };
     }
@@ -186,10 +246,11 @@ const emit = async (event, socket, data, con_obj, err) => {
 // log Event
 const log_event = (event, data, con_obj) =>
     logger.socket_requests({
-        api: 'v.2',
+        api: 'v. 2.1',
         event: event,
+        module: 'ws socket.io',
         data: data,
-        timestamp: moment().format('DD.MM.YYYY HH:mm:ss'),
+        timestamp: moment(),
         connected_obj: con_obj,
     });
 
@@ -208,7 +269,11 @@ const init_io_handler = (io) => {
             else err_log = { error: '2nd argument is not a function', con_object: con_obj };
         };
         console.log(
-            wid_ptrn(`client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${c.magenta}${socket.handshake.url}${c.green}`)
+            wid_ptrn(
+                `client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${c.magenta}${
+                    socket.handshake.url
+                }${c.green}`
+            )
         );
 
         /** socket.on(eventName, cb(arg1, arg2))
@@ -222,6 +287,11 @@ const init_io_handler = (io) => {
         socket.on(e.tx_d, (data, err) => e_wrapper(e.tx_d, data, err));
         /** 'list' event handler */
         socket.on(e.list, (data, err) => e_wrapper(e.list, data, err));
+        /** 'search' event handler */
+        socket.on(e.search, (data, err) => e_wrapper(e.search, data, err));
+        /** 'erc20Details' event handler */
+        socket.on(e.erc20_det, (data, err) => e_wrapper(e.erc20_det, data, err));
+
         /** 'disconnection' event handler */
         socket.on('disconnect', (data) => log_event('disconnect', data, con_obj));
         /** 'error' event handler */

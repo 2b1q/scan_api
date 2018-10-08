@@ -33,6 +33,7 @@ const ssoGetJWT = (tmp_tkn) =>
             (err, res, body) => {
                 if (err) reject(err);
                 let statusCode = res.statusCode;
+                console.log(body);
                 if (statusCode === 401) reject(error['401']);
                 resolve(body);
             }
@@ -44,7 +45,7 @@ const upsert = (accountId, jwt) =>
     new Promise((resolve, reject) => {
         db.get()
             .then((db_instance) => {
-                if (!db_instance) reject(); // reject if no db instance empty after reconnect
+                if (!db_instance) return reject(); // reject if no db instance empty after reconnect
                 db_instance
                     .collection('users')
                     .update(
@@ -89,10 +90,7 @@ const verifyTemp = (tmp_tkn) =>
                 upsert(accountId, jwt);
                 resolve(jwt.access_token);
             })
-            .catch((e) => {
-                console.log(e);
-                reject(e);
-            });
+            .catch((e) => reject(e));
     });
 
 /** Logout user from SSO service
@@ -110,7 +108,7 @@ const ssoLogout = (access_tkn) =>
                 if (err) reject(err);
                 let statusCode = res.statusCode;
                 if (statusCode === 401) reject(error['401']);
-                console.log(`${c.green}============= Client loged out from SSO by access_token =============${c.yellow}`);
+                console.log(`${c.green}============= Client logged out from SSO by access_token =============${c.yellow}`);
                 console.log(body);
                 console.log(`${c.green}=====================================================================${c.white}`);
                 resolve(body);
@@ -130,7 +128,7 @@ const verifyJWT = (access_tkn) =>
                 /** lookup refresh_token by accountId in MongoDb */
                 db.get()
                     .then((db_instance) => {
-                        if (!db_instance) reject(); // reject if no db instance empty after reconnect
+                        if (!db_instance) return reject(); // reject if no db instance empty after reconnect
                         db_instance
                             .collection('users')
                             .findOne({ accountId: accountId })
@@ -177,7 +175,7 @@ const refreshJWT = (refreshToken) =>
                 url: sso_service_url,
             },
             (err, res, new_token) => {
-                if (err) reject(err);
+                if (err) return reject(err);
                 let statusCode = res.statusCode;
                 if (statusCode === 401) reject(error['401']);
                 resolve(new_token);

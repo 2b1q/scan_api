@@ -1,21 +1,83 @@
 /*
  * Address model v.2
  */
-const cfg = require('../../config/config'),
+const cluster = require('cluster'),
+    check = require('../../utils/checker').cheker(),
+    db = require('../../libs/db'),
+    cfg = require('../../config/config'),
     c = cfg.color,
     MAX_SKIP = cfg.store.mongo.max_skip,
     dbquery = require('./db_query'),
     eth_col = cfg.store.cols.eth,
     token_col = cfg.store.cols.token,
     erc_20_col = cfg.store.cols.erc20_cache,
+    token_head = cfg.store.cols.token_head,
     addr_header_col = 'address_header',
     address_eth_txn_col = 'address_eth_txn',
     address_token_txn_col = 'address_token_txn',
     ethproxy = require('../../node_interaction/eth-proxy-client'),
-    TOKEN_LIST_SIZE = 55; // TODO move to config
+    TOKEN_LIST_SIZE = 55, // TODO move to config
+    ETHDCM = cfg.constants.ethdcm,
+    TOKENDCM = cfg.constants.tokendcm,
+    FEEDCM = cfg.constants.feedcm,
+    moment = require('moment');
 
 /* eth get data timeouts. */
 const wait = (ms) => new Promise((resolve) => setTimeout(() => resolve(), ms));
+
+/** worker id pattern */
+const wid_ptrn = (msg) =>
+    `${c.green}worker[${cluster.worker.id}]${c.red}[API v.2.1]${c.cyan}[address module]${c.red} > ${c.green}[${msg}] ${c.white}`;
+
+/** counter */
+const count = (collection, query) =>
+    new Promise(
+        (resolve, reject) =>
+            db
+                .get()
+                .then((db_instance) => {
+                    if (!db_instance) return resolve();
+                    db_instance
+                        .collection(collection)
+                        .count(query)
+                        .then((cnt) => resolve(cnt))
+                        .catch((e) => reject(e)); // handle error on query crash
+                })
+                .catch((e) => reject(e)) // handle error if no DB instance
+    );
+
+/** findQuery polymorphic */
+const find = (collection, query, skip, limit, sort) =>
+    new Promise(
+        (resolve, reject) =>
+            db
+                .get()
+                .then((db_instance) => {
+                    if (!db_instance) return resolve();
+                    if (sort)
+                        return db_instance
+                            .collection(collection)
+                            .find(query)
+                            .sort(sort)
+                            .skip(skip)
+                            .limit(limit)
+                            .toArray((err, txs) => {
+                                if (err) return reject(err); // handle error on query crash
+                                resolve(txs);
+                            });
+                    else
+                        return db_instance
+                            .collection(collection)
+                            .find(query)
+                            .skip(skip)
+                            .limit(limit)
+                            .toArray((err, txs) => {
+                                if (err) return reject(err); // handle error on query crash
+                                resolve(txs);
+                            });
+                })
+                .catch((e) => reject(e)) // handle error if no DB instance
+    );
 
 // Get address details API v.2:
 const GetAddressDetails = async (addr) => {
@@ -56,120 +118,154 @@ const GetAddressDetails = async (addr) => {
                 innerTxCount: inner_cnt, // кол-во внутренних транзакций эфира
                 tokenTxCount: token_tx_cnt, // кол-во всех транзакций по токенам
                 totalTokens: erc_20_cnt, // кол-во токенов которые были или есть у данного адреса
-                balance: eth_balance === null || eth_balance === undefined ? null : eth_balance, // баланс ETH
-                decimals: 18, // знаков после "."
+                balance: { val: eth_balance === null || eth_balance === undefined ? null : eth_balance, dcm: ETHDCM },
             };
             return response;
         })
         .catch((e) => e); // catch and return throwed exception OR Promise.reject()
 };
 
-/** Get Token balance API v.2 */
-const GetAddrTokenBalance = async (options) => {
-    console.log(options);
-    let { addr, offset, size } = options;
+// /** Get Token balance API v.2 */
+// const GetAddrTokenBalance = async (options) => {
+//     console.log(options);
+//     let { addr, offset, size } = options;
+//
+//     let lastCachedBlock = 0;
+//     let allTokensMap = new Map();
+//
+//     const tokenCacheCol = await dbquery.find(erc_20_col, { addr: addr, lastblock: { $gt: 0 } });
+//     const ctl = await dbquery.find(erc_20_col, { addr: addr, lastblock: 0 });
+//
+//     const cachedTokenBlocks = async () => {
+//         for (let i = 0; i < 5; i++) {
+//             if (tokenCacheCol.rows === 0) await wait(50);
+//             else {
+//                 tokenCacheCol.forEach((c_block) => {
+//                     console.log(`c_block.lastblock = ${c_block.lastblock}`);
+//                     if (c_block.lastblock > lastCachedBlock) lastCachedBlock = c_block.lastblock;
+//                     return 0;
+//                 });
+//                 break;
+//             }
+//         }
+//         return 0; // done
+//     };
+//
+//     await cachedTokenBlocks();
+//
+//     if (Array.isArray(ctl)) {
+//         ctl.forEach((tkn) => {
+//             allTokensMap.set(tkn.tokenaddr, {
+//                 addr: tkn.tokenaddr,
+//                 name: tkn.tokenname,
+//                 smbl: tkn.tokensmbl,
+//                 dcm: tkn.tokendcm,
+//                 type: 20,
+//                 balance: tkn.value,
+//                 icon: '/api/token/icon/' + tkn.tokenaddr,
+//                 dynamic: 0,
+//             });
+//         });
+//     }
+//
+//     let last_tokens_selector = {
+//         $or: [{ addrto: addr }, { addrfrom: addr }],
+//         block: { $gt: lastCachedBlock },
+//         tokentype: 20,
+//     };
+//     let lastTokens = await dbquery.distinct(token_col, last_tokens_selector, 'tokenaddr');
+//
+//     let lastTokensPromiseList = [];
+//     lastTokens.forEach((t) => lastTokensPromiseList.push(dbquery.findOne(cfg.store.cols.token_head, { addr: t })));
+//
+//     // await parallel ETH token balance requests
+//     await Promise.all(lastTokensPromiseList)
+//         .then((tokens) => {
+//             tokens.forEach((token) => {
+//                 token.balance = '*';
+//                 token.icon = '/api/token/icon/' + token.addr;
+//                 token.dynamic = 0;
+//                 allTokensMap.set(token.addr, token);
+//             });
+//         })
+//         .catch((e) => logger.error(e));
+//
+//     let allTokens = Array.from(allTokensMap);
+//     allTokens.sort(function(a, b) {
+//         if (a[1].name > b[1].name) return 1;
+//         else return -1;
+//     });
+//
+//     let totalTokens = allTokens.length;
+//     let fromI = offset;
+//     let toI = offset + size;
+//     if (fromI < 0) fromI = 0;
+//     if (fromI > totalTokens) fromI = totalTokens;
+//     if (toI < 0) toI = 0;
+//     if (toI > totalTokens) toI = totalTokens;
+//     if (fromI > toI) toI = fromI;
+//
+//     let partToken = [];
+//     for (let i = fromI; i < toI; i += 1) {
+//         let tkn = allTokens[i][1];
+//         if (tkn.balance === '*') {
+//             tkn.balance = await ethproxy.tokenBalance([addr, tkn.addr]).catch(() => null);
+//             tkn.balance = tkn.balance === null || tkn.balance === undefined ? null : tkn.balance;
+//         }
+//         partToken.push(tkn);
+//     }
+//
+//     console.log({
+//         totalTokens: totalTokens,
+//         ['partToken.length']: partToken.length,
+//     });
+//
+//     return {
+//         head: {
+//             totalEntities: totalTokens,
+//             addr: addr,
+//             offset: offset,
+//             size: size,
+//             infinityScroll: 1,
+//         },
+//         rows: partToken,
+//     };
+// };
 
-    let lastCachedBlock = 0;
-    let allTokensMap = new Map();
-
-    const tokenCacheCol = await dbquery.find(erc_20_col, { addr: addr, lastblock: { $gt: 0 } });
-    const ctl = await dbquery.find(erc_20_col, { addr: addr, lastblock: 0 });
-
-    const cachedTokenBlocks = async () => {
-        for (let i = 0; i < 5; i++) {
-            if (tokenCacheCol.rows === 0) await wait(50);
-            else {
-                tokenCacheCol.forEach((c_block) => {
-                    console.log(`c_block.lastblock = ${c_block.lastblock}`);
-                    if (c_block.lastblock > lastCachedBlock) lastCachedBlock = c_block.lastblock;
-                    return 0;
-                });
-                break;
-            }
-        }
-        return 0; // done
-    };
-
-    await cachedTokenBlocks();
-
-    if (Array.isArray(ctl)) {
-        ctl.forEach((tkn) => {
-            allTokensMap.set(tkn.tokenaddr, {
-                addr: tkn.tokenaddr,
-                name: tkn.tokenname,
-                smbl: tkn.tokensmbl,
-                dcm: tkn.tokendcm,
-                type: 20,
-                balance: tkn.value,
-                icon: '/api/token/icon/' + tkn.tokenaddr,
-                dynamic: 0,
-            });
-        });
-    }
-
-    let last_tokens_selector = {
-        $or: [{ addrto: addr }, { addrfrom: addr }],
-        block: { $gt: lastCachedBlock },
-        tokentype: 20,
-    };
-    let lastTokens = await dbquery.distinct(token_col, last_tokens_selector, 'tokenaddr');
-
-    let lastTokensPromiseList = [];
-    lastTokens.forEach((t) => lastTokensPromiseList.push(dbquery.findOne(cfg.store.cols.token_head, { addr: t })));
-
-    // await parallel ETH token balance requests
-    await Promise.all(lastTokensPromiseList)
-        .then((tokens) => {
-            tokens.forEach((token) => {
-                token.balance = '*';
-                token.icon = '/api/token/icon/' + token.addr;
-                token.dynamic = 0;
-                allTokensMap.set(token.addr, token);
-            });
-        })
-        .catch((e) => logger.error(e));
-
-    let allTokens = Array.from(allTokensMap);
-    allTokens.sort(function(a, b) {
-        if (a[1].name > b[1].name) return 1;
-        else return -1;
+//const ctl = await dbquery.find(erc_20_col, { addr: addr });
+/** Get Token balance API v.2.1 new */
+const GetAddrTokenBalance = ({ size, offset, addr }) =>
+    new Promise((resolve) => {
+        console.log(`${wid_ptrn('GetAddrTokenBalance')}`);
+        let query = { addr: addr };
+        /** register Promises */
+        const totalEntitiesP = count(erc_20_col, query);
+        const txsP = find(erc_20_col, query, offset, size);
+        /** resolve in parallel */
+        Promise.all([totalEntitiesP, txsP])
+            .then(
+                ([totalEntities, txs]) =>
+                    (totalEntities &&
+                        resolve({
+                            head: { totalEntities: totalEntities, offset: offset, size: size, addr: addr, updateTime: moment() },
+                            rows: txs.map((tx) =>
+                                Object({
+                                    id: tx._id,
+                                    addr: tx.addr,
+                                    name: tx.tokenname,
+                                    smbl: tx.tokensmbl,
+                                    balance: {
+                                        val: tx.value || null,
+                                        dcm: tx.tokendcm,
+                                    },
+                                    dynamic: tx.dynamic || 0,
+                                })
+                            ),
+                        })) ||
+                    resolve(check.get_msg()['404'])
+            )
+            .catch((e) => console.error(e) && resolve({ head: {}, rows: [] }));
     });
-
-    let totalTokens = allTokens.length;
-    let fromI = offset;
-    let toI = offset + size;
-    if (fromI < 0) fromI = 0;
-    if (fromI > totalTokens) fromI = totalTokens;
-    if (toI < 0) toI = 0;
-    if (toI > totalTokens) toI = totalTokens;
-    if (fromI > toI) toI = fromI;
-
-    let partToken = [];
-    for (let i = fromI; i < toI; i += 1) {
-        let tkn = allTokens[i][1];
-        if (tkn.balance === '*') {
-            tkn.balance = await ethproxy.tokenBalance([addr, tkn.addr]).catch(() => null);
-            tkn.balance = tkn.balance === null || tkn.balance === undefined ? null : tkn.balance;
-        }
-        partToken.push(tkn);
-    }
-
-    console.log({
-        totalTokens: totalTokens,
-        ['partToken.length']: partToken.length,
-    });
-
-    return {
-        head: {
-            totalEntities: totalTokens,
-            addr: addr,
-            offset: offset,
-            size: size,
-            infinityScroll: 1,
-        },
-        rows: partToken,
-    };
-};
 
 // < 10k tx getter
 const slowTxGetter = (db_col, selector, fields, sort, offset, size, count, addr) =>
@@ -289,7 +385,7 @@ const tokenBooster = async (addr, offset, size, fields, count, sort) =>
                 .skip(offset)
                 .limit(size)
                 .toArray((err, docs) => {
-                    if (err) resolve(false); // stop flow and return false without exeption
+                    if (err) return resolve(false); // stop flow and return false without exeption
                     resolve({
                         head: {
                             addr: addr,
@@ -314,7 +410,7 @@ const ethBooster = (addr, offset, size, fields, count, sort) =>
                 .skip(offset)
                 .limit(size)
                 .toArray((err, docs) => {
-                    if (err) resolve(false); // stop flow and return false without exeption
+                    if (err) return resolve(false); // stop flow and return false without exeption
                     resolve({
                         head: {
                             addr: addr,

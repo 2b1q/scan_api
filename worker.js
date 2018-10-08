@@ -6,9 +6,8 @@ const express = require('express'),
     debug = require('debug')('scan-api:server'),
     config = require('./config/config'),
     c = config.color,
-    sockIOv1 = require('./routes/socket.io.v1'),
     sockIOv2 = require('./routes/socket.io.v2'),
-    sockIOwss = require('./routes/socket.io.jwt'),
+    sockIOjwt = require('./routes/socket.io.jwt'),
     rest = require('./routes/services');
 
 debug('booting %s', 'scan-api');
@@ -53,8 +52,8 @@ const port2 = normalizePort(process.env.PORT2 || config.server.port2 || 3001); /
 
 /**
  * Setup Node servers
- * HTTP server1 listen on port 3000/2020, use express middleware and serve HTTP REST API v.1/v.2 requests
- * HTTP server2 listen on port 3001/2021 and serve Socket.io API v1./v.2 requests
+ * HTTP server1 listen on port 3000/2020, use express middleware and serve HTTP REST API v.2 requests
+ * HTTP server2 listen on port 3001/2021 and serve Socket.io API v.2 requests
  */
 let wid = cluster.worker.id;
 if (wid % 2 === 0) {
@@ -62,8 +61,9 @@ if (wid % 2 === 0) {
     app.set('port', config.server.ip + ':' + port1); // set HTTP server port
     const server1 = http.createServer(app); // create HTTP server for REST API requests
     server1.listen(port1); // Listen Node server on provided port
-    console.log(`${c.cyan}HTTP ${c.green}server1${c.cyan} listen port ${c.green}${port1}${c.cyan} on Worker ${c.yellow}${wid}${c.cyan} and serv:
-    ${c.magenta}> HTTP REST ${c.red}API v.1
+    console.log(`${c.cyan}HTTP ${c.green}server1${c.cyan} listen port ${c.green}${port1}${c.cyan} on Worker ${c.yellow}${wid}${
+        c.cyan
+    } and serv:
     ${c.magenta}> HTTP REST ${c.red}API v.2${c.white}`);
     server1.on('error', onError1); // server event hanlers 'on.error'
     server1.on('listening', onListening); // server event hanlers 'on.listening'
@@ -77,13 +77,13 @@ if (wid % 2 === 0) {
     /** HTTP server2 */
     const server2 = http.createServer(); // create HTTP server for Socket.io workers
     server2.listen(port2);
-    sockIOv1(server2); // API v.1 socket.io
     sockIOv2(server2); // API v.2 socket.io
-    sockIOwss(server2); // AUTH JWT WSS socket.io API
-    console.log(`${c.cyan}HTTP ${c.green}server2${c.cyan} listen port ${c.green}${port2}${c.cyan} on Worker ${c.yellow}${wid}${c.cyan} and serv:
-    ${c.magenta}> Socket.io ${c.red}API v.1
+    sockIOjwt(server2); // AUTH JWT socket.io API
+    console.log(`${c.cyan}HTTP ${c.green}server2${c.cyan} listen port ${c.green}${port2}${c.cyan} on Worker ${c.yellow}${wid}${
+        c.cyan
+    } and serv:
     ${c.magenta}> Socket.io ${c.red}API v.2${c.white}
-    ${c.magenta}> Socket.io ${c.red}AUTH WSS API${c.white}`);
+    ${c.magenta}> Socket.io ${c.red}AUTH JWT API${c.white}`);
     server2.on('error', onError2); // server event hanlers 'on.error'
     server2.on('listening', onListening); // server event hanlers 'on.listening'
     //  Event listener for HTTP server "listening" event.

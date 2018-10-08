@@ -6,23 +6,33 @@ const addr_model = require('../../models/v2/address'),
     moment = require('moment'),
     check = require('../../utils/checker').cheker(),
     cfg = require('../../config/config'),
+    api_version = cfg.api_version,
+    project = cfg.project,
     eth_col = cfg.store.cols.eth,
     token_col = cfg.store.cols.token,
-    erc_20_col = cfg.store.cols.erc20_cache,
     cluster = require('cluster'),
-    c = cfg.color;
+    c = cfg.color,
+    ETHDCM = cfg.constants.ethdcm,
+    TOKENDCM = cfg.constants.tokendcm,
+    FEEDCM = cfg.constants.feedcm,
+    TB = 'GetTokenBalance time';
 
 // worker id pattern
 const wid_ptrn = (endpoint) =>
-    `${c.green}worker[${cluster.worker.id}]${c.red}[API v.2]${c.cyan}[address controller]${c.red} > ${c.green}[${endpoint}] ${c.white}`;
+    `${c.green}worker[${cluster.worker.id}]${c.red}[API v.2]${c.cyan}[address controller]${c.red} > ${c.green}[${endpoint}] ${
+        c.white
+    }`;
 
 // simple query logger
 let logit = (req, msg = '') => {
     return {
         msg: msg,
+        api_version: api_version,
+        module: 'address controller',
+        project: project,
         post_params: req.body,
         get_params: req.query,
-        timestamp: (() => moment().format('DD.MM.YYYY HH:mm:ss'))(),
+        timestamp: (() => moment())(),
         path: module.filename
             .split('/')
             .slice(-2)
@@ -80,9 +90,8 @@ const GetAddrEth = async (req, res) => {
                     error: tx.error,
                     isContract: tx.iscontract,
                     isInner: tx.isinner,
-                    value: tx.value,
-                    txFee: tx.txfee,
-                    dcm: tx.tokendcm,
+                    value: { val: tx.value, dcm: ETHDCM },
+                    txFee: { val: tx.txfee, dcm: FEEDCM },
                     gasUsed: tx.gasused,
                     gasCost: tx.gascost,
                 };
@@ -118,9 +127,8 @@ const ioGetAddrEth = async (options) => {
                 error: tx.error,
                 isContract: tx.iscontract,
                 isInner: tx.isinner,
-                value: tx.value,
-                txFee: tx.txfee,
-                dcm: tx.tokendcm || 18,
+                value: { val: tx.value, dcm: ETHDCM },
+                txFee: { val: tx.txfee, dcm: FEEDCM },
                 gasUsed: tx.gasused,
                 gasCost: tx.gascost,
             };
@@ -154,14 +162,12 @@ const GetAddrTokens = async (req, res) => {
                     error: tx.error,
                     isContract: tx.iscontract,
                     isInner: tx.isinner,
-                    value: tx.value,
+                    value: { val: tx.value, dcm: tx.tokendcm || TOKENDCM },
+                    txFee: { val: tx.txfee, dcm: FEEDCM },
                     tokenAddr: tx.tokenaddr,
                     tokenName: tx.tokenname,
                     tokenSmbl: tx.tokensmbl,
-                    tokenDcm: tx.tokendcm,
                     tokenType: tx.tokentype,
-                    txFee: tx.txfee,
-                    dcm: tx.tokendcm || 0,
                     gasUsed: tx.gasused,
                     gasCost: tx.gascost,
                 };
@@ -196,14 +202,12 @@ const ioGetAddrTokens = async (options) => {
                 error: tx.error,
                 isContract: tx.iscontract,
                 isInner: tx.isinner,
-                value: tx.value,
+                value: { val: tx.value, dcm: tx.tokendcm || TOKENDCM },
+                txFee: { val: tx.txfee, dcm: FEEDCM },
                 tokenAddr: tx.tokenaddr,
                 tokenName: tx.tokenname,
                 tokenSmbl: tx.tokensmbl,
-                tokenDcm: tx.tokendcm,
                 tokenType: tx.tokentype,
-                txFee: tx.txfee,
-                dcm: tx.tokendcm,
                 gasUsed: tx.gasused,
                 gasCost: tx.gascost,
             };
@@ -258,26 +262,16 @@ const GetAddrDetails = (req, res) => {
 
 /** Get token Balance REST API v.2 */
 const GetTokenBalance = async (req, res) => {
+    console.time(TB);
     logger.api_requests(logit(req)); // log query data any way
     console.log(`${wid_ptrn('REST GetTokenBalance')}`);
     let options = checkAddrkParams(req, res);
     if (options) {
         let response = await addr_model.tokenBalance(options);
+        console.timeEnd(TB);
         if (response) {
             // preparing data (map data from model)
             response.head.updateTime = moment(); // UTC time format
-            response.rows = response.rows.map((token) => {
-                return {
-                    addr: token.addr,
-                    name: token.name,
-                    smbl: token.smbl,
-                    dcm: token.dcm,
-                    type: token.type,
-                    balance: token.balance,
-                    icon: token.icon,
-                    dynamic: token.dynamic,
-                };
-            });
             res.json(response);
         } else res.json(check.get_msg().not_found);
     }
@@ -285,26 +279,17 @@ const GetTokenBalance = async (req, res) => {
 
 /** io Get token Balance REST API v.2 */
 const ioGetTokenBalance = async (options) => {
+    console.time(TB);
     console.log(`${wid_ptrn('io GetTokenBalance')}`);
     let response = await addr_model.tokenBalance(options);
+    console.timeEnd(TB);
     if (response) {
         // preparing data (map data from model)
         response.head.updateTime = moment(); // UTC time format
         response.head.listId = 'listOfTokenBalance';
         response.head.moduleId = 'address';
         response.head.entityId = options.addr;
-        response.rows = response.rows.map((token) => {
-            return {
-                addr: token.addr,
-                name: token.name,
-                smbl: token.smbl,
-                dcm: token.dcm,
-                type: token.type,
-                balance: token.balance,
-                icon: token.icon,
-                dynamic: token.dynamic,
-            };
-        });
+        response.head.infinityScroll = 1;
         return response;
     } else return check.get_msg().not_found;
 };

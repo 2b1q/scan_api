@@ -69,7 +69,7 @@ const GetBlockTransactions = async (options) => {
             .skip(offset)
             .limit(size)
             .toArray((err, docs) => {
-                if (err) resolve(false); // stop flow and return false without exeption
+                if (err) return resolve(false); // stop flow and return false without exeption
                 resolve({
                     head: {
                         totalEntities: count,

@@ -7,10 +7,15 @@ const cfg = require('../../config/config'),
     moment = require('moment'),
     dbquery = require('./db_query'),
     ethproxy = require('../../node_interaction/eth-proxy-client'),
-    eth_col = cfg.store.cols.eth,
-    token_col = cfg.store.cols.token,
-    data_col = 'data_txn',
-    c = cfg.color;
+    cols = cfg.store.cols,
+    eth_col = cols.eth,
+    token_col = cols.token,
+    data_col = cols.tx_data,
+    pending_col = cols.pending_tx,
+    c = cfg.color,
+    ETHDCM = cfg.constants.ethdcm,
+    TOKENDCM = cfg.constants.tokendcm,
+    FEEDCM = cfg.constants.feedcm;
 
 // worker id pattern
 const wid_ptrn = (endpoint) =>
@@ -83,7 +88,7 @@ const GetLastTransactions = async ({ collection, size, offset }) => {
             .skip(offset)
             .limit(size)
             .toArray((err, docs) => {
-                if (err) resolve(false);
+                if (err) return resolve(false);
                 resolve({
                     head: {
                         totalEntities: count > MAX_SKIP ? MAX_SKIP : count,
@@ -122,88 +127,92 @@ const GetTxDetails = async (hash) => {
         // rcplogs: 1, // not necessary yet
     };
     // DB queries
-    const data_p = dbquery.findOne(data_col, selector, data_fields);
-    const ethTx_p = dbquery.find(eth_col, selector, tx_fields);
-    const tokenTx_p = dbquery.find(token_col, selector);
+    const data_p = dbquery.findOne(data_col, selector, data_fields); // lookup tx data
+    const ethTx_p = dbquery.find(eth_col, selector, tx_fields); // lookup ETH txs in DB
+    const tokenTx_p = dbquery.find(token_col, selector); // lookup token txs in DB
+    const pendingTx_p = dbquery.findOne(pending_col, selector); // lookup pending tx in DB
 
-    return await Promise.all([ethTx_p, tokenTx_p, data_p])
-        .then(async ([eth_txs, token_txs, data]) => {
+    return await Promise.all([ethTx_p, tokenTx_p, data_p, pendingTx_p])
+        .then(async ([eth_txs, token_txs, data, pending_tx]) => {
             let response = {};
-            if (!Array.isArray(eth_txs)) response.empty = true;
-            // set no data flag
-            else var [eth_tx] = eth_txs; // use var instead of let
+            if (!Array.isArray(eth_txs)) response.empty = true; // set no data flag
             // if no txs in DB => ask ETH node
             if (response.hasOwnProperty('empty')) {
-                console.log(wid_ptrn(`ask ETH proxy for a pending transaction 0x${hash}`));
-                const tx = await ethproxy.getTransaction(hash).catch(() => null);
+                console.log(wid_ptrn(`ask for a pending transaction 0x${hash}`));
+                const tx = !pending_tx.hash ? await ethproxy.getPendingTransaction(hash).catch(() => null) : pending_tx;
                 if (tx) {
                     delete response.empty; // unset no data flag
                     response.head = {
-                        id: '',
+                        id: tx._id ? tx._id : null,
                         hash: tx.hash,
                         block: tx.block || 0,
                         addrFrom: tx.addrfrom,
                         addrTo: tx.addrto,
-                        time: moment(), // время транзакции = текущее время. Номер блока не определен.
+                        time: tx.isotime ? tx.isotime : moment(),
                         type: 'tx', // тип транзакции. Возможны варианты: [tx]
                         status: -1, // Статус = -1. Результат транзакции не определен.
+                        error: '',
                         isContract: 0, // 0 - обычная транзакция, 1 - создание транзакции
-                        value: tx.value === null || tx.value === undefined ? null : tx.value,
-                        txFee: '0', // Всегда 0. Не известно сколько газа потрачено.
-                        dcm: 18,
+                        value: { val: tx.value === null || tx.value === undefined ? null : tx.value, dcm: ETHDCM },
+                        txFee: { val: '0', dcm: FEEDCM }, // Всегда 0. Не известно сколько газа потрачено.
                         gasUsed: 0, // Всегда 0. Не известно сколько газа потрачено.
                         gasCost: tx.gascost, // стоимость газа в ETH
+                        gasLimit: tx.gaslimit ? tx.gaslimit : null,
                         data: tx.data, // данные, которые были отправлены в транзакцию. В бинарном виде
                     };
                     response.rows = [];
                 }
             } else {
-                // ETH head
-                response.head = {
-                    id: eth_tx._id,
-                    hash: eth_tx.hash,
-                    block: eth_tx.block,
-                    addrFrom: eth_tx.addrfrom,
-                    addrTo: eth_tx.addrto,
-                    time: eth_tx.isotime,
-                    type: eth_tx.type,
-                    status: eth_tx.status,
-                    error: eth_tx.error,
-                    isContract: eth_tx.iscontract,
-                    value: eth_tx.value,
-                    txFee: eth_tx.txfee,
-                    dcm: 18,
-                    gasUsed: eth_tx.gasused,
-                    gasCost: eth_tx.gascost,
-                    data: eth_tx.hash === data.hash ? data.data : undefined,
-                };
+                response.rows = [];
+                eth_txs.forEach((eth_tx) => {
+                    let tx = Object({
+                        id: eth_tx._id,
+                        hash: eth_tx.hash,
+                        block: eth_tx.block,
+                        addrFrom: eth_tx.addrfrom,
+                        addrTo: eth_tx.addrto,
+                        time: eth_tx.isotime,
+                        type: eth_tx.type,
+                        status: eth_tx.status,
+                        error: eth_tx.error,
+                        isContract: eth_tx.iscontract,
+                        value: { val: eth_tx.value, dcm: ETHDCM },
+                        txFee: { val: eth_tx.txfee, dcm: FEEDCM },
+                        gasUsed: eth_tx.gasused,
+                        gasCost: eth_tx.gascost,
+                        data: eth_tx.hash === data.hash ? data.data : undefined,
+                    });
+                    // ETH head
+                    if (tx.type === 'tx') response.head = tx;
+                    else response.rows.push(tx);
+                });
                 // token txs
-                if (Array.isArray(token_txs)) {
-                    response.rows = token_txs.map((token) =>
-                        Object({
-                            id: token._id,
-                            hash: token.hash,
-                            block: token.block,
-                            addrFrom: token.addrfrom,
-                            addrTo: token.addrto,
-                            time: token.isotime,
-                            type: token.type,
-                            status: token.status,
-                            error: token.error,
-                            isContract: token.iscontract,
-                            isInner: token.isinner,
-                            value: token.value,
-                            tokenAddr: token.tokenaddr,
-                            tokenName: token.tokenname,
-                            tokenSmbl: token.tokensmbl,
-                            tokenType: token.tokentype,
-                            txFee: token.txfee,
-                            dcm: token.tokendcm,
-                            gasUsed: token.gasused,
-                            gasCost: token.gascost,
-                        })
+                Array.isArray(token_txs) &&
+                    token_txs.forEach((token_tx) =>
+                        response.rows.push(
+                            Object({
+                                id: token_tx._id,
+                                hash: token_tx.hash,
+                                block: token_tx.block,
+                                addrFrom: token_tx.addrfrom,
+                                addrTo: token_tx.addrto,
+                                time: token_tx.isotime,
+                                type: token_tx.type,
+                                status: token_tx.status,
+                                error: token_tx.error,
+                                isContract: token_tx.iscontract,
+                                isInner: token_tx.isinner,
+                                value: { val: token_tx.value, dcm: token_tx.tokendcm || TOKENDCM },
+                                txFee: { val: token_tx.txfee, dcm: FEEDCM },
+                                tokenAddr: token_tx.tokenaddr,
+                                tokenName: token_tx.tokenname,
+                                tokenSmbl: token_tx.tokensmbl,
+                                tokenType: token_tx.tokentype,
+                                gasUsed: token_tx.gasused,
+                                gasCost: token_tx.gascost,
+                            })
+                        )
                     );
-                } else response.rows = [];
             }
             return response;
         })

@@ -10,9 +10,10 @@ node.log
 config.js
 config/secret
 config/sso_secret.pub
+package-lock.json
 
 # test results
-tests/test_result/
+result.xml
 
 # OS X files
 .DS_Store

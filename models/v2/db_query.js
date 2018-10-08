@@ -12,7 +12,7 @@ const col = (name) =>
         db
             .get()
             .then((db_con) => {
-                if (!db_con) reject(); // reject if no db instance empty after reconnect
+                if (!db_con) return reject(); // reject if no db instance empty after reconnect
                 resolve(db_con.collection(name));
             })
             .catch(() => {
@@ -20,29 +20,6 @@ const col = (name) =>
                 console.error('connection to MongoDB lost');
             })
     );
-
-// get tnx db collection name by listId
-const get_tnx_col_by = (listId) => {
-    switch (listId) {
-        case cfg.list_type.eth:
-            return cfg.store.cols.eth;
-        case cfg.list_type.token:
-            return cfg.store.cols.token;
-        default:
-            return '';
-    }
-};
-
-// find tokens
-const findTokens = async (tnx_col, query) => {
-    let db_col = await col(tnx_col);
-    return new Promise((resolve, reject) =>
-        db_col.find(query).toArray((err, docs) => {
-            if (err) return reject(err); // stop flow and return reject with exeption
-            resolve(docs);
-        })
-    );
-};
 
 // count collection docs by selector
 const collectionCount = async (collection, selector = {}) => {

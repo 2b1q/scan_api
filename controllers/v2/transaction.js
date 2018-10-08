@@ -5,24 +5,34 @@
 const tnx_model = require('../../models/v2/transaction'),
     cluster = require('cluster'),
     cfg = require('../../config/config'),
+    api_version = cfg.api_version,
+    project = cfg.project,
     eth_col = cfg.store.cols.eth,
     token_col = cfg.store.cols.token,
     logger = require('../../utils/logger')(module),
     moment = require('moment'),
     check = require('../../utils/checker').cheker(),
-    c = cfg.color;
+    c = cfg.color,
+    ETHDCM = cfg.constants.ethdcm,
+    TOKENDCM = cfg.constants.tokendcm,
+    FEEDCM = cfg.constants.feedcm;
 
 // worker id pattern
 const wid_ptrn = (endpoint) =>
-    `${c.green}worker[${cluster.worker.id}]${c.red}[API v.2]${c.cyan}[transaction controller]${c.red} > ${c.green}[${endpoint}] ${c.white}`;
+    `${c.green}worker[${cluster.worker.id}]${c.red}[API v.2]${c.cyan}[transaction controller]${c.red} > ${c.green}[${endpoint}] ${
+        c.white
+    }`;
 
 // simple query logger
 let logit = (req, msg = '') => {
     return {
         msg: msg,
+        api_version: api_version,
+        module: 'transaction controller',
+        project: project,
         post_params: req.body,
         get_params: req.query,
-        timestamp: (() => moment().format('DD.MM.YYYY HH:mm:ss'))(),
+        timestamp: (() => moment())(),
         path: module.filename
             .split('/')
             .slice(-2)
@@ -75,14 +85,12 @@ const GetLastTnxTokensRest = async (req, res) => {
                     error: tx.error,
                     isContract: tx.iscontract,
                     isInner: tx.isinner,
-                    value: tx.value,
+                    value: { val: tx.value, dcm: tx.tokendcm || TOKENDCM },
+                    txFee: { val: tx.txfee, dcm: FEEDCM },
                     tokenAddr: tx.tokenaddr,
                     tokenName: tx.tokenname,
                     tokenSmbl: tx.tokensmbl,
-                    tokenDcm: tx.tokendcm,
                     tokenType: tx.tokentype,
-                    txFee: tx.txfee,
-                    dcm: tx.tokendcm,
                     gasUsed: tx.gasused,
                     gasCost: tx.gascost,
                 };
@@ -117,9 +125,8 @@ const GetLastTnxEthRest = async (req, res) => {
                     error: tx.error,
                     isContract: tx.iscontract,
                     isInner: tx.isinner,
-                    value: tx.value,
-                    txFee: tx.txfee,
-                    dcm: tx.tokendcm,
+                    value: { val: tx.value, dcm: ETHDCM },
+                    txFee: { val: tx.txfee, dcm: FEEDCM },
                     gasUsed: tx.gasused,
                     gasCost: tx.gascost,
                 };
@@ -194,9 +201,8 @@ const ioGetLastTnxEth = async (options) => {
                 error: tx.error,
                 isContract: tx.iscontract,
                 isInner: tx.isinner,
-                value: tx.value,
-                txFee: tx.txfee,
-                dcm: tx.tokendcm || 18,
+                value: { val: tx.value, dcm: ETHDCM },
+                txFee: { val: tx.txfee, dcm: FEEDCM },
                 gasUsed: tx.gasused,
                 gasCost: tx.gascost,
             };
@@ -229,14 +235,12 @@ const ioGetLastTnxTokens = async (options) => {
                 error: tx.error,
                 isContract: tx.iscontract,
                 isInner: tx.isinner,
-                value: tx.value,
+                value: { val: tx.value, dcm: tx.tokendcm || TOKENDCM },
+                txFee: { val: tx.txfee, dcm: FEEDCM },
                 tokenAddr: tx.tokenaddr,
                 tokenName: tx.tokenname,
                 tokenSmbl: tx.tokensmbl,
-                tokenDcm: tx.tokendcm,
                 tokenType: tx.tokentype,
-                txFee: tx.txfee,
-                dcm: tx.tokendcm || 0,
                 gasUsed: tx.gasused,
                 gasCost: tx.gascost,
             };

@@ -6,8 +6,7 @@ const cluster = require('cluster'),
     config = require('../config/config'),
     c = config.color,
     logger = require('../utils/logger')(module),
-    moment = require('moment'),
-    check = require('../utils/checker').cheker();
+    moment = require('moment');
 
 // cluster.worker.id
 const wid = cluster.worker.id;
@@ -23,7 +22,7 @@ const print_event = (action) => {
 
 // io JWT options
 const io_opts = {
-    path: '/wss', // JWT AUTH API PATH
+    path: '/wss/v2_1', // JWT AUTH API PATH
     serveClient: false, // (Boolean): whether to serve the client files
     pingInterval: 10000, // (Number): how many ms without a pong packet to consider the connection closed
     pingTimeout: 5000, //(Number): how many ms before sending a new ping packet
@@ -117,7 +116,11 @@ const init_io_handler = (io) => {
             authData: _jwt.decode(access_token).authData,
         };
         console.log(
-            wid_ptrn(`client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${c.magenta}${socket.handshake.url}${c.green}`)
+            wid_ptrn(
+                `client ${c.magenta}${socket.handshake.address}${c.green} connected to URL PATH ${c.magenta}${
+                    socket.handshake.url
+                }${c.green}`
+            )
         );
 
         // set new JWT AccessToken to client app
